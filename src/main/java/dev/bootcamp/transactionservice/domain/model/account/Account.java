@@ -9,7 +9,14 @@ import dev.bootcamp.transactionservice.domain.model.movement.Movement;
  * @param maxMonthlyMovements solo para SAVINGS
  * @param movementDayOfMonth  solo para FIXED_TERM
  */
-public record Account(Long id, AccountType type, Integer maxMonthlyMovements, Integer movementDayOfMonth) {
+public record Account(Long id, Long customerId, AccountType type, Integer maxMonthlyMovements, Integer movementDayOfMonth) {
+
+    /**
+     * Indica si la cuenta pertenece al cliente.
+     */
+    public boolean belongsTo(Long customerId) {
+        return this.customerId.equals(customerId);
+    }
 
     /**
      * Valida un nuevo movimiento según las reglas del tipo de cuenta.

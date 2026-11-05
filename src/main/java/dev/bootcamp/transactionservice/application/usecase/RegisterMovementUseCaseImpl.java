@@ -6,6 +6,7 @@ import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
@@ -19,11 +20,23 @@ public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
     }
 
     @Override
-    public Movement execute(Long accountId, MovementType type, LocalDate date) {
-        Account account = accountClient.findById(accountId)
+    public Movement deposit(Long customerId, Long accountId, BigDecimal amount, LocalDate date) {
+        return register(customerId, new Movement(accountId, MovementType.DEPOSIT, amount, date));
+    }
+
+    @Override
+    public Movement withdraw(Long customerId, Long accountId, BigDecimal amount, LocalDate date) {
+        return register(customerId, new Movement(accountId, MovementType.WITHDRAWAL, amount, date));
+    }
+
+    private Movement register(Long customerId, Movement movement) {
+        Account account = accountClient.findById(movement.accountId())
                 .orElseThrow(() -> new BusinessRuleException("La cuenta no existe"));
-        Movement movement = new Movement(accountId, type, date);
-        long movementsInMonth = movementRepository.countByAccountIdAndMonth(accountId, YearMonth.from(date));
+        if (!account.belongsTo(customerId)) {
+            throw new BusinessRuleException("La cuenta no pertenece al cliente");
+        }
+        long movementsInMonth = movementRepository.countByAccountIdAndMonth(
+                movement.accountId(), YearMonth.from(movement.date()));
         account.validateMovement(movement, movementsInMonth);
         return movementRepository.save(movement);
     }
