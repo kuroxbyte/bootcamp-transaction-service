@@ -13,84 +13,48 @@ import org.junit.jupiter.api.Test;
 
 class AccountTest {
 
-    private static Movement movementOn(int day) {
-        return new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, LocalDate.of(2026, 11, day));
+    private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
+
+    private static Movement withdrawal(String amount) {
+        return new Movement(1L, MovementType.WITHDRAWAL, new BigDecimal(amount), DATE);
     }
 
-    @Test
-    void savingsAllowsMovementsBelowMonthlyLimit() {
-        Account savings = new Account(1L, 100L, AccountType.SAVINGS, 2, null);
-
-        assertThatCode(() -> savings.validateMovement(movementOn(1), 1, BigDecimal.ZERO)).doesNotThrowAnyException();
-    }
-
-    @Test
-    void savingsRejectsMovementOverMonthlyLimit() {
-        Account savings = new Account(1L, 100L, AccountType.SAVINGS, 2, null);
-
-        assertThatThrownBy(() -> savings.validateMovement(movementOn(3), 2, BigDecimal.ZERO))
-                .isInstanceOf(BusinessRuleException.class);
-    }
-
-    @Test
-    void checkingAllowsUnlimitedMovements() {
-        Account checking = new Account(1L, 100L, AccountType.CHECKING, null, null);
-
-        assertThatCode(() -> checking.validateMovement(movementOn(1), 1_000, BigDecimal.ZERO)).doesNotThrowAnyException();
-    }
-
-    @Test
-    void fixedTermAllowsOneMovementOnConfiguredDay() {
-        Account fixedTerm = new Account(1L, 100L, AccountType.FIXED_TERM, null, 15);
-
-        assertThatCode(() -> fixedTerm.validateMovement(movementOn(15), 0, BigDecimal.ZERO)).doesNotThrowAnyException();
-    }
-
-    @Test
-    void fixedTermRejectsMovementOnOtherDay() {
-        Account fixedTerm = new Account(1L, 100L, AccountType.FIXED_TERM, null, 15);
-
-        assertThatThrownBy(() -> fixedTerm.validateMovement(movementOn(14), 0, BigDecimal.ZERO))
-                .isInstanceOf(BusinessRuleException.class);
-    }
-
-    @Test
-    void fixedTermRejectsSecondMovementInMonth() {
-        Account fixedTerm = new Account(1L, 100L, AccountType.FIXED_TERM, null, 15);
-
-        assertThatThrownBy(() -> fixedTerm.validateMovement(movementOn(15), 1, BigDecimal.ZERO))
-                .isInstanceOf(BusinessRuleException.class);
+    private static Account checking() {
+        return new Account(1L, 100L, new CheckingMovementPolicy());
     }
 
     @Test
     void belongsToItsCustomerOnly() {
-        Account account = new Account(1L, 100L, AccountType.CHECKING, null, null);
-
-        assertThat(account.belongsTo(100L)).isTrue();
-        assertThat(account.belongsTo(200L)).isFalse();
+        assertThat(checking().belongsTo(100L)).isTrue();
+        assertThat(checking().belongsTo(200L)).isFalse();
     }
 
-    private static Movement withdrawal(String amount) {
-        return new Movement(1L, MovementType.WITHDRAWAL, new BigDecimal(amount), LocalDate.of(2026, 11, 15));
+    @Test
+    void appliesMovementPolicyOfAccountType() {
+        Account savings = new Account(1L, 100L, new SavingsMovementPolicy(2));
+        Movement deposit = new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, DATE);
+
+        assertThatThrownBy(() -> savings.validateMovement(deposit, 2, BigDecimal.ZERO))
+                .isInstanceOf(BusinessRuleException.class);
     }
 
     @Test
     void allowsWithdrawalUpToBalance() {
-        Account checking = new Account(1L, 100L, AccountType.CHECKING, null, null);
-
-        assertThatCode(() -> checking.validateMovement(withdrawal("50"), 0, new BigDecimal("100")))
+        assertThatCode(() -> checking().validateMovement(withdrawal("50"), 0, new BigDecimal("100")))
                 .doesNotThrowAnyException();
-        assertThatCode(() -> checking.validateMovement(withdrawal("100"), 0, new BigDecimal("100")))
+        assertThatCode(() -> checking().validateMovement(withdrawal("100"), 0, new BigDecimal("100")))
                 .doesNotThrowAnyException();
     }
 
     @Test
     void rejectsWithdrawalOverBalanceInEveryAccountType() {
-        Account savings = new Account(1L, 100L, AccountType.SAVINGS, 5, null);
-        Account checking = new Account(1L, 100L, AccountType.CHECKING, null, null);
-        Account fixedTerm = new Account(1L, 100L, AccountType.FIXED_TERM, null, 15);
+        Account[] accounts = {
+                new Account(1L, 100L, new SavingsMovementPolicy(5)),
+                checking(),
+                new Account(1L, 100L, new FixedTermMovementPolicy(15))
+        };
 
-        for (Account account : new Account[] {savings, checking, fixedTerm}) {
+        for (Account account : accounts) {
             assertThatThrownBy(() -> account.validateMovement(withdrawal("100.01"), 0, new BigDecimal("100")))
                     .isInstanceOf(BusinessRuleException.class)
                     .hasMessage("Saldo insuficiente para el retiro");
@@ -99,9 +63,9 @@ class AccountTest {
 
     @Test
     void depositDoesNotDependOnBalance() {
-        Account checking = new Account(1L, 100L, AccountType.CHECKING, null, null);
+        Movement deposit = new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, DATE);
 
-        assertThatCode(() -> checking.validateMovement(movementOn(15), 0, BigDecimal.ZERO))
+        assertThatCode(() -> checking().validateMovement(deposit, 0, BigDecimal.ZERO))
                 .doesNotThrowAnyException();
     }
 }

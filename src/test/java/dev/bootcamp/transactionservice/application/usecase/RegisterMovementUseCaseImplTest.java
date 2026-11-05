@@ -11,7 +11,10 @@ import dev.bootcamp.transactionservice.application.port.AccountClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
-import dev.bootcamp.transactionservice.domain.model.account.AccountType;
+import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPolicy;
+import dev.bootcamp.transactionservice.domain.model.account.FixedTermMovementPolicy;
+import dev.bootcamp.transactionservice.domain.model.account.MovementPolicy;
+import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import java.math.BigDecimal;
@@ -40,14 +43,14 @@ class RegisterMovementUseCaseImplTest {
     @InjectMocks
     private RegisterMovementUseCaseImpl useCase;
 
-    private void givenAccount(AccountType type, Integer maxMonthlyMovements, Integer movementDay) {
+    private void givenAccount(MovementPolicy movementPolicy) {
         when(accountClient.findById(1L))
-                .thenReturn(Optional.of(new Account(1L, CUSTOMER_ID, type, maxMonthlyMovements, movementDay)));
+                .thenReturn(Optional.of(new Account(1L, CUSTOMER_ID, movementPolicy)));
     }
 
     @Test
     void customerDepositsIntoOwnAccount() {
-        givenAccount(AccountType.CHECKING, null, null);
+        givenAccount(new CheckingMovementPolicy());
         when(movementRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Movement movement = useCase.deposit(CUSTOMER_ID, 1L, AMOUNT, DATE);
@@ -57,7 +60,7 @@ class RegisterMovementUseCaseImplTest {
 
     @Test
     void customerWithdrawsFromOwnAccount() {
-        givenAccount(AccountType.CHECKING, null, null);
+        givenAccount(new CheckingMovementPolicy());
         when(movementRepository.getBalance(1L)).thenReturn(new BigDecimal("100"));
         when(movementRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -68,7 +71,7 @@ class RegisterMovementUseCaseImplTest {
 
     @Test
     void rejectsMovementOnAccountOfAnotherCustomer() {
-        givenAccount(AccountType.CHECKING, null, null);
+        givenAccount(new CheckingMovementPolicy());
 
         assertThatThrownBy(() -> useCase.deposit(999L, 1L, AMOUNT, DATE))
                 .isInstanceOf(BusinessRuleException.class);
@@ -96,7 +99,7 @@ class RegisterMovementUseCaseImplTest {
 
     @Test
     void savesMovementWithinSavingsLimit() {
-        givenAccount(AccountType.SAVINGS, 2, null);
+        givenAccount(new SavingsMovementPolicy(2));
         when(movementRepository.countByAccountIdAndMonth(1L, YearMonth.from(DATE))).thenReturn(1L);
 
         useCase.deposit(CUSTOMER_ID, 1L, AMOUNT, DATE);
@@ -106,7 +109,7 @@ class RegisterMovementUseCaseImplTest {
 
     @Test
     void doesNotSaveMovementOverSavingsLimit() {
-        givenAccount(AccountType.SAVINGS, 2, null);
+        givenAccount(new SavingsMovementPolicy(2));
         when(movementRepository.countByAccountIdAndMonth(1L, YearMonth.from(DATE))).thenReturn(2L);
 
         assertThatThrownBy(() -> useCase.withdraw(CUSTOMER_ID, 1L, AMOUNT, DATE))
@@ -116,7 +119,7 @@ class RegisterMovementUseCaseImplTest {
 
     @Test
     void doesNotSaveSecondFixedTermMovementInMonth() {
-        givenAccount(AccountType.FIXED_TERM, null, 15);
+        givenAccount(new FixedTermMovementPolicy(15));
         when(movementRepository.countByAccountIdAndMonth(1L, YearMonth.from(DATE))).thenReturn(1L);
 
         assertThatThrownBy(() -> useCase.withdraw(CUSTOMER_ID, 1L, AMOUNT, DATE))
@@ -126,7 +129,7 @@ class RegisterMovementUseCaseImplTest {
 
     @Test
     void doesNotSaveWithdrawalOverBalance() {
-        givenAccount(AccountType.CHECKING, null, null);
+        givenAccount(new CheckingMovementPolicy());
         when(movementRepository.getBalance(1L)).thenReturn(new BigDecimal("5"));
 
         assertThatThrownBy(() -> useCase.withdraw(CUSTOMER_ID, 1L, AMOUNT, DATE))
@@ -136,7 +139,7 @@ class RegisterMovementUseCaseImplTest {
 
     @Test
     void depositIsSavedEvenWithZeroBalance() {
-        givenAccount(AccountType.CHECKING, null, null);
+        givenAccount(new CheckingMovementPolicy());
         when(movementRepository.getBalance(1L)).thenReturn(BigDecimal.ZERO);
 
         useCase.deposit(CUSTOMER_ID, 1L, AMOUNT, DATE);
