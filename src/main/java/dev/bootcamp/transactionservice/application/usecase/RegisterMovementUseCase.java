@@ -12,6 +12,7 @@ import java.time.LocalDate;
  * <ul>
  *   <li>La cuenta debe existir en account-service y pertenecer al cliente.</li>
  *   <li>El monto debe ser mayor a 0.</li>
+ *   <li>Un retiro no puede superar el saldo de la cuenta (depósitos menos retiros).</li>
  *   <li>Ahorro: no se puede superar el límite máximo de movimientos mensuales.</li>
  *   <li>Cuenta corriente: sin límite de movimientos.</li>
  *   <li>Plazo fijo: un solo movimiento al mes, en el día configurado.</li>
@@ -41,7 +42,8 @@ public interface RegisterMovementUseCase {
      * @param date       fecha del movimiento
      * @return el movimiento guardado
      * @throws BusinessRuleException si la cuenta no existe, no pertenece al cliente,
-     *                               el monto no es válido o se incumple una regla de la cuenta
+     *                               el monto no es válido, supera el saldo
+     *                               o se incumple una regla de la cuenta
      */
     Movement withdraw(Long customerId, Long accountId, BigDecimal amount, LocalDate date);
 }

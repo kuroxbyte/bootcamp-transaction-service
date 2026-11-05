@@ -58,6 +58,7 @@ class RegisterMovementUseCaseImplTest {
     @Test
     void customerWithdrawsFromOwnAccount() {
         givenAccount(AccountType.CHECKING, null, null);
+        when(movementRepository.getBalance(1L)).thenReturn(new BigDecimal("100"));
         when(movementRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Movement movement = useCase.withdraw(CUSTOMER_ID, 1L, AMOUNT, DATE);
@@ -121,5 +122,25 @@ class RegisterMovementUseCaseImplTest {
         assertThatThrownBy(() -> useCase.withdraw(CUSTOMER_ID, 1L, AMOUNT, DATE))
                 .isInstanceOf(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
+    }
+
+    @Test
+    void doesNotSaveWithdrawalOverBalance() {
+        givenAccount(AccountType.CHECKING, null, null);
+        when(movementRepository.getBalance(1L)).thenReturn(new BigDecimal("5"));
+
+        assertThatThrownBy(() -> useCase.withdraw(CUSTOMER_ID, 1L, AMOUNT, DATE))
+                .isInstanceOf(BusinessRuleException.class);
+        verify(movementRepository, never()).save(any());
+    }
+
+    @Test
+    void depositIsSavedEvenWithZeroBalance() {
+        givenAccount(AccountType.CHECKING, null, null);
+        when(movementRepository.getBalance(1L)).thenReturn(BigDecimal.ZERO);
+
+        useCase.deposit(CUSTOMER_ID, 1L, AMOUNT, DATE);
+
+        verify(movementRepository).save(new Movement(1L, MovementType.DEPOSIT, AMOUNT, DATE));
     }
 }
