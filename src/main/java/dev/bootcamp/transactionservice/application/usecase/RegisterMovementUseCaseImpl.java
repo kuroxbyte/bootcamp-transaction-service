@@ -37,7 +37,8 @@ public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
         }
         long movementsInMonth = movementRepository.countByAccountIdAndMonth(
                 movement.accountId(), YearMonth.from(movement.date()));
-        account.validateMovement(movement, movementsInMonth);
+        BigDecimal balance = movementRepository.getBalance(movement.accountId());
+        account.validateMovement(movement, movementsInMonth, balance);
         return movementRepository.save(movement);
     }
 }

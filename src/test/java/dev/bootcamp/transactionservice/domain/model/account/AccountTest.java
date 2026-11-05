@@ -21,14 +21,14 @@ class AccountTest {
     void savingsAllowsMovementsBelowMonthlyLimit() {
         Account savings = new Account(1L, 100L, AccountType.SAVINGS, 2, null);
 
-        assertThatCode(() -> savings.validateMovement(movementOn(1), 1)).doesNotThrowAnyException();
+        assertThatCode(() -> savings.validateMovement(movementOn(1), 1, BigDecimal.ZERO)).doesNotThrowAnyException();
     }
 
     @Test
     void savingsRejectsMovementOverMonthlyLimit() {
         Account savings = new Account(1L, 100L, AccountType.SAVINGS, 2, null);
 
-        assertThatThrownBy(() -> savings.validateMovement(movementOn(3), 2))
+        assertThatThrownBy(() -> savings.validateMovement(movementOn(3), 2, BigDecimal.ZERO))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
@@ -36,21 +36,21 @@ class AccountTest {
     void checkingAllowsUnlimitedMovements() {
         Account checking = new Account(1L, 100L, AccountType.CHECKING, null, null);
 
-        assertThatCode(() -> checking.validateMovement(movementOn(1), 1_000)).doesNotThrowAnyException();
+        assertThatCode(() -> checking.validateMovement(movementOn(1), 1_000, BigDecimal.ZERO)).doesNotThrowAnyException();
     }
 
     @Test
     void fixedTermAllowsOneMovementOnConfiguredDay() {
         Account fixedTerm = new Account(1L, 100L, AccountType.FIXED_TERM, null, 15);
 
-        assertThatCode(() -> fixedTerm.validateMovement(movementOn(15), 0)).doesNotThrowAnyException();
+        assertThatCode(() -> fixedTerm.validateMovement(movementOn(15), 0, BigDecimal.ZERO)).doesNotThrowAnyException();
     }
 
     @Test
     void fixedTermRejectsMovementOnOtherDay() {
         Account fixedTerm = new Account(1L, 100L, AccountType.FIXED_TERM, null, 15);
 
-        assertThatThrownBy(() -> fixedTerm.validateMovement(movementOn(14), 0))
+        assertThatThrownBy(() -> fixedTerm.validateMovement(movementOn(14), 0, BigDecimal.ZERO))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
@@ -58,7 +58,7 @@ class AccountTest {
     void fixedTermRejectsSecondMovementInMonth() {
         Account fixedTerm = new Account(1L, 100L, AccountType.FIXED_TERM, null, 15);
 
-        assertThatThrownBy(() -> fixedTerm.validateMovement(movementOn(15), 1))
+        assertThatThrownBy(() -> fixedTerm.validateMovement(movementOn(15), 1, BigDecimal.ZERO))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
@@ -68,5 +68,40 @@ class AccountTest {
 
         assertThat(account.belongsTo(100L)).isTrue();
         assertThat(account.belongsTo(200L)).isFalse();
+    }
+
+    private static Movement withdrawal(String amount) {
+        return new Movement(1L, MovementType.WITHDRAWAL, new BigDecimal(amount), LocalDate.of(2026, 11, 15));
+    }
+
+    @Test
+    void allowsWithdrawalUpToBalance() {
+        Account checking = new Account(1L, 100L, AccountType.CHECKING, null, null);
+
+        assertThatCode(() -> checking.validateMovement(withdrawal("50"), 0, new BigDecimal("100")))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> checking.validateMovement(withdrawal("100"), 0, new BigDecimal("100")))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void rejectsWithdrawalOverBalanceInEveryAccountType() {
+        Account savings = new Account(1L, 100L, AccountType.SAVINGS, 5, null);
+        Account checking = new Account(1L, 100L, AccountType.CHECKING, null, null);
+        Account fixedTerm = new Account(1L, 100L, AccountType.FIXED_TERM, null, 15);
+
+        for (Account account : new Account[] {savings, checking, fixedTerm}) {
+            assertThatThrownBy(() -> account.validateMovement(withdrawal("100.01"), 0, new BigDecimal("100")))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessage("Saldo insuficiente para el retiro");
+        }
+    }
+
+    @Test
+    void depositDoesNotDependOnBalance() {
+        Account checking = new Account(1L, 100L, AccountType.CHECKING, null, null);
+
+        assertThatCode(() -> checking.validateMovement(movementOn(15), 0, BigDecimal.ZERO))
+                .doesNotThrowAnyException();
     }
 }

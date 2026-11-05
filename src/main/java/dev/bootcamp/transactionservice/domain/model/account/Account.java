@@ -2,6 +2,8 @@ package dev.bootcamp.transactionservice.domain.model.account;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
+import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
+import java.math.BigDecimal;
 
 /**
  * Vista local de la cuenta, obtenida de account-service.
@@ -35,17 +37,23 @@ public record Account(Long id, Long customerId, AccountType type, Integer maxMon
      *       Es decir, un único depósito o retiro al mes, en el día configurado.</li>
      * </ul>
      *
+     * <p>En todos los tipos de cuenta, un retiro se rechaza si su monto es mayor que
+     * {@code balance}. Un retiro por el saldo exacto sí se permite y deja la cuenta en 0.
+     * Los depósitos no dependen del saldo.
+     *
      * <p>Los depósitos y los retiros cuentan por igual para los límites. El mes se determina por
      * la fecha del movimiento, así que el conteo se reinicia al empezar cada mes calendario.
      *
      * @param movement         movimiento a validar; se usa su fecha para la regla de plazo fijo
      * @param movementsInMonth cantidad de movimientos ya guardados en esta cuenta durante el mes
      *                         calendario de {@code movement.date()}, sin contar el nuevo
+     * @param balance          saldo actual de la cuenta antes del movimiento
      * @throws BusinessRuleException si se alcanzó el límite mensual de la cuenta de ahorro, si el
-     *                               movimiento de plazo fijo no cae en el día configurado o si
-     *                               ya existe un movimiento de plazo fijo en ese mes
+     *                               movimiento de plazo fijo no cae en el día configurado, si
+     *                               ya existe un movimiento de plazo fijo en ese mes o si un
+     *                               retiro supera el saldo disponible
      */
-    public void validateMovement(Movement movement, long movementsInMonth) {
+    public void validateMovement(Movement movement, long movementsInMonth, BigDecimal balance) {
         switch (type) {
             case SAVINGS -> {
                 if (movementsInMonth >= maxMonthlyMovements) {
@@ -63,6 +71,9 @@ public record Account(Long id, Long customerId, AccountType type, Integer maxMon
                     throw new BusinessRuleException("Solo se permite un movimiento al mes");
                 }
             }
+        }
+        if (movement.type() == MovementType.WITHDRAWAL && movement.amount().compareTo(balance) > 0) {
+            throw new BusinessRuleException("Saldo insuficiente para el retiro");
         }
     }
 }
