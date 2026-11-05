@@ -19,11 +19,31 @@ public record Account(Long id, Long customerId, AccountType type, Integer maxMon
     }
 
     /**
-     * Valida un nuevo movimiento según las reglas del tipo de cuenta.
+     * Valida si un nuevo movimiento (depósito o retiro) está permitido según el tipo de cuenta.
      *
-     * @param movement         movimiento a registrar
-     * @param movementsInMonth movimientos ya registrados en el mes del movimiento
-     * @throws BusinessRuleException si el movimiento no está permitido
+     * <p>No modifica nada: si el movimiento es válido el método termina sin efecto y quien
+     * lo invoca debe guardarlo; si no, lanza una excepción y el movimiento no debe guardarse.
+     *
+     * <p>Reglas por tipo de cuenta:
+     * <ul>
+     *   <li>{@link AccountType#SAVINGS}: se permite mientras {@code movementsInMonth} sea menor
+     *       que {@code maxMonthlyMovements}. Por ejemplo, con un límite de 2 se aceptan el 1.º y
+     *       el 2.º movimiento del mes y se rechaza el 3.º.</li>
+     *   <li>{@link AccountType#CHECKING}: siempre se permite, no hay límite de movimientos.</li>
+     *   <li>{@link AccountType#FIXED_TERM}: se permite solo si la fecha del movimiento cae en
+     *       {@code movementDayOfMonth} y aún no hay movimientos en ese mes ({@code movementsInMonth == 0}).
+     *       Es decir, un único depósito o retiro al mes, en el día configurado.</li>
+     * </ul>
+     *
+     * <p>Los depósitos y los retiros cuentan por igual para los límites. El mes se determina por
+     * la fecha del movimiento, así que el conteo se reinicia al empezar cada mes calendario.
+     *
+     * @param movement         movimiento a validar; se usa su fecha para la regla de plazo fijo
+     * @param movementsInMonth cantidad de movimientos ya guardados en esta cuenta durante el mes
+     *                         calendario de {@code movement.date()}, sin contar el nuevo
+     * @throws BusinessRuleException si se alcanzó el límite mensual de la cuenta de ahorro, si el
+     *                               movimiento de plazo fijo no cae en el día configurado o si
+     *                               ya existe un movimiento de plazo fijo en ese mes
      */
     public void validateMovement(Movement movement, long movementsInMonth) {
         switch (type) {
