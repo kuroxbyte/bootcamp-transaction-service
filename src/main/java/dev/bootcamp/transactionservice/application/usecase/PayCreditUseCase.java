@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Caso de uso para que un cliente haga pagos de sus productos de crédito.
+ * Caso de uso para que un cliente haga pagos de sus créditos personales o empresariales.
  *
  * <p>Reglas:
  * <ul>
@@ -17,7 +17,7 @@ import java.time.LocalDate;
 public interface PayCreditUseCase {
 
     /**
-     * Registra un pago a un producto de crédito del cliente.
+     * Registra un pago a un crédito del cliente.
      *
      * @param customerId id del cliente que paga
      * @param creditId   id del crédito en credit-service

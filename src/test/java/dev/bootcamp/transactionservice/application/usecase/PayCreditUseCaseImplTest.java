@@ -12,6 +12,7 @@ import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
+import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -44,7 +45,7 @@ class PayCreditUseCaseImplTest {
 
         Payment payment = useCase.pay(CUSTOMER_ID, 1L, AMOUNT, DATE);
 
-        assertThat(payment).isEqualTo(new Payment(1L, AMOUNT, DATE));
+        assertThat(payment).isEqualTo(new Payment(PaymentTarget.CREDIT, 1L, AMOUNT, DATE));
     }
 
     @Test

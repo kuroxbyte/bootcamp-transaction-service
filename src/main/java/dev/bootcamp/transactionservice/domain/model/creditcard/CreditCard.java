@@ -1,4 +1,4 @@
-package dev.bootcamp.transactionservice.domain.model.credit;
+package dev.bootcamp.transactionservice.domain.model.creditcard;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;

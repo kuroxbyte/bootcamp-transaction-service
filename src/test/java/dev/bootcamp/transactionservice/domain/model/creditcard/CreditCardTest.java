@@ -1,4 +1,4 @@
-package dev.bootcamp.transactionservice.domain.model.credit;
+package dev.bootcamp.transactionservice.domain.model.creditcard;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
