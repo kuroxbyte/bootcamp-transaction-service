@@ -1,3 +1,6 @@
 spring:
   application:
     name: transaction-service
+  mongodb:
+    # Una base de datos por microservicio; se puede sobrescribir con la variable MONGODB_URI.
+    uri: ${MONGODB_URI:mongodb://localhost:27017/transaction_db}
