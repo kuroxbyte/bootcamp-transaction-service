@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  description: Apertura y consulta de cuentas bancarias (ahorro, corriente y plazo fijo).
+  version: 1.0.0
+servers:
+  - url: http://localhost:8082
+    description: Local
+tags:
+  - name: Accounts
+    description: Cuentas bancarias (pasivos)
+paths:
+  /api/v1/accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: Listar las cuentas del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+      responses:
+        '200':
+          description: Cuentas del cliente (vacío si no tiene)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/v1/accounts/savings:
+    post:
+      tags: [Accounts]
+      operationId: openSavingsAccount
+      summary: Abrir una cuenta de ahorro
+      description: |
+        Sin comisión de mantenimiento y con límite máximo de movimientos mensuales.
+        Un cliente personal solo puede tener una; un cliente empresarial no puede tener ninguna.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavingsAccountRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/AccountCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/CustomerNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/checking:
+    post:
+      tags: [Accounts]
+      operationId: openCheckingAccount
+      summary: Abrir una cuenta corriente
+      description: |
+        Con comisión de mantenimiento y sin límite de movimientos mensuales.
+        Un cliente personal solo puede tener una; un cliente empresarial puede tener varias
+        y debe indicar al menos un titular (los firmantes autorizados son opcionales).
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckingAccountRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/AccountCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/CustomerNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/fixed-term:
+    post:
+      tags: [Accounts]
+      operationId: openFixedTermAccount
+      summary: Abrir una cuenta a plazo fijo
+      description: |
+        Sin comisión de mantenimiento; permite un solo depósito o retiro al mes, en el día indicado.
+        Un cliente personal puede tener varias; un cliente empresarial no puede tener ninguna.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FixedTermAccountRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/AccountCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/CustomerNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/{accountId}:
+    get:
+      tags: [Accounts]
+      operationId: getAccountById
+      summary: Consultar una cuenta
+      description: Uso interno; transaction-service lo usa para validar al dueño y las reglas de movimientos.
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Cuenta encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    XCustomerId:
+      name: X-Customer-Id
+      in: header
+      required: true
+      description: Id del cliente que realiza la operación
+      schema:
+        type: string
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      description: Id de la cuenta
+      schema:
+        type: string
+  schemas:
+    AccountType:
+      type: string
+      description: Tipo de cuenta bancaria
+      enum: [SAVINGS, CHECKING, FIXED_TERM]
+    SavingsAccountRequest:
+      type: object
+      required: [maxMonthlyMovements]
+      properties:
+        maxMonthlyMovements:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Límite máximo de movimientos mensuales
+          example: 5
+    CheckingAccountRequest:
+      type: object
+      required: [maintenanceFee]
+      properties:
+        maintenanceFee:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Comisión de mantenimiento
+          example: 15.00
+        holderIds:
+          type: array
+          description: Titulares; obligatorio al menos uno si el cliente es empresarial
+          items:
+            type: string
+        authorizedSignerIds:
+          type: array
+          description: Firmantes autorizados (opcional)
+          items:
+            type: string
+    FixedTermAccountRequest:
+      type: object
+      required: [movementDayOfMonth]
+      properties:
+        movementDayOfMonth:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 31
+          description: Día del mes en que se permite el único movimiento
+          example: 15
+    AccountResponse:
+      type: object
+      description: Cuenta bancaria; los campos propios de cada tipo solo vienen en ese tipo.
+      required: [id, customerId, type]
+      properties:
+        id:
+          type: string
+          example: 6650f1c2a4b5c6d7e8f90456
+        customerId:
+          type: string
+          example: 6650f1c2a4b5c6d7e8f90123
+        type:
+          $ref: '#/components/schemas/AccountType'
+        maxMonthlyMovements:
+          type: integer
+          format: int32
+          description: Solo SAVINGS
+        maintenanceFee:
+          type: number
+          description: Solo CHECKING
+        holderIds:
+          type: array
+          description: Solo CHECKING
+          items:
+            type: string
+        authorizedSignerIds:
+          type: array
+          description: Solo CHECKING
+          items:
+            type: string
+        movementDayOfMonth:
+          type: integer
+          format: int32
+          description: Solo FIXED_TERM
+    Problem:
+      type: object
+      description: Detalle de error (RFC 7807)
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  responses:
+    AccountCreated:
+      description: Cuenta creada
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AccountResponse'
+    BadRequest:
+      description: Datos de entrada inválidos o falta el header X-Customer-Id
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: El recurso no existe
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    CustomerNotFound:
+      description: El cliente no existe
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    BusinessRuleViolation:
+      description: Se incumple una regla de negocio (por ejemplo, límite de cuentas por tipo de cliente)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: customer-service no está disponible
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

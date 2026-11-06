@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: Credit Service API
+  description: Otorgamiento y consulta de productos de crédito (créditos y tarjetas de crédito).
+  version: 1.0.0
+servers:
+  - url: http://localhost:8083
+    description: Local
+tags:
+  - name: Credits
+    description: Créditos personales y empresariales
+  - name: CreditCards
+    description: Tarjetas de crédito
+paths:
+  /api/v1/credits:
+    get:
+      tags: [Credits]
+      operationId: listCredits
+      summary: Listar los créditos del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+      responses:
+        '200':
+          description: Créditos del cliente (vacío si no tiene)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags: [Credits]
+      operationId: createCredit
+      summary: Otorgar un crédito
+      description: |
+        Personal: solo para clientes personales y máximo uno por persona.
+        Empresarial: solo para clientes empresariales, sin límite por empresa.
+        No se exige que el cliente tenga una cuenta bancaria.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditRequest'
+      responses:
+        '201':
+          description: Crédito otorgado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/CustomerNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credits/{creditId}:
+    get:
+      tags: [Credits]
+      operationId: getCreditById
+      summary: Consultar un crédito
+      description: Uso interno; transaction-service lo usa para validar al dueño del crédito.
+      parameters:
+        - $ref: '#/components/parameters/CreditId'
+      responses:
+        '200':
+          description: Crédito encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/credit-cards:
+    get:
+      tags: [CreditCards]
+      operationId: listCreditCards
+      summary: Listar las tarjetas de crédito del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+      responses:
+        '200':
+          description: Tarjetas del cliente (vacío si no tiene)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags: [CreditCards]
+      operationId: createCreditCard
+      summary: Otorgar una tarjeta de crédito
+      description: |
+        Para clientes personales o empresariales, con un límite de crédito mayor a 0.
+        No se exige que el cliente tenga una cuenta bancaria.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+      responses:
+        '201':
+          description: Tarjeta otorgada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/CustomerNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credit-cards/{creditCardId}:
+    get:
+      tags: [CreditCards]
+      operationId: getCreditCardById
+      summary: Consultar una tarjeta de crédito
+      description: Uso interno; transaction-service lo usa para validar al dueño y el límite de crédito.
+      parameters:
+        - $ref: '#/components/parameters/CreditCardId'
+      responses:
+        '200':
+          description: Tarjeta encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    XCustomerId:
+      name: X-Customer-Id
+      in: header
+      required: true
+      description: Id del cliente que realiza la operación
+      schema:
+        type: string
+    CreditId:
+      name: creditId
+      in: path
+      required: true
+      description: Id del crédito
+      schema:
+        type: string
+    CreditCardId:
+      name: creditCardId
+      in: path
+      required: true
+      description: Id de la tarjeta de crédito
+      schema:
+        type: string
+  schemas:
+    CreditType:
+      type: string
+      description: Tipo de crédito
+      enum: [PERSONAL, BUSINESS]
+    CreditRequest:
+      type: object
+      required: [type]
+      properties:
+        type:
+          $ref: '#/components/schemas/CreditType'
+    CreditResponse:
+      type: object
+      required: [id, customerId, type]
+      properties:
+        id:
+          type: string
+          example: 6650f1c2a4b5c6d7e8f90789
+        customerId:
+          type: string
+          example: 6650f1c2a4b5c6d7e8f90123
+        type:
+          $ref: '#/components/schemas/CreditType'
+    CreditCardRequest:
+      type: object
+      required: [creditLimit]
+      properties:
+        creditLimit:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Límite de crédito para consumos
+          example: 5000.00
+    CreditCardResponse:
+      type: object
+      required: [id, customerId, creditLimit]
+      properties:
+        id:
+          type: string
+          example: 6650f1c2a4b5c6d7e8f90abc
+        customerId:
+          type: string
+          example: 6650f1c2a4b5c6d7e8f90123
+        creditLimit:
+          type: number
+          example: 5000.00
+    Problem:
+      type: object
+      description: Detalle de error (RFC 7807)
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  responses:
+    BadRequest:
+      description: Datos de entrada inválidos o falta el header X-Customer-Id
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: El recurso no existe
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    CustomerNotFound:
+      description: El cliente no existe
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    BusinessRuleViolation:
+      description: Se incumple una regla de negocio (por ejemplo, segundo crédito personal)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: customer-service no está disponible
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
