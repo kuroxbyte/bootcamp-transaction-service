@@ -3,6 +3,7 @@ package dev.bootcamp.transactionservice.application.port;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import java.util.List;
 
 public interface MovementRepository {
     long countByAccountIdAndMonth(Long accountId, YearMonth month);
@@ -11,6 +12,9 @@ public interface MovementRepository {
      * Saldo de la cuenta: suma de sus depósitos menos suma de sus retiros (0 si no tiene movimientos).
      */
     BigDecimal getBalance(Long accountId);
+
+    /** Depósitos y retiros de la cuenta. */
+    List<Movement> findByAccountId(Long accountId);
 
     Movement save(Movement movement);
 }
