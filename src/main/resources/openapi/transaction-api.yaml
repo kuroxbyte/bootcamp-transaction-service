@@ -1,0 +1,413 @@
+openapi: 3.0.3
+info:
+  title: Transaction Service API
+  description: |
+    Transacciones y consultas sobre los productos del cliente: depósitos y retiros en cuentas
+    bancarias, pagos de créditos, consumos y pagos de tarjetas de crédito, saldos y movimientos.
+    La fecha de cada transacción la asigna el servidor.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8084
+    description: Local
+tags:
+  - name: AccountTransactions
+    description: Depósitos, retiros, saldo y movimientos de cuentas bancarias
+  - name: CreditTransactions
+    description: Pagos y movimientos de créditos personales y empresariales
+  - name: CreditCardTransactions
+    description: Consumos, pagos, crédito disponible y movimientos de tarjetas de crédito
+paths:
+  /api/v1/accounts/{accountId}/deposits:
+    post:
+      tags: [AccountTransactions]
+      operationId: deposit
+      summary: Depositar en una cuenta del cliente
+      description: Ahorro respeta el límite mensual de movimientos; plazo fijo solo el día configurado y uno por mes.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        $ref: '#/components/requestBodies/Amount'
+      responses:
+        '201':
+          $ref: '#/components/responses/MovementCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/{accountId}/withdrawals:
+    post:
+      tags: [AccountTransactions]
+      operationId: withdraw
+      summary: Retirar de una cuenta del cliente
+      description: Además de las reglas del tipo de cuenta, el monto no puede superar el saldo.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        $ref: '#/components/requestBodies/Amount'
+      responses:
+        '201':
+          $ref: '#/components/responses/MovementCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/{accountId}/balance:
+    get:
+      tags: [AccountTransactions]
+      operationId: getAccountBalance
+      summary: Consultar el saldo disponible de una cuenta del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Saldo disponible (depósitos menos retiros)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountBalanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/{accountId}/movements:
+    get:
+      tags: [AccountTransactions]
+      operationId: getAccountMovements
+      summary: Consultar los movimientos de una cuenta del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProductMovements'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credits/{creditId}/payments:
+    post:
+      tags: [CreditTransactions]
+      operationId: payCredit
+      summary: Pagar un crédito del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditId'
+      requestBody:
+        $ref: '#/components/requestBodies/Amount'
+      responses:
+        '201':
+          $ref: '#/components/responses/PaymentCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credits/{creditId}/movements:
+    get:
+      tags: [CreditTransactions]
+      operationId: getCreditMovements
+      summary: Consultar los movimientos (pagos) de un crédito del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProductMovements'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credit-cards/{creditCardId}/charges:
+    post:
+      tags: [CreditCardTransactions]
+      operationId: chargeCreditCard
+      summary: Cargar un consumo a una tarjeta del cliente
+      description: El consumo no puede superar el crédito disponible (límite menos deuda).
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditCardId'
+      requestBody:
+        $ref: '#/components/requestBodies/Amount'
+      responses:
+        '201':
+          description: Consumo registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChargeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credit-cards/{creditCardId}/payments:
+    post:
+      tags: [CreditCardTransactions]
+      operationId: payCreditCard
+      summary: Pagar una tarjeta del cliente
+      description: El pago reduce la deuda y libera crédito disponible.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditCardId'
+      requestBody:
+        $ref: '#/components/requestBodies/Amount'
+      responses:
+        '201':
+          $ref: '#/components/responses/PaymentCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credit-cards/{creditCardId}/available-credit:
+    get:
+      tags: [CreditCardTransactions]
+      operationId: getCreditCardAvailableCredit
+      summary: Consultar el crédito disponible de una tarjeta del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditCardId'
+      responses:
+        '200':
+          description: Crédito disponible (límite menos deuda)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableCreditResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credit-cards/{creditCardId}/movements:
+    get:
+      tags: [CreditCardTransactions]
+      operationId: getCreditCardMovements
+      summary: Consultar los movimientos (consumos y pagos) de una tarjeta del cliente
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditCardId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProductMovements'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+components:
+  parameters:
+    XCustomerId:
+      name: X-Customer-Id
+      in: header
+      required: true
+      description: Id del cliente que realiza la operación; debe ser el dueño del producto
+      schema:
+        type: string
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      description: Id de la cuenta bancaria
+      schema:
+        type: string
+    CreditId:
+      name: creditId
+      in: path
+      required: true
+      description: Id del crédito
+      schema:
+        type: string
+    CreditCardId:
+      name: creditCardId
+      in: path
+      required: true
+      description: Id de la tarjeta de crédito
+      schema:
+        type: string
+  requestBodies:
+    Amount:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AmountRequest'
+  schemas:
+    AmountRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          example: 100.00
+    MovementType:
+      type: string
+      description: Tipo de movimiento de una cuenta bancaria
+      enum: [DEPOSIT, WITHDRAWAL]
+    MovementResponse:
+      type: object
+      required: [accountId, type, amount, date]
+      properties:
+        accountId:
+          type: string
+        type:
+          $ref: '#/components/schemas/MovementType'
+        amount:
+          type: number
+          example: 100.00
+        date:
+          type: string
+          format: date
+    PaymentTarget:
+      type: string
+      description: Producto de crédito al que se aplica el pago
+      enum: [CREDIT, CREDIT_CARD]
+    PaymentResponse:
+      type: object
+      required: [target, productId, amount, date]
+      properties:
+        target:
+          $ref: '#/components/schemas/PaymentTarget'
+        productId:
+          type: string
+          description: Id del crédito o de la tarjeta, según target
+        amount:
+          type: number
+          example: 250.00
+        date:
+          type: string
+          format: date
+    ChargeResponse:
+      type: object
+      required: [creditCardId, amount, date]
+      properties:
+        creditCardId:
+          type: string
+        amount:
+          type: number
+          example: 80.50
+        date:
+          type: string
+          format: date
+    AccountBalanceResponse:
+      type: object
+      required: [accountId, balance]
+      properties:
+        accountId:
+          type: string
+        balance:
+          type: number
+          example: 1250.00
+    AvailableCreditResponse:
+      type: object
+      required: [creditCardId, availableCredit]
+      properties:
+        creditCardId:
+          type: string
+        availableCredit:
+          type: number
+          example: 4200.00
+    ProductMovementType:
+      type: string
+      description: Tipo de movimiento de un producto bancario
+      enum: [DEPOSIT, WITHDRAWAL, CHARGE, PAYMENT]
+    ProductMovementResponse:
+      type: object
+      required: [type, amount, date]
+      properties:
+        type:
+          $ref: '#/components/schemas/ProductMovementType'
+        amount:
+          type: number
+          example: 100.00
+        date:
+          type: string
+          format: date
+    Problem:
+      type: object
+      description: Detalle de error (RFC 7807)
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  responses:
+    MovementCreated:
+      description: Movimiento registrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MovementResponse'
+    PaymentCreated:
+      description: Pago registrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PaymentResponse'
+    ProductMovements:
+      description: Movimientos del producto ordenados por fecha, del más antiguo al más reciente (vacío si no tiene)
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProductMovementResponse'
+    BadRequest:
+      description: Datos de entrada inválidos o falta el header X-Customer-Id
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ProductNotFound:
+      description: El producto no existe o no pertenece al cliente
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    BusinessRuleViolation:
+      description: Se incumple una regla de negocio (límite de movimientos, saldo o crédito insuficiente, día no permitido)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: account-service o credit-service no está disponible
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
