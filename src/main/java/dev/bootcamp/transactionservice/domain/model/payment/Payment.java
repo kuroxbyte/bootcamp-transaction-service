@@ -5,9 +5,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Pago realizado a un crédito o a una tarjeta de crédito.
+ * Pago realizado a un producto de crédito: un crédito (personal o empresarial)
+ * o una tarjeta de crédito.
  *
- * @param target    tipo de producto pagado
+ * @param target    producto de crédito pagado
  * @param productId id del crédito o de la tarjeta en credit-service, según {@code target}
  */
 public record Payment(PaymentTarget target, Long productId, BigDecimal amount, LocalDate date) {

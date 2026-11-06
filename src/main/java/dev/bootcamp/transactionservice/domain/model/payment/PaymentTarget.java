@@ -1,6 +1,9 @@
 package dev.bootcamp.transactionservice.domain.model.payment;
 
-/** Producto al que se aplica un pago. */
+/**
+ * Producto de crédito al que se aplica un pago: un crédito (personal o empresarial)
+ * o una tarjeta de crédito.
+ */
 public enum PaymentTarget {
     /** Crédito personal o empresarial. */
     CREDIT,

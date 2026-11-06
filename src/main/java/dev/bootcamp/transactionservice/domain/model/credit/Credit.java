@@ -1,7 +1,7 @@
 package dev.bootcamp.transactionservice.domain.model.credit;
 
 /**
- * Vista local del producto de crédito, obtenida de credit-service.
+ * Vista local de un crédito personal o empresarial, obtenida de credit-service.
  */
 public record Credit(Long id, Long customerId) {
 
