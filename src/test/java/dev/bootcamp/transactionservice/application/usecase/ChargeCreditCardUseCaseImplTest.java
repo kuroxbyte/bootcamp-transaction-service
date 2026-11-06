@@ -8,10 +8,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.bootcamp.transactionservice.application.port.ChargeRepository;
-import dev.bootcamp.transactionservice.application.port.CreditClient;
+import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
-import dev.bootcamp.transactionservice.domain.model.credit.CreditCard;
+import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -32,14 +32,14 @@ class ChargeCreditCardUseCaseImplTest {
     private ChargeRepository chargeRepository;
 
     @Mock
-    private CreditClient creditClient;
+    private CreditCardClient creditCardClient;
 
     @InjectMocks
     private ChargeCreditCardUseCaseImpl useCase;
 
     @Test
     void customerChargesOwnCardWithinAvailableCredit() {
-        when(creditClient.findCreditCardById(1L)).thenReturn(Optional.of(CARD));
+        when(creditCardClient.findById(1L)).thenReturn(Optional.of(CARD));
         when(chargeRepository.getDebt(1L)).thenReturn(new BigDecimal("800"));
         when(chargeRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -50,7 +50,7 @@ class ChargeCreditCardUseCaseImplTest {
 
     @Test
     void doesNotSaveChargeOverAvailableCredit() {
-        when(creditClient.findCreditCardById(1L)).thenReturn(Optional.of(CARD));
+        when(creditCardClient.findById(1L)).thenReturn(Optional.of(CARD));
         when(chargeRepository.getDebt(1L)).thenReturn(new BigDecimal("800"));
 
         assertThatThrownBy(() -> useCase.charge(CUSTOMER_ID, 1L, new BigDecimal("200.01"), DATE))
@@ -60,7 +60,7 @@ class ChargeCreditCardUseCaseImplTest {
 
     @Test
     void rejectsChargeToCardOfAnotherCustomer() {
-        when(creditClient.findCreditCardById(1L)).thenReturn(Optional.of(CARD));
+        when(creditCardClient.findById(1L)).thenReturn(Optional.of(CARD));
 
         assertThatThrownBy(() -> useCase.charge(999L, 1L, BigDecimal.TEN, DATE))
                 .isInstanceOf(BusinessRuleException.class);
@@ -68,8 +68,8 @@ class ChargeCreditCardUseCaseImplTest {
     }
 
     @Test
-    void rejectsUnknownCardOrCreditThatIsNotACard() {
-        when(creditClient.findCreditCardById(99L)).thenReturn(Optional.empty());
+    void rejectsUnknownCard() {
+        when(creditCardClient.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.charge(CUSTOMER_ID, 99L, BigDecimal.TEN, DATE))
                 .isInstanceOf(BusinessRuleException.class);
@@ -80,7 +80,7 @@ class ChargeCreditCardUseCaseImplTest {
     void rejectsInvalidAmountBeforeQueryingCard() {
         assertThatThrownBy(() -> useCase.charge(CUSTOMER_ID, 1L, BigDecimal.ZERO, DATE))
                 .isInstanceOf(BusinessRuleException.class);
-        verify(creditClient, never()).findCreditCardById(any());
+        verify(creditCardClient, never()).findById(any());
         verify(chargeRepository, never()).save(any());
     }
 }

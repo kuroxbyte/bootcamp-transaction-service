@@ -5,6 +5,7 @@ import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
+import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -19,7 +20,7 @@ public class PayCreditUseCaseImpl implements PayCreditUseCase {
 
     @Override
     public Payment pay(Long customerId, Long creditId, BigDecimal amount, LocalDate date) {
-        Payment payment = new Payment(creditId, amount, date);
+        Payment payment = new Payment(PaymentTarget.CREDIT, creditId, amount, date);
         Credit credit = creditClient.findById(creditId)
                 .orElseThrow(() -> new BusinessRuleException("El crédito no existe"));
         if (!credit.belongsTo(customerId)) {

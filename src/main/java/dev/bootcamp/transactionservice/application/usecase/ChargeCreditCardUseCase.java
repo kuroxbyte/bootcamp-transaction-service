@@ -10,8 +10,7 @@ import java.time.LocalDate;
  *
  * <p>Reglas:
  * <ul>
- *   <li>El crédito debe existir en credit-service, ser una tarjeta de crédito
- *       y pertenecer al cliente.</li>
+ *   <li>La tarjeta de crédito debe existir en credit-service y pertenecer al cliente.</li>
  *   <li>El monto del consumo debe ser mayor a 0.</li>
  *   <li>El consumo no puede superar el crédito disponible: límite de crédito
  *       menos la deuda actual (consumos menos pagos).</li>
