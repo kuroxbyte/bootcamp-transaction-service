@@ -24,7 +24,7 @@ public class GetAvailableBalanceUseCaseImpl implements GetAvailableBalanceUseCas
     }
 
     @Override
-    public BigDecimal getAccountBalance(Long customerId, Long accountId) {
+    public BigDecimal getAccountBalance(String customerId, String accountId) {
         Account account = accountClient.findById(accountId)
                 .orElseThrow(() -> new BusinessRuleException("La cuenta no existe"));
         if (!account.belongsTo(customerId)) {
@@ -34,7 +34,7 @@ public class GetAvailableBalanceUseCaseImpl implements GetAvailableBalanceUseCas
     }
 
     @Override
-    public BigDecimal getCreditCardAvailableCredit(Long customerId, Long creditCardId) {
+    public BigDecimal getCreditCardAvailableCredit(String customerId, String creditCardId) {
         CreditCard creditCard = creditCardClient.findById(creditCardId)
                 .orElseThrow(() -> new BusinessRuleException("La tarjeta de crédito no existe"));
         if (!creditCard.belongsTo(customerId)) {

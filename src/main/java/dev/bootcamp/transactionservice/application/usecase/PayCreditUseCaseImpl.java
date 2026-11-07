@@ -19,7 +19,7 @@ public class PayCreditUseCaseImpl implements PayCreditUseCase {
     }
 
     @Override
-    public Payment pay(Long customerId, Long creditId, BigDecimal amount, LocalDate date) {
+    public Payment pay(String customerId, String creditId, BigDecimal amount, LocalDate date) {
         Payment payment = new Payment(PaymentTarget.CREDIT, creditId, amount, date);
         Credit credit = creditClient.findById(creditId)
                 .orElseThrow(() -> new BusinessRuleException("El crédito no existe"));

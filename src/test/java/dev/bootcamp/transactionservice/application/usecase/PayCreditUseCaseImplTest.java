@@ -25,7 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PayCreditUseCaseImplTest {
 
-    private static final Long CUSTOMER_ID = 100L;
+    private static final String CUSTOMER_ID = "100";
     private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
     private static final BigDecimal AMOUNT = new BigDecimal("250.00");
 
@@ -40,35 +40,35 @@ class PayCreditUseCaseImplTest {
 
     @Test
     void customerPaysOwnCredit() {
-        when(creditClient.findById(1L)).thenReturn(Optional.of(new Credit(1L, CUSTOMER_ID)));
+        when(creditClient.findById("1")).thenReturn(Optional.of(new Credit("1", CUSTOMER_ID)));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        Payment payment = useCase.pay(CUSTOMER_ID, 1L, AMOUNT, DATE);
+        Payment payment = useCase.pay(CUSTOMER_ID, "1", AMOUNT, DATE);
 
-        assertThat(payment).isEqualTo(new Payment(PaymentTarget.CREDIT, 1L, AMOUNT, DATE));
+        assertThat(payment).isEqualTo(new Payment(PaymentTarget.CREDIT, "1", AMOUNT, DATE));
     }
 
     @Test
     void rejectsPaymentToCreditOfAnotherCustomer() {
-        when(creditClient.findById(1L)).thenReturn(Optional.of(new Credit(1L, CUSTOMER_ID)));
+        when(creditClient.findById("1")).thenReturn(Optional.of(new Credit("1", CUSTOMER_ID)));
 
-        assertThatThrownBy(() -> useCase.pay(999L, 1L, AMOUNT, DATE))
+        assertThatThrownBy(() -> useCase.pay("999", "1", AMOUNT, DATE))
                 .isInstanceOf(BusinessRuleException.class);
         verify(paymentRepository, never()).save(any());
     }
 
     @Test
     void rejectsUnknownCredit() {
-        when(creditClient.findById(99L)).thenReturn(Optional.empty());
+        when(creditClient.findById("99")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.pay(CUSTOMER_ID, 99L, AMOUNT, DATE))
+        assertThatThrownBy(() -> useCase.pay(CUSTOMER_ID, "99", AMOUNT, DATE))
                 .isInstanceOf(BusinessRuleException.class);
         verify(paymentRepository, never()).save(any());
     }
 
     @Test
     void rejectsInvalidAmountBeforeQueryingCredit() {
-        assertThatThrownBy(() -> useCase.pay(CUSTOMER_ID, 1L, BigDecimal.ZERO, DATE))
+        assertThatThrownBy(() -> useCase.pay(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE))
                 .isInstanceOf(BusinessRuleException.class);
         verify(creditClient, never()).findById(any());
         verify(paymentRepository, never()).save(any());

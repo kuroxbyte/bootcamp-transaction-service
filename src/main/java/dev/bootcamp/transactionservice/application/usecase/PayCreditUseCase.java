@@ -27,5 +27,5 @@ public interface PayCreditUseCase {
      * @throws BusinessRuleException si el monto no es válido, el crédito no existe
      *                               o no pertenece al cliente
      */
-    Payment pay(Long customerId, Long creditId, BigDecimal amount, LocalDate date);
+    Payment pay(String customerId, String creditId, BigDecimal amount, LocalDate date);
 }

@@ -20,16 +20,16 @@ public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
     }
 
     @Override
-    public Movement deposit(Long customerId, Long accountId, BigDecimal amount, LocalDate date) {
+    public Movement deposit(String customerId, String accountId, BigDecimal amount, LocalDate date) {
         return register(customerId, new Movement(accountId, MovementType.DEPOSIT, amount, date));
     }
 
     @Override
-    public Movement withdraw(Long customerId, Long accountId, BigDecimal amount, LocalDate date) {
+    public Movement withdraw(String customerId, String accountId, BigDecimal amount, LocalDate date) {
         return register(customerId, new Movement(accountId, MovementType.WITHDRAWAL, amount, date));
     }
 
-    private Movement register(Long customerId, Movement movement) {
+    private Movement register(String customerId, Movement movement) {
         Account account = accountClient.findById(movement.accountId())
                 .orElseThrow(() -> new BusinessRuleException("La cuenta no existe"));
         if (!account.belongsTo(customerId)) {

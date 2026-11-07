@@ -25,10 +25,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PayCreditCardUseCaseImplTest {
 
-    private static final Long CUSTOMER_ID = 100L;
+    private static final String CUSTOMER_ID = "100";
     private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
     private static final BigDecimal AMOUNT = new BigDecimal("250.00");
-    private static final CreditCard CARD = new CreditCard(1L, CUSTOMER_ID, new BigDecimal("1000"));
+    private static final CreditCard CARD = new CreditCard("1", CUSTOMER_ID, new BigDecimal("1000"));
 
     @Mock
     private PaymentRepository paymentRepository;
@@ -41,35 +41,35 @@ class PayCreditCardUseCaseImplTest {
 
     @Test
     void customerPaysOwnCreditCard() {
-        when(creditCardClient.findById(1L)).thenReturn(Optional.of(CARD));
+        when(creditCardClient.findById("1")).thenReturn(Optional.of(CARD));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        Payment payment = useCase.pay(CUSTOMER_ID, 1L, AMOUNT, DATE);
+        Payment payment = useCase.pay(CUSTOMER_ID, "1", AMOUNT, DATE);
 
-        assertThat(payment).isEqualTo(new Payment(PaymentTarget.CREDIT_CARD, 1L, AMOUNT, DATE));
+        assertThat(payment).isEqualTo(new Payment(PaymentTarget.CREDIT_CARD, "1", AMOUNT, DATE));
     }
 
     @Test
     void rejectsPaymentToCardOfAnotherCustomer() {
-        when(creditCardClient.findById(1L)).thenReturn(Optional.of(CARD));
+        when(creditCardClient.findById("1")).thenReturn(Optional.of(CARD));
 
-        assertThatThrownBy(() -> useCase.pay(999L, 1L, AMOUNT, DATE))
+        assertThatThrownBy(() -> useCase.pay("999", "1", AMOUNT, DATE))
                 .isInstanceOf(BusinessRuleException.class);
         verify(paymentRepository, never()).save(any());
     }
 
     @Test
     void rejectsUnknownCard() {
-        when(creditCardClient.findById(99L)).thenReturn(Optional.empty());
+        when(creditCardClient.findById("99")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.pay(CUSTOMER_ID, 99L, AMOUNT, DATE))
+        assertThatThrownBy(() -> useCase.pay(CUSTOMER_ID, "99", AMOUNT, DATE))
                 .isInstanceOf(BusinessRuleException.class);
         verify(paymentRepository, never()).save(any());
     }
 
     @Test
     void rejectsInvalidAmountBeforeQueryingCard() {
-        assertThatThrownBy(() -> useCase.pay(CUSTOMER_ID, 1L, BigDecimal.ZERO, DATE))
+        assertThatThrownBy(() -> useCase.pay(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE))
                 .isInstanceOf(BusinessRuleException.class);
         verify(creditCardClient, never()).findById(any());
         verify(paymentRepository, never()).save(any());

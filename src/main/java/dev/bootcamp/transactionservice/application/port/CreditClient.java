@@ -5,5 +5,5 @@ import java.util.Optional;
 
 /** Consulta de créditos personales y empresariales en credit-service. */
 public interface CreditClient {
-    Optional<Credit> findById(Long creditId);
+    Optional<Credit> findById(String creditId);
 }

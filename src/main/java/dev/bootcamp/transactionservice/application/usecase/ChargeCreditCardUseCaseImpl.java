@@ -18,7 +18,7 @@ public class ChargeCreditCardUseCaseImpl implements ChargeCreditCardUseCase {
     }
 
     @Override
-    public Charge charge(Long customerId, Long creditCardId, BigDecimal amount, LocalDate date) {
+    public Charge charge(String customerId, String creditCardId, BigDecimal amount, LocalDate date) {
         Charge charge = new Charge(creditCardId, amount, date);
         CreditCard creditCard = creditCardClient.findById(creditCardId)
                 .orElseThrow(() -> new BusinessRuleException("La tarjeta de crédito no existe"));

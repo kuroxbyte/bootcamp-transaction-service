@@ -14,17 +14,17 @@ class MovementTest {
 
     @Test
     void acceptsPositiveAmount() {
-        assertThatCode(() -> new Movement(1L, MovementType.DEPOSIT, BigDecimal.ONE, DATE))
+        assertThatCode(() -> new Movement("1", MovementType.DEPOSIT, BigDecimal.ONE, DATE))
                 .doesNotThrowAnyException();
     }
 
     @Test
     void rejectsZeroNegativeOrMissingAmount() {
-        assertThatThrownBy(() -> new Movement(1L, MovementType.DEPOSIT, BigDecimal.ZERO, DATE))
+        assertThatThrownBy(() -> new Movement("1", MovementType.DEPOSIT, BigDecimal.ZERO, DATE))
                 .isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> new Movement(1L, MovementType.WITHDRAWAL, new BigDecimal("-5"), DATE))
+        assertThatThrownBy(() -> new Movement("1", MovementType.WITHDRAWAL, new BigDecimal("-5"), DATE))
                 .isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> new Movement(1L, MovementType.DEPOSIT, null, DATE))
+        assertThatThrownBy(() -> new Movement("1", MovementType.DEPOSIT, null, DATE))
                 .isInstanceOf(BusinessRuleException.class);
     }
 }

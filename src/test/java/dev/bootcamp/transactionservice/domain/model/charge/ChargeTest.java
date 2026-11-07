@@ -14,16 +14,16 @@ class ChargeTest {
 
     @Test
     void acceptsPositiveAmount() {
-        assertThatCode(() -> new Charge(1L, BigDecimal.ONE, DATE)).doesNotThrowAnyException();
+        assertThatCode(() -> new Charge("1", BigDecimal.ONE, DATE)).doesNotThrowAnyException();
     }
 
     @Test
     void rejectsZeroNegativeOrMissingAmount() {
-        assertThatThrownBy(() -> new Charge(1L, BigDecimal.ZERO, DATE))
+        assertThatThrownBy(() -> new Charge("1", BigDecimal.ZERO, DATE))
                 .isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> new Charge(1L, new BigDecimal("-1"), DATE))
+        assertThatThrownBy(() -> new Charge("1", new BigDecimal("-1"), DATE))
                 .isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> new Charge(1L, null, DATE))
+        assertThatThrownBy(() -> new Charge("1", null, DATE))
                 .isInstanceOf(BusinessRuleException.class);
     }
 }

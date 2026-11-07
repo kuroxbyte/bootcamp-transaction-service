@@ -17,21 +17,21 @@ class ProductMovementTest {
 
     @Test
     void mapsDepositAndWithdrawal() {
-        assertThat(ProductMovement.from(new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, DATE)))
+        assertThat(ProductMovement.from(new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DATE)))
                 .isEqualTo(new ProductMovement(ProductMovementType.DEPOSIT, BigDecimal.TEN, DATE));
-        assertThat(ProductMovement.from(new Movement(1L, MovementType.WITHDRAWAL, BigDecimal.ONE, DATE)))
+        assertThat(ProductMovement.from(new Movement("1", MovementType.WITHDRAWAL, BigDecimal.ONE, DATE)))
                 .isEqualTo(new ProductMovement(ProductMovementType.WITHDRAWAL, BigDecimal.ONE, DATE));
     }
 
     @Test
     void mapsPayment() {
-        assertThat(ProductMovement.from(new Payment(PaymentTarget.CREDIT, 1L, BigDecimal.TEN, DATE)))
+        assertThat(ProductMovement.from(new Payment(PaymentTarget.CREDIT, "1", BigDecimal.TEN, DATE)))
                 .isEqualTo(new ProductMovement(ProductMovementType.PAYMENT, BigDecimal.TEN, DATE));
     }
 
     @Test
     void mapsCharge() {
-        assertThat(ProductMovement.from(new Charge(1L, BigDecimal.TEN, DATE)))
+        assertThat(ProductMovement.from(new Charge("1", BigDecimal.TEN, DATE)))
                 .isEqualTo(new ProductMovement(ProductMovementType.CHARGE, BigDecimal.TEN, DATE));
     }
 }

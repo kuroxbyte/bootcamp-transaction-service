@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface PaymentRepository {
     /** Pagos hechos al producto de crédito indicado. */
-    List<Payment> findByTargetAndProductId(PaymentTarget target, Long productId);
+    List<Payment> findByTargetAndProductId(PaymentTarget target, String productId);
 
     Payment save(Payment payment);
 }

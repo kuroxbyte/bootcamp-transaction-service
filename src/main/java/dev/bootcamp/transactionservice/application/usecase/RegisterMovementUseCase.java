@@ -31,7 +31,7 @@ public interface RegisterMovementUseCase {
      * @throws BusinessRuleException si la cuenta no existe, no pertenece al cliente,
      *                               el monto no es válido o se incumple una regla de la cuenta
      */
-    Movement deposit(Long customerId, Long accountId, BigDecimal amount, LocalDate date);
+    Movement deposit(String customerId, String accountId, BigDecimal amount, LocalDate date);
 
     /**
      * Registra un retiro en una cuenta del cliente.
@@ -45,5 +45,5 @@ public interface RegisterMovementUseCase {
      *                               el monto no es válido, supera el saldo
      *                               o se incumple una regla de la cuenta
      */
-    Movement withdraw(Long customerId, Long accountId, BigDecimal amount, LocalDate date);
+    Movement withdraw(String customerId, String accountId, BigDecimal amount, LocalDate date);
 }

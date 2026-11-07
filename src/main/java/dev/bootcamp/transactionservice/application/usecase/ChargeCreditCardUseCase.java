@@ -29,5 +29,5 @@ public interface ChargeCreditCardUseCase {
      * @throws BusinessRuleException si el monto no es válido, la tarjeta no existe, no pertenece
      *                               al cliente o el consumo supera el crédito disponible
      */
-    Charge charge(Long customerId, Long creditCardId, BigDecimal amount, LocalDate date);
+    Charge charge(String customerId, String creditCardId, BigDecimal amount, LocalDate date);
 }

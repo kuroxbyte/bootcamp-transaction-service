@@ -7,7 +7,7 @@ import java.time.LocalDate;
 /**
  * Consumo cargado a una tarjeta de crédito.
  */
-public record Charge(Long creditCardId, BigDecimal amount, LocalDate date) {
+public record Charge(String creditCardId, BigDecimal amount, LocalDate date) {
 
     public Charge {
         if (amount == null || amount.signum() <= 0) {
