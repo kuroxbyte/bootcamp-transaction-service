@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
@@ -53,7 +54,7 @@ class PayCreditCardUseCaseImplTest {
     void rejectsPaymentToCardOfAnotherCustomer() {
         when(creditCardClient.findById("1")).thenReturn(Maybe.just(CARD));
 
-        useCase.pay("999", "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.pay("999", "1", AMOUNT, DATE).test().assertError(NotFoundException.class);
         verify(paymentRepository, never()).save(any());
     }
 
@@ -61,7 +62,7 @@ class PayCreditCardUseCaseImplTest {
     void rejectsUnknownCard() {
         when(creditCardClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.pay(CUSTOMER_ID, "99", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.pay(CUSTOMER_ID, "99", AMOUNT, DATE).test().assertError(NotFoundException.class);
         verify(paymentRepository, never()).save(any());
     }
 

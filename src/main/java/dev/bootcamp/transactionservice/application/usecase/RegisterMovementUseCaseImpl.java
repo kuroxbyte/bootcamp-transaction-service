@@ -2,7 +2,7 @@ package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.application.port.AccountClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
-import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
@@ -34,7 +34,7 @@ public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
 
     private Single<Movement> register(String customerId, Movement movement) {
         return accountClient.findById(movement.accountId())
-                .switchIfEmpty(Single.error(() -> new BusinessRuleException("La cuenta no existe")))
+                .switchIfEmpty(Single.error(() -> new NotFoundException("La cuenta no existe")))
                 .map(account -> ensureBelongsTo(account, customerId))
                 .flatMap(account -> Single.zip(
                         movementRepository.countByAccountIdAndMonth(movement.accountId(), YearMonth.from(movement.date())),
@@ -48,7 +48,7 @@ public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
 
     private static Account ensureBelongsTo(Account account, String customerId) {
         if (!account.belongsTo(customerId)) {
-            throw new BusinessRuleException("La cuenta no pertenece al cliente");
+            throw new NotFoundException("La cuenta no pertenece al cliente");
         }
         return account;
     }

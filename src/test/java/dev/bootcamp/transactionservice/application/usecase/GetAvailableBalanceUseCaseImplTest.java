@@ -10,7 +10,7 @@ import dev.bootcamp.transactionservice.application.port.AccountClient;
 import dev.bootcamp.transactionservice.application.port.ChargeRepository;
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
-import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
@@ -57,7 +57,7 @@ class GetAvailableBalanceUseCaseImplTest {
     void rejectsBalanceOfAccountOfAnotherCustomer() {
         when(accountClient.findById("1")).thenReturn(Maybe.just(ACCOUNT));
 
-        useCase.getAccountBalance("999", "1").test().assertError(BusinessRuleException.class);
+        useCase.getAccountBalance("999", "1").test().assertError(NotFoundException.class);
         verify(movementRepository, never()).getBalance(any());
     }
 
@@ -65,7 +65,7 @@ class GetAvailableBalanceUseCaseImplTest {
     void rejectsBalanceOfUnknownAccount() {
         when(accountClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.getAccountBalance(CUSTOMER_ID, "99").test().assertError(BusinessRuleException.class);
+        useCase.getAccountBalance(CUSTOMER_ID, "99").test().assertError(NotFoundException.class);
     }
 
     @Test
@@ -88,7 +88,7 @@ class GetAvailableBalanceUseCaseImplTest {
     void rejectsAvailableCreditOfCardOfAnotherCustomer() {
         when(creditCardClient.findById("2")).thenReturn(Maybe.just(CARD));
 
-        useCase.getCreditCardAvailableCredit("999", "2").test().assertError(BusinessRuleException.class);
+        useCase.getCreditCardAvailableCredit("999", "2").test().assertError(NotFoundException.class);
         verify(chargeRepository, never()).getDebt(any());
     }
 
@@ -96,6 +96,6 @@ class GetAvailableBalanceUseCaseImplTest {
     void rejectsAvailableCreditOfUnknownCard() {
         when(creditCardClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "99").test().assertError(BusinessRuleException.class);
+        useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "99").test().assertError(NotFoundException.class);
     }
 }
