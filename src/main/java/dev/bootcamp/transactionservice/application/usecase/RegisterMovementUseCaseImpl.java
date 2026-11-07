@@ -6,6 +6,7 @@ import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -20,25 +21,35 @@ public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
     }
 
     @Override
-    public Movement deposit(String customerId, String accountId, BigDecimal amount, LocalDate date) {
-        return register(customerId, new Movement(accountId, MovementType.DEPOSIT, amount, date));
+    public Single<Movement> deposit(String customerId, String accountId, BigDecimal amount, LocalDate date) {
+        return Single.fromCallable(() -> new Movement(accountId, MovementType.DEPOSIT, amount, date))
+                .flatMap(movement -> register(customerId, movement));
     }
 
     @Override
-    public Movement withdraw(String customerId, String accountId, BigDecimal amount, LocalDate date) {
-        return register(customerId, new Movement(accountId, MovementType.WITHDRAWAL, amount, date));
+    public Single<Movement> withdraw(String customerId, String accountId, BigDecimal amount, LocalDate date) {
+        return Single.fromCallable(() -> new Movement(accountId, MovementType.WITHDRAWAL, amount, date))
+                .flatMap(movement -> register(customerId, movement));
     }
 
-    private Movement register(String customerId, Movement movement) {
-        Account account = accountClient.findById(movement.accountId())
-                .orElseThrow(() -> new BusinessRuleException("La cuenta no existe"));
+    private Single<Movement> register(String customerId, Movement movement) {
+        return accountClient.findById(movement.accountId())
+                .switchIfEmpty(Single.error(() -> new BusinessRuleException("La cuenta no existe")))
+                .map(account -> ensureBelongsTo(account, customerId))
+                .flatMap(account -> Single.zip(
+                        movementRepository.countByAccountIdAndMonth(movement.accountId(), YearMonth.from(movement.date())),
+                        movementRepository.getBalance(movement.accountId()),
+                        (movementsInMonth, balance) -> {
+                            account.validateMovement(movement, movementsInMonth, balance);
+                            return movement;
+                        }))
+                .flatMap(movementRepository::save);
+    }
+
+    private static Account ensureBelongsTo(Account account, String customerId) {
         if (!account.belongsTo(customerId)) {
             throw new BusinessRuleException("La cuenta no pertenece al cliente");
         }
-        long movementsInMonth = movementRepository.countByAccountIdAndMonth(
-                movement.accountId(), YearMonth.from(movement.date()));
-        BigDecimal balance = movementRepository.getBalance(movement.accountId());
-        account.validateMovement(movement, movementsInMonth, balance);
-        return movementRepository.save(movement);
+        return account;
     }
 }

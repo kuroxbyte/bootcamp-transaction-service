@@ -1,7 +1,6 @@
 package dev.bootcamp.transactionservice.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -15,8 +14,9 @@ import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -47,59 +47,55 @@ class GetAvailableBalanceUseCaseImplTest {
 
     @Test
     void returnsBalanceOfOwnAccount() {
-        when(accountClient.findById("1")).thenReturn(Optional.of(ACCOUNT));
-        when(movementRepository.getBalance("1")).thenReturn(new BigDecimal("350.50"));
+        when(accountClient.findById("1")).thenReturn(Maybe.just(ACCOUNT));
+        when(movementRepository.getBalance("1")).thenReturn(Single.just(new BigDecimal("350.50")));
 
-        assertThat(useCase.getAccountBalance(CUSTOMER_ID, "1")).isEqualByComparingTo("350.50");
+        assertThat(useCase.getAccountBalance(CUSTOMER_ID, "1").blockingGet()).isEqualByComparingTo("350.50");
     }
 
     @Test
     void rejectsBalanceOfAccountOfAnotherCustomer() {
-        when(accountClient.findById("1")).thenReturn(Optional.of(ACCOUNT));
+        when(accountClient.findById("1")).thenReturn(Maybe.just(ACCOUNT));
 
-        assertThatThrownBy(() -> useCase.getAccountBalance("999", "1"))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.getAccountBalance("999", "1").test().assertError(BusinessRuleException.class);
         verify(movementRepository, never()).getBalance(any());
     }
 
     @Test
     void rejectsBalanceOfUnknownAccount() {
-        when(accountClient.findById("99")).thenReturn(Optional.empty());
+        when(accountClient.findById("99")).thenReturn(Maybe.empty());
 
-        assertThatThrownBy(() -> useCase.getAccountBalance(CUSTOMER_ID, "99"))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.getAccountBalance(CUSTOMER_ID, "99").test().assertError(BusinessRuleException.class);
     }
 
     @Test
     void returnsAvailableCreditOfOwnCard() {
-        when(creditCardClient.findById("2")).thenReturn(Optional.of(CARD));
-        when(chargeRepository.getDebt("2")).thenReturn(new BigDecimal("800"));
+        when(creditCardClient.findById("2")).thenReturn(Maybe.just(CARD));
+        when(chargeRepository.getDebt("2")).thenReturn(Single.just(new BigDecimal("800")));
 
-        assertThat(useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "2")).isEqualByComparingTo("200");
+        assertThat(useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "2").blockingGet()).isEqualByComparingTo("200");
     }
 
     @Test
     void returnsFullLimitWhenCardHasNoDebt() {
-        when(creditCardClient.findById("2")).thenReturn(Optional.of(CARD));
-        when(chargeRepository.getDebt("2")).thenReturn(BigDecimal.ZERO);
+        when(creditCardClient.findById("2")).thenReturn(Maybe.just(CARD));
+        when(chargeRepository.getDebt("2")).thenReturn(Single.just(BigDecimal.ZERO));
 
-        assertThat(useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "2")).isEqualByComparingTo("1000");
+        assertThat(useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "2").blockingGet()).isEqualByComparingTo("1000");
     }
 
     @Test
     void rejectsAvailableCreditOfCardOfAnotherCustomer() {
-        when(creditCardClient.findById("2")).thenReturn(Optional.of(CARD));
+        when(creditCardClient.findById("2")).thenReturn(Maybe.just(CARD));
 
-        assertThatThrownBy(() -> useCase.getCreditCardAvailableCredit("999", "2"))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.getCreditCardAvailableCredit("999", "2").test().assertError(BusinessRuleException.class);
         verify(chargeRepository, never()).getDebt(any());
     }
 
     @Test
     void rejectsAvailableCreditOfUnknownCard() {
-        when(creditCardClient.findById("99")).thenReturn(Optional.empty());
+        when(creditCardClient.findById("99")).thenReturn(Maybe.empty());
 
-        assertThatThrownBy(() -> useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "99"))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "99").test().assertError(BusinessRuleException.class);
     }
 }

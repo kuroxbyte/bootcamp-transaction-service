@@ -6,6 +6,7 @@ import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -19,13 +20,18 @@ public class PayCreditUseCaseImpl implements PayCreditUseCase {
     }
 
     @Override
-    public Payment pay(String customerId, String creditId, BigDecimal amount, LocalDate date) {
-        Payment payment = new Payment(PaymentTarget.CREDIT, creditId, amount, date);
-        Credit credit = creditClient.findById(creditId)
-                .orElseThrow(() -> new BusinessRuleException("El crédito no existe"));
+    public Single<Payment> pay(String customerId, String creditId, BigDecimal amount, LocalDate date) {
+        return Single.fromCallable(() -> new Payment(PaymentTarget.CREDIT, creditId, amount, date))
+                .flatMap(payment -> creditClient.findById(creditId)
+                        .switchIfEmpty(Single.error(() -> new BusinessRuleException("El crédito no existe")))
+                        .map(credit -> ensureBelongsTo(credit, customerId))
+                        .flatMap(credit -> paymentRepository.save(payment)));
+    }
+
+    private static Credit ensureBelongsTo(Credit credit, String customerId) {
         if (!credit.belongsTo(customerId)) {
             throw new BusinessRuleException("El crédito no pertenece al cliente");
         }
-        return paymentRepository.save(payment);
+        return credit;
     }
 }

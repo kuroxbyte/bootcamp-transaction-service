@@ -1,9 +1,13 @@
 package dev.bootcamp.transactionservice.application.port;
 
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
-import java.util.Optional;
+import io.reactivex.rxjava3.core.Maybe;
 
 /** Consulta de tarjetas de crédito en credit-service. */
 public interface CreditCardClient {
-    Optional<CreditCard> findById(String creditCardId);
+
+    /**
+     * @return la tarjeta, o vacío si no existe
+     */
+    Maybe<CreditCard> findById(String creditCardId);
 }

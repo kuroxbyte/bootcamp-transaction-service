@@ -2,6 +2,7 @@ package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -17,6 +18,9 @@ import java.time.LocalDate;
  *   <li>Cuenta corriente: sin límite de movimientos.</li>
  *   <li>Plazo fijo: un solo movimiento al mes, en el día configurado.</li>
  * </ul>
+ *
+ * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Single}. Si se incumple una
+ * regla, el {@link Single} termina con error {@link BusinessRuleException}.
  */
 public interface RegisterMovementUseCase {
 
@@ -27,11 +31,10 @@ public interface RegisterMovementUseCase {
      * @param accountId  id de la cuenta en account-service
      * @param amount     monto a depositar
      * @param date       fecha del movimiento
-     * @return el movimiento guardado
-     * @throws BusinessRuleException si la cuenta no existe, no pertenece al cliente,
-     *                               el monto no es válido o se incumple una regla de la cuenta
+     * @return el movimiento guardado; error {@link BusinessRuleException} si la cuenta no existe, no
+     *         pertenece al cliente, el monto no es válido o se incumple una regla de la cuenta
      */
-    Movement deposit(String customerId, String accountId, BigDecimal amount, LocalDate date);
+    Single<Movement> deposit(String customerId, String accountId, BigDecimal amount, LocalDate date);
 
     /**
      * Registra un retiro en una cuenta del cliente.
@@ -40,10 +43,9 @@ public interface RegisterMovementUseCase {
      * @param accountId  id de la cuenta en account-service
      * @param amount     monto a retirar
      * @param date       fecha del movimiento
-     * @return el movimiento guardado
-     * @throws BusinessRuleException si la cuenta no existe, no pertenece al cliente,
-     *                               el monto no es válido, supera el saldo
-     *                               o se incumple una regla de la cuenta
+     * @return el movimiento guardado; error {@link BusinessRuleException} si la cuenta no existe, no
+     *         pertenece al cliente, el monto no es válido, supera el saldo o se incumple una regla de
+     *         la cuenta
      */
-    Movement withdraw(String customerId, String accountId, BigDecimal amount, LocalDate date);
+    Single<Movement> withdraw(String customerId, String accountId, BigDecimal amount, LocalDate date);
 }

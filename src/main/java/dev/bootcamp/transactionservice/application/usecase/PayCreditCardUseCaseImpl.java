@@ -6,6 +6,7 @@ import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -19,13 +20,18 @@ public class PayCreditCardUseCaseImpl implements PayCreditCardUseCase {
     }
 
     @Override
-    public Payment pay(String customerId, String creditCardId, BigDecimal amount, LocalDate date) {
-        Payment payment = new Payment(PaymentTarget.CREDIT_CARD, creditCardId, amount, date);
-        CreditCard creditCard = creditCardClient.findById(creditCardId)
-                .orElseThrow(() -> new BusinessRuleException("La tarjeta de crédito no existe"));
+    public Single<Payment> pay(String customerId, String creditCardId, BigDecimal amount, LocalDate date) {
+        return Single.fromCallable(() -> new Payment(PaymentTarget.CREDIT_CARD, creditCardId, amount, date))
+                .flatMap(payment -> creditCardClient.findById(creditCardId)
+                        .switchIfEmpty(Single.error(() -> new BusinessRuleException("La tarjeta de crédito no existe")))
+                        .map(creditCard -> ensureBelongsTo(creditCard, customerId))
+                        .flatMap(creditCard -> paymentRepository.save(payment)));
+    }
+
+    private static CreditCard ensureBelongsTo(CreditCard creditCard, String customerId) {
         if (!creditCard.belongsTo(customerId)) {
             throw new BusinessRuleException("La tarjeta de crédito no pertenece al cliente");
         }
-        return paymentRepository.save(payment);
+        return creditCard;
     }
 }

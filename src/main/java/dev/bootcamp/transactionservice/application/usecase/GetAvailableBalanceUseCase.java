@@ -1,6 +1,7 @@
 package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 
 /**
@@ -14,6 +15,9 @@ import java.math.BigDecimal;
  *   <li>Tarjeta de crédito: el saldo disponible es el límite de crédito menos la deuda
  *       (consumos menos pagos a la tarjeta).</li>
  * </ul>
+ *
+ * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Single}. Si se incumple una
+ * regla, el {@link Single} termina con error {@link BusinessRuleException}.
  */
 public interface GetAvailableBalanceUseCase {
 
@@ -22,18 +26,18 @@ public interface GetAvailableBalanceUseCase {
      *
      * @param customerId id del cliente que consulta
      * @param accountId  id de la cuenta en account-service
-     * @return saldo disponible de la cuenta
-     * @throws BusinessRuleException si la cuenta no existe o no pertenece al cliente
+     * @return saldo disponible de la cuenta; error {@link BusinessRuleException} si la cuenta no
+     *         existe o no pertenece al cliente
      */
-    BigDecimal getAccountBalance(String customerId, String accountId);
+    Single<BigDecimal> getAccountBalance(String customerId, String accountId);
 
     /**
      * Consulta el crédito disponible de una tarjeta de crédito del cliente.
      *
      * @param customerId   id del cliente que consulta
      * @param creditCardId id de la tarjeta en credit-service
-     * @return crédito disponible de la tarjeta
-     * @throws BusinessRuleException si la tarjeta no existe o no pertenece al cliente
+     * @return crédito disponible de la tarjeta; error {@link BusinessRuleException} si la tarjeta no
+     *         existe o no pertenece al cliente
      */
-    BigDecimal getCreditCardAvailableCredit(String customerId, String creditCardId);
+    Single<BigDecimal> getCreditCardAvailableCredit(String customerId, String creditCardId);
 }

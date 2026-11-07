@@ -1,8 +1,9 @@
 package dev.bootcamp.transactionservice.application.port;
 
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
-import java.util.List;
 
 public interface ChargeRepository {
 
@@ -10,10 +11,10 @@ public interface ChargeRepository {
      * Deuda de la tarjeta: suma de sus consumos menos suma de sus pagos
      * ({@link dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget#CREDIT_CARD}) (0 si no tiene ninguno).
      */
-    BigDecimal getDebt(String creditCardId);
+    Single<BigDecimal> getDebt(String creditCardId);
 
     /** Consumos de la tarjeta. */
-    List<Charge> findByCreditCardId(String creditCardId);
+    Flowable<Charge> findByCreditCardId(String creditCardId);
 
-    Charge save(Charge charge);
+    Single<Charge> save(Charge charge);
 }

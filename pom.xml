@@ -29,6 +29,7 @@
     <properties>
         <java.version>17</java.version>
         <openapi-generator.version>7.10.0</openapi-generator.version>
+        <rxjava.version>3.1.10</rxjava.version>
     </properties>
     <dependencies>
         <dependency>
@@ -42,6 +43,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex.rxjava3</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>${rxjava.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

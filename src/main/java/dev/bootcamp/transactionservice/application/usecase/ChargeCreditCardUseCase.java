@@ -2,6 +2,7 @@ package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -15,6 +16,9 @@ import java.time.LocalDate;
  *   <li>El consumo no puede superar el crédito disponible: límite de crédito
  *       menos la deuda actual (consumos menos pagos).</li>
  * </ul>
+ *
+ * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Single}. Si se incumple una
+ * regla, el {@link Single} termina con error {@link BusinessRuleException}.
  */
 public interface ChargeCreditCardUseCase {
 
@@ -25,9 +29,8 @@ public interface ChargeCreditCardUseCase {
      * @param creditCardId id de la tarjeta de crédito en credit-service
      * @param amount       monto del consumo
      * @param date         fecha del consumo
-     * @return el consumo guardado
-     * @throws BusinessRuleException si el monto no es válido, la tarjeta no existe, no pertenece
-     *                               al cliente o el consumo supera el crédito disponible
+     * @return el consumo guardado; error {@link BusinessRuleException} si el monto no es válido, la
+     *         tarjeta no existe, no pertenece al cliente o el consumo supera el crédito disponible
      */
-    Charge charge(String customerId, String creditCardId, BigDecimal amount, LocalDate date);
+    Single<Charge> charge(String customerId, String creditCardId, BigDecimal amount, LocalDate date);
 }

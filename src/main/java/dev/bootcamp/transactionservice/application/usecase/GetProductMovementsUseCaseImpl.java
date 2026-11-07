@@ -7,14 +7,11 @@ import dev.bootcamp.transactionservice.application.port.CreditClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
-import dev.bootcamp.transactionservice.domain.model.account.Account;
-import dev.bootcamp.transactionservice.domain.model.credit.Credit;
-import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Stream;
 
 public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCase {
     private static final Comparator<ProductMovement> BY_DATE = Comparator.comparing(ProductMovement::date);
@@ -38,45 +35,35 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
     }
 
     @Override
-    public List<ProductMovement> getAccountMovements(String customerId, String accountId) {
-        Account account = accountClient.findById(accountId)
-                .orElseThrow(() -> new BusinessRuleException("La cuenta no existe"));
-        if (!account.belongsTo(customerId)) {
-            throw new BusinessRuleException("La cuenta no pertenece al cliente");
-        }
-        return movementRepository.findByAccountId(accountId).stream()
-                .map(ProductMovement::from)
-                .sorted(BY_DATE)
-                .toList();
+    public Flowable<ProductMovement> getAccountMovements(String customerId, String accountId) {
+        return accountClient.findById(accountId)
+                .switchIfEmpty(Single.error(() -> new BusinessRuleException("La cuenta no existe")))
+                .flatMapPublisher(account -> account.belongsTo(customerId)
+                        ? movementRepository.findByAccountId(accountId).map(ProductMovement::from).sorted(BY_DATE)
+                        : Flowable.error(new BusinessRuleException("La cuenta no pertenece al cliente")));
     }
 
     @Override
-    public List<ProductMovement> getCreditMovements(String customerId, String creditId) {
-        Credit credit = creditClient.findById(creditId)
-                .orElseThrow(() -> new BusinessRuleException("El crédito no existe"));
-        if (!credit.belongsTo(customerId)) {
-            throw new BusinessRuleException("El crédito no pertenece al cliente");
-        }
-        return paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT, creditId).stream()
-                .map(ProductMovement::from)
-                .sorted(BY_DATE)
-                .toList();
+    public Flowable<ProductMovement> getCreditMovements(String customerId, String creditId) {
+        return creditClient.findById(creditId)
+                .switchIfEmpty(Single.error(() -> new BusinessRuleException("El crédito no existe")))
+                .flatMapPublisher(credit -> credit.belongsTo(customerId)
+                        ? paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT, creditId)
+                                .map(ProductMovement::from)
+                                .sorted(BY_DATE)
+                        : Flowable.error(new BusinessRuleException("El crédito no pertenece al cliente")));
     }
 
     @Override
-    public List<ProductMovement> getCreditCardMovements(String customerId, String creditCardId) {
-        CreditCard creditCard = creditCardClient.findById(creditCardId)
-                .orElseThrow(() -> new BusinessRuleException("La tarjeta de crédito no existe"));
-        if (!creditCard.belongsTo(customerId)) {
-            throw new BusinessRuleException("La tarjeta de crédito no pertenece al cliente");
-        }
-        Stream<ProductMovement> charges = chargeRepository.findByCreditCardId(creditCardId).stream()
-                .map(ProductMovement::from);
-        Stream<ProductMovement> payments = paymentRepository
-                .findByTargetAndProductId(PaymentTarget.CREDIT_CARD, creditCardId).stream()
-                .map(ProductMovement::from);
-        return Stream.concat(charges, payments)
-                .sorted(BY_DATE)
-                .toList();
+    public Flowable<ProductMovement> getCreditCardMovements(String customerId, String creditCardId) {
+        return creditCardClient.findById(creditCardId)
+                .switchIfEmpty(Single.error(() -> new BusinessRuleException("La tarjeta de crédito no existe")))
+                .flatMapPublisher(creditCard -> creditCard.belongsTo(customerId)
+                        ? Flowable.merge(
+                                        chargeRepository.findByCreditCardId(creditCardId).map(ProductMovement::from),
+                                        paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT_CARD, creditCardId)
+                                                .map(ProductMovement::from))
+                                .sorted(BY_DATE)
+                        : Flowable.error(new BusinessRuleException("La tarjeta de crédito no pertenece al cliente")));
     }
 }
