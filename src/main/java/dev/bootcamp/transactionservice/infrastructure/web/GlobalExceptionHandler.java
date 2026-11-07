@@ -2,6 +2,7 @@ package dev.bootcamp.transactionservice.infrastructure.web;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
+import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono;
  *       {@link ResponseEntityExceptionHandler}.</li>
  *   <li>404: {@link NotFoundException}.</li>
  *   <li>422: {@link BusinessRuleException}.</li>
+ *   <li>503: {@link ServiceUnavailableException}; el detalle ya lo registra el cliente HTTP.</li>
  *   <li>500: cualquier otro error inesperado.</li>
  * </ul>
  */
@@ -36,6 +38,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public Mono<ResponseEntity<ProblemDetail>> handleBusinessRule(BusinessRuleException ex) {
         log.warn("Business rule violated: {}", ex.getMessage());
         return problem(HttpStatus.UNPROCESSABLE_CONTENT, "Regla de negocio incumplida", ex.getMessage());
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleServiceUnavailable(ServiceUnavailableException ex) {
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, "Servicio no disponible", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
