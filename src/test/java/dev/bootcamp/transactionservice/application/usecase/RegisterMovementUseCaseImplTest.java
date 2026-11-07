@@ -1,7 +1,5 @@
 package dev.bootcamp.transactionservice.application.usecase;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -17,10 +15,11 @@ import dev.bootcamp.transactionservice.domain.model.account.MovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,104 +44,103 @@ class RegisterMovementUseCaseImplTest {
 
     private void givenAccount(MovementPolicy movementPolicy) {
         when(accountClient.findById("1"))
-                .thenReturn(Optional.of(new Account("1", CUSTOMER_ID, movementPolicy)));
+                .thenReturn(Maybe.just(new Account("1", CUSTOMER_ID, movementPolicy)));
+    }
+
+    /** Cuenta propia con los movimientos del mes y el saldo indicados. */
+    private void givenAccount(MovementPolicy movementPolicy, long movementsInMonth, String balance) {
+        givenAccount(movementPolicy);
+        when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE)))
+                .thenReturn(Single.just(movementsInMonth));
+        when(movementRepository.getBalance("1")).thenReturn(Single.just(new BigDecimal(balance)));
+    }
+
+    private void givenSaveReturnsMovement() {
+        when(movementRepository.save(any())).thenAnswer(inv -> Single.just(inv.getArgument(0)));
     }
 
     @Test
     void customerDepositsIntoOwnAccount() {
-        givenAccount(new CheckingMovementPolicy());
-        when(movementRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        givenAccount(new CheckingMovementPolicy(), 0, "0");
+        givenSaveReturnsMovement();
 
-        Movement movement = useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE);
-
-        assertThat(movement).isEqualTo(new Movement("1", MovementType.DEPOSIT, AMOUNT, DATE));
+        useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE).test()
+                .assertValue(new Movement("1", MovementType.DEPOSIT, AMOUNT, DATE));
     }
 
     @Test
     void customerWithdrawsFromOwnAccount() {
-        givenAccount(new CheckingMovementPolicy());
-        when(movementRepository.getBalance("1")).thenReturn(new BigDecimal("100"));
-        when(movementRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        givenAccount(new CheckingMovementPolicy(), 0, "100");
+        givenSaveReturnsMovement();
 
-        Movement movement = useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE);
-
-        assertThat(movement).isEqualTo(new Movement("1", MovementType.WITHDRAWAL, AMOUNT, DATE));
+        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE).test()
+                .assertValue(new Movement("1", MovementType.WITHDRAWAL, AMOUNT, DATE));
     }
 
     @Test
     void rejectsMovementOnAccountOfAnotherCustomer() {
         givenAccount(new CheckingMovementPolicy());
 
-        assertThatThrownBy(() -> useCase.deposit("999", "1", AMOUNT, DATE))
-                .isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> useCase.withdraw("999", "1", AMOUNT, DATE))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.deposit("999", "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.withdraw("999", "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
     }
 
     @Test
     void rejectsInvalidAmountBeforeQueryingAccount() {
-        assertThatThrownBy(() -> useCase.deposit(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.deposit(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE).test().assertError(BusinessRuleException.class);
         verify(accountClient, never()).findById(any());
         verify(movementRepository, never()).save(any());
     }
 
     @Test
     void rejectsUnknownAccount() {
-        when(accountClient.findById("99")).thenReturn(Optional.empty());
+        when(accountClient.findById("99")).thenReturn(Maybe.empty());
 
-        assertThatThrownBy(() -> useCase.deposit(CUSTOMER_ID, "99", AMOUNT, DATE))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.deposit(CUSTOMER_ID, "99", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
     }
 
     @Test
     void savesMovementWithinSavingsLimit() {
-        givenAccount(new SavingsMovementPolicy(2));
-        when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE))).thenReturn(1L);
+        givenAccount(new SavingsMovementPolicy(2), 1, "0");
+        givenSaveReturnsMovement();
 
-        useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE);
+        useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertComplete();
 
         verify(movementRepository).save(new Movement("1", MovementType.DEPOSIT, AMOUNT, DATE));
     }
 
     @Test
     void doesNotSaveMovementOverSavingsLimit() {
-        givenAccount(new SavingsMovementPolicy(2));
-        when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE))).thenReturn(2L);
+        givenAccount(new SavingsMovementPolicy(2), 2, "100");
 
-        assertThatThrownBy(() -> useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
     }
 
     @Test
     void doesNotSaveSecondFixedTermMovementInMonth() {
-        givenAccount(new FixedTermMovementPolicy(15));
-        when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE))).thenReturn(1L);
+        givenAccount(new FixedTermMovementPolicy(15), 1, "100");
 
-        assertThatThrownBy(() -> useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
     }
 
     @Test
     void doesNotSaveWithdrawalOverBalance() {
-        givenAccount(new CheckingMovementPolicy());
-        when(movementRepository.getBalance("1")).thenReturn(new BigDecimal("5"));
+        givenAccount(new CheckingMovementPolicy(), 0, "5");
 
-        assertThatThrownBy(() -> useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE))
-                .isInstanceOf(BusinessRuleException.class);
+        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
     }
 
     @Test
     void depositIsSavedEvenWithZeroBalance() {
-        givenAccount(new CheckingMovementPolicy());
-        when(movementRepository.getBalance("1")).thenReturn(BigDecimal.ZERO);
+        givenAccount(new CheckingMovementPolicy(), 0, "0");
+        givenSaveReturnsMovement();
 
-        useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE);
+        useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertComplete();
 
         verify(movementRepository).save(new Movement("1", MovementType.DEPOSIT, AMOUNT, DATE));
     }

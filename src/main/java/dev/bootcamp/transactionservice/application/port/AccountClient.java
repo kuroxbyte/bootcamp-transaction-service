@@ -1,9 +1,13 @@
 package dev.bootcamp.transactionservice.application.port;
 
 import dev.bootcamp.transactionservice.domain.model.account.Account;
-import java.util.Optional;
+import io.reactivex.rxjava3.core.Maybe;
 
 /** Consulta de cuentas en account-service. */
 public interface AccountClient {
-    Optional<Account> findById(String accountId);
+
+    /**
+     * @return la cuenta, o vacío si no existe
+     */
+    Maybe<Account> findById(String accountId);
 }

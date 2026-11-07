@@ -2,7 +2,7 @@ package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
-import java.util.List;
+import io.reactivex.rxjava3.core.Flowable;
 
 /**
  * Caso de uso para consultar todos los movimientos de un producto bancario de un cliente.
@@ -16,6 +16,9 @@ import java.util.List;
  *   <li>Los movimientos se devuelven ordenados por fecha, del más antiguo al más reciente;
  *       una lista vacía si el producto no tiene movimientos.</li>
  * </ul>
+ *
+ * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Flowable}. Si se incumple una
+ * regla, el {@link Flowable} termina con error {@link BusinessRuleException}.
  */
 public interface GetProductMovementsUseCase {
 
@@ -24,28 +27,28 @@ public interface GetProductMovementsUseCase {
      *
      * @param customerId id del cliente que consulta
      * @param accountId  id de la cuenta en account-service
-     * @return movimientos de la cuenta ordenados por fecha
-     * @throws BusinessRuleException si la cuenta no existe o no pertenece al cliente
+     * @return movimientos de la cuenta ordenados por fecha; error {@link BusinessRuleException} si la
+     *         cuenta no existe o no pertenece al cliente
      */
-    List<ProductMovement> getAccountMovements(String customerId, String accountId);
+    Flowable<ProductMovement> getAccountMovements(String customerId, String accountId);
 
     /**
      * Consulta los pagos de un crédito personal o empresarial del cliente.
      *
      * @param customerId id del cliente que consulta
      * @param creditId   id del crédito en credit-service
-     * @return movimientos del crédito ordenados por fecha
-     * @throws BusinessRuleException si el crédito no existe o no pertenece al cliente
+     * @return movimientos del crédito ordenados por fecha; error {@link BusinessRuleException} si el
+     *         crédito no existe o no pertenece al cliente
      */
-    List<ProductMovement> getCreditMovements(String customerId, String creditId);
+    Flowable<ProductMovement> getCreditMovements(String customerId, String creditId);
 
     /**
      * Consulta los consumos y pagos de una tarjeta de crédito del cliente.
      *
      * @param customerId   id del cliente que consulta
      * @param creditCardId id de la tarjeta en credit-service
-     * @return movimientos de la tarjeta ordenados por fecha
-     * @throws BusinessRuleException si la tarjeta no existe o no pertenece al cliente
+     * @return movimientos de la tarjeta ordenados por fecha; error {@link BusinessRuleException} si la
+     *         tarjeta no existe o no pertenece al cliente
      */
-    List<ProductMovement> getCreditCardMovements(String customerId, String creditCardId);
+    Flowable<ProductMovement> getCreditCardMovements(String customerId, String creditCardId);
 }
