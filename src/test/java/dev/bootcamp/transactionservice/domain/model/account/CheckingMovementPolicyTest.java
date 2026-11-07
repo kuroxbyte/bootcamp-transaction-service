@@ -12,7 +12,7 @@ class CheckingMovementPolicyTest {
 
     @Test
     void allowsUnlimitedMovements() {
-        Movement movement = new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, LocalDate.of(2026, 11, 3));
+        Movement movement = new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, LocalDate.of(2026, 11, 3));
 
         assertThatCode(() -> new CheckingMovementPolicy().validate(movement, 1_000)).doesNotThrowAnyException();
     }

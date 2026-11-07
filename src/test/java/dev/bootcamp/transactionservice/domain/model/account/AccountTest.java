@@ -16,23 +16,23 @@ class AccountTest {
     private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
 
     private static Movement withdrawal(String amount) {
-        return new Movement(1L, MovementType.WITHDRAWAL, new BigDecimal(amount), DATE);
+        return new Movement("1", MovementType.WITHDRAWAL, new BigDecimal(amount), DATE);
     }
 
     private static Account checking() {
-        return new Account(1L, 100L, new CheckingMovementPolicy());
+        return new Account("1", "100", new CheckingMovementPolicy());
     }
 
     @Test
     void belongsToItsCustomerOnly() {
-        assertThat(checking().belongsTo(100L)).isTrue();
-        assertThat(checking().belongsTo(200L)).isFalse();
+        assertThat(checking().belongsTo("100")).isTrue();
+        assertThat(checking().belongsTo("200")).isFalse();
     }
 
     @Test
     void appliesMovementPolicyOfAccountType() {
-        Account savings = new Account(1L, 100L, new SavingsMovementPolicy(2));
-        Movement deposit = new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, DATE);
+        Account savings = new Account("1", "100", new SavingsMovementPolicy(2));
+        Movement deposit = new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DATE);
 
         assertThatThrownBy(() -> savings.validateMovement(deposit, 2, BigDecimal.ZERO))
                 .isInstanceOf(BusinessRuleException.class);
@@ -49,9 +49,9 @@ class AccountTest {
     @Test
     void rejectsWithdrawalOverBalanceInEveryAccountType() {
         Account[] accounts = {
-                new Account(1L, 100L, new SavingsMovementPolicy(5)),
+                new Account("1", "100", new SavingsMovementPolicy(5)),
                 checking(),
-                new Account(1L, 100L, new FixedTermMovementPolicy(15))
+                new Account("1", "100", new FixedTermMovementPolicy(15))
         };
 
         for (Account account : accounts) {
@@ -63,7 +63,7 @@ class AccountTest {
 
     @Test
     void depositDoesNotDependOnBalance() {
-        Movement deposit = new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, DATE);
+        Movement deposit = new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DATE);
 
         assertThatCode(() -> checking().validateMovement(deposit, 0, BigDecimal.ZERO))
                 .doesNotThrowAnyException();

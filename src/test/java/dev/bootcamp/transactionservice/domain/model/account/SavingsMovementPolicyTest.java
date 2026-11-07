@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class SavingsMovementPolicyTest {
 
     private final MovementPolicy policy = new SavingsMovementPolicy(2);
-    private final Movement movement = new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, LocalDate.of(2026, 11, 3));
+    private final Movement movement = new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, LocalDate.of(2026, 11, 3));
 
     @Test
     void allowsMovementsBelowMonthlyLimit() {

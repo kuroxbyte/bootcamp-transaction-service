@@ -11,7 +11,7 @@ import java.time.LocalDate;
  * @param target    producto de crédito pagado
  * @param productId id del crédito o de la tarjeta en credit-service, según {@code target}
  */
-public record Payment(PaymentTarget target, Long productId, BigDecimal amount, LocalDate date) {
+public record Payment(PaymentTarget target, String productId, BigDecimal amount, LocalDate date) {
 
     public Payment {
         if (amount == null || amount.signum() <= 0) {

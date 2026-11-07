@@ -8,9 +8,9 @@ class CreditTest {
 
     @Test
     void belongsToItsCustomerOnly() {
-        Credit credit = new Credit(1L, 100L);
+        Credit credit = new Credit("1", "100");
 
-        assertThat(credit.belongsTo(100L)).isTrue();
-        assertThat(credit.belongsTo(200L)).isFalse();
+        assertThat(credit.belongsTo("100")).isTrue();
+        assertThat(credit.belongsTo("200")).isFalse();
     }
 }

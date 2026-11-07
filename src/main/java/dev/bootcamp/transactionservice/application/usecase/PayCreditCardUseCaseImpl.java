@@ -19,7 +19,7 @@ public class PayCreditCardUseCaseImpl implements PayCreditCardUseCase {
     }
 
     @Override
-    public Payment pay(Long customerId, Long creditCardId, BigDecimal amount, LocalDate date) {
+    public Payment pay(String customerId, String creditCardId, BigDecimal amount, LocalDate date) {
         Payment payment = new Payment(PaymentTarget.CREDIT_CARD, creditCardId, amount, date);
         CreditCard creditCard = creditCardClient.findById(creditCardId)
                 .orElseThrow(() -> new BusinessRuleException("La tarjeta de crédito no existe"));

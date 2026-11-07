@@ -38,7 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class GetProductMovementsUseCaseImplTest {
 
-    private static final Long CUSTOMER_ID = 100L;
+    private static final String CUSTOMER_ID = "100";
     private static final LocalDate DAY_1 = LocalDate.of(2026, 11, 1);
     private static final LocalDate DAY_2 = LocalDate.of(2026, 11, 2);
     private static final LocalDate DAY_3 = LocalDate.of(2026, 11, 3);
@@ -61,12 +61,12 @@ class GetProductMovementsUseCaseImplTest {
 
     @Test
     void returnsAccountMovementsSortedByDate() {
-        when(accountClient.findById(1L)).thenReturn(Optional.of(new Account(1L, CUSTOMER_ID, new CheckingMovementPolicy())));
-        when(movementRepository.findByAccountId(1L)).thenReturn(List.of(
-                new Movement(1L, MovementType.WITHDRAWAL, BigDecimal.ONE, DAY_2),
-                new Movement(1L, MovementType.DEPOSIT, BigDecimal.TEN, DAY_1)));
+        when(accountClient.findById("1")).thenReturn(Optional.of(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
+        when(movementRepository.findByAccountId("1")).thenReturn(List.of(
+                new Movement("1", MovementType.WITHDRAWAL, BigDecimal.ONE, DAY_2),
+                new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DAY_1)));
 
-        List<ProductMovement> movements = useCase.getAccountMovements(CUSTOMER_ID, 1L);
+        List<ProductMovement> movements = useCase.getAccountMovements(CUSTOMER_ID, "1");
 
         assertThat(movements).containsExactly(
                 new ProductMovement(ProductMovementType.DEPOSIT, BigDecimal.TEN, DAY_1),
@@ -75,59 +75,59 @@ class GetProductMovementsUseCaseImplTest {
 
     @Test
     void returnsEmptyListWhenAccountHasNoMovements() {
-        when(accountClient.findById(1L)).thenReturn(Optional.of(new Account(1L, CUSTOMER_ID, new CheckingMovementPolicy())));
-        when(movementRepository.findByAccountId(1L)).thenReturn(List.of());
+        when(accountClient.findById("1")).thenReturn(Optional.of(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
+        when(movementRepository.findByAccountId("1")).thenReturn(List.of());
 
-        assertThat(useCase.getAccountMovements(CUSTOMER_ID, 1L)).isEmpty();
+        assertThat(useCase.getAccountMovements(CUSTOMER_ID, "1")).isEmpty();
     }
 
     @Test
     void rejectsMovementsOfAccountOfAnotherCustomer() {
-        when(accountClient.findById(1L)).thenReturn(Optional.of(new Account(1L, CUSTOMER_ID, new CheckingMovementPolicy())));
+        when(accountClient.findById("1")).thenReturn(Optional.of(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
 
-        assertThatThrownBy(() -> useCase.getAccountMovements(999L, 1L))
+        assertThatThrownBy(() -> useCase.getAccountMovements("999", "1"))
                 .isInstanceOf(BusinessRuleException.class);
         verify(movementRepository, never()).findByAccountId(any());
     }
 
     @Test
     void rejectsMovementsOfUnknownAccount() {
-        when(accountClient.findById(99L)).thenReturn(Optional.empty());
+        when(accountClient.findById("99")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.getAccountMovements(CUSTOMER_ID, 99L))
+        assertThatThrownBy(() -> useCase.getAccountMovements(CUSTOMER_ID, "99"))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
     @Test
     void returnsCreditPayments() {
-        when(creditClient.findById(2L)).thenReturn(Optional.of(new Credit(2L, CUSTOMER_ID)));
-        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT, 2L)).thenReturn(List.of(
-                new Payment(PaymentTarget.CREDIT, 2L, BigDecimal.TEN, DAY_1)));
+        when(creditClient.findById("2")).thenReturn(Optional.of(new Credit("2", CUSTOMER_ID)));
+        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT, "2")).thenReturn(List.of(
+                new Payment(PaymentTarget.CREDIT, "2", BigDecimal.TEN, DAY_1)));
 
-        assertThat(useCase.getCreditMovements(CUSTOMER_ID, 2L)).containsExactly(
+        assertThat(useCase.getCreditMovements(CUSTOMER_ID, "2")).containsExactly(
                 new ProductMovement(ProductMovementType.PAYMENT, BigDecimal.TEN, DAY_1));
     }
 
     @Test
     void rejectsMovementsOfCreditOfAnotherCustomer() {
-        when(creditClient.findById(2L)).thenReturn(Optional.of(new Credit(2L, CUSTOMER_ID)));
+        when(creditClient.findById("2")).thenReturn(Optional.of(new Credit("2", CUSTOMER_ID)));
 
-        assertThatThrownBy(() -> useCase.getCreditMovements(999L, 2L))
+        assertThatThrownBy(() -> useCase.getCreditMovements("999", "2"))
                 .isInstanceOf(BusinessRuleException.class);
         verify(paymentRepository, never()).findByTargetAndProductId(any(), any());
     }
 
     @Test
     void returnsCardChargesAndPaymentsMergedAndSortedByDate() {
-        when(creditCardClient.findById(3L))
-                .thenReturn(Optional.of(new CreditCard(3L, CUSTOMER_ID, new BigDecimal("1000"))));
-        when(chargeRepository.findByCreditCardId(3L)).thenReturn(List.of(
-                new Charge(3L, new BigDecimal("300"), DAY_1),
-                new Charge(3L, new BigDecimal("50"), DAY_3)));
-        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT_CARD, 3L)).thenReturn(List.of(
-                new Payment(PaymentTarget.CREDIT_CARD, 3L, new BigDecimal("100"), DAY_2)));
+        when(creditCardClient.findById("3"))
+                .thenReturn(Optional.of(new CreditCard("3", CUSTOMER_ID, new BigDecimal("1000"))));
+        when(chargeRepository.findByCreditCardId("3")).thenReturn(List.of(
+                new Charge("3", new BigDecimal("300"), DAY_1),
+                new Charge("3", new BigDecimal("50"), DAY_3)));
+        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT_CARD, "3")).thenReturn(List.of(
+                new Payment(PaymentTarget.CREDIT_CARD, "3", new BigDecimal("100"), DAY_2)));
 
-        assertThat(useCase.getCreditCardMovements(CUSTOMER_ID, 3L)).containsExactly(
+        assertThat(useCase.getCreditCardMovements(CUSTOMER_ID, "3")).containsExactly(
                 new ProductMovement(ProductMovementType.CHARGE, new BigDecimal("300"), DAY_1),
                 new ProductMovement(ProductMovementType.PAYMENT, new BigDecimal("100"), DAY_2),
                 new ProductMovement(ProductMovementType.CHARGE, new BigDecimal("50"), DAY_3));
@@ -135,10 +135,10 @@ class GetProductMovementsUseCaseImplTest {
 
     @Test
     void rejectsMovementsOfCardOfAnotherCustomer() {
-        when(creditCardClient.findById(3L))
-                .thenReturn(Optional.of(new CreditCard(3L, CUSTOMER_ID, new BigDecimal("1000"))));
+        when(creditCardClient.findById("3"))
+                .thenReturn(Optional.of(new CreditCard("3", CUSTOMER_ID, new BigDecimal("1000"))));
 
-        assertThatThrownBy(() -> useCase.getCreditCardMovements(999L, 3L))
+        assertThatThrownBy(() -> useCase.getCreditCardMovements("999", "3"))
                 .isInstanceOf(BusinessRuleException.class);
         verify(chargeRepository, never()).findByCreditCardId(any());
         verify(paymentRepository, never()).findByTargetAndProductId(any(), any());

@@ -12,12 +12,12 @@ import java.math.BigDecimal;
  *                       ({@link SavingsMovementPolicy}, {@link CheckingMovementPolicy}
  *                       o {@link FixedTermMovementPolicy})
  */
-public record Account(Long id, Long customerId, MovementPolicy movementPolicy) {
+public record Account(String id, String customerId, MovementPolicy movementPolicy) {
 
     /**
      * Indica si la cuenta pertenece al cliente.
      */
-    public boolean belongsTo(Long customerId) {
+    public boolean belongsTo(String customerId) {
         return this.customerId.equals(customerId);
     }
 

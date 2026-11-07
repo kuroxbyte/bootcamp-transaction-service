@@ -7,12 +7,12 @@ import java.math.BigDecimal;
 /**
  * Vista local de una tarjeta de crédito, obtenida de credit-service.
  */
-public record CreditCard(Long id, Long customerId, BigDecimal creditLimit) {
+public record CreditCard(String id, String customerId, BigDecimal creditLimit) {
 
     /**
      * Indica si la tarjeta pertenece al cliente.
      */
-    public boolean belongsTo(Long customerId) {
+    public boolean belongsTo(String customerId) {
         return this.customerId.equals(customerId);
     }
 

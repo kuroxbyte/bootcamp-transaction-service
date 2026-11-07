@@ -10,10 +10,10 @@ public interface ChargeRepository {
      * Deuda de la tarjeta: suma de sus consumos menos suma de sus pagos
      * ({@link dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget#CREDIT_CARD}) (0 si no tiene ninguno).
      */
-    BigDecimal getDebt(Long creditCardId);
+    BigDecimal getDebt(String creditCardId);
 
     /** Consumos de la tarjeta. */
-    List<Charge> findByCreditCardId(Long creditCardId);
+    List<Charge> findByCreditCardId(String creditCardId);
 
     Charge save(Charge charge);
 }

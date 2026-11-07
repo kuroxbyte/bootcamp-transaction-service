@@ -27,7 +27,7 @@ public interface GetProductMovementsUseCase {
      * @return movimientos de la cuenta ordenados por fecha
      * @throws BusinessRuleException si la cuenta no existe o no pertenece al cliente
      */
-    List<ProductMovement> getAccountMovements(Long customerId, Long accountId);
+    List<ProductMovement> getAccountMovements(String customerId, String accountId);
 
     /**
      * Consulta los pagos de un crédito personal o empresarial del cliente.
@@ -37,7 +37,7 @@ public interface GetProductMovementsUseCase {
      * @return movimientos del crédito ordenados por fecha
      * @throws BusinessRuleException si el crédito no existe o no pertenece al cliente
      */
-    List<ProductMovement> getCreditMovements(Long customerId, Long creditId);
+    List<ProductMovement> getCreditMovements(String customerId, String creditId);
 
     /**
      * Consulta los consumos y pagos de una tarjeta de crédito del cliente.
@@ -47,5 +47,5 @@ public interface GetProductMovementsUseCase {
      * @return movimientos de la tarjeta ordenados por fecha
      * @throws BusinessRuleException si la tarjeta no existe o no pertenece al cliente
      */
-    List<ProductMovement> getCreditCardMovements(Long customerId, Long creditCardId);
+    List<ProductMovement> getCreditCardMovements(String customerId, String creditCardId);
 }

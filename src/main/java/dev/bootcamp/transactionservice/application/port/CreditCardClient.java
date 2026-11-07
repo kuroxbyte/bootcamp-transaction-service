@@ -5,5 +5,5 @@ import java.util.Optional;
 
 /** Consulta de tarjetas de crédito en credit-service. */
 public interface CreditCardClient {
-    Optional<CreditCard> findById(Long creditCardId);
+    Optional<CreditCard> findById(String creditCardId);
 }

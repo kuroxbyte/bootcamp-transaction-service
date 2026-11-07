@@ -25,7 +25,7 @@ public interface GetAvailableBalanceUseCase {
      * @return saldo disponible de la cuenta
      * @throws BusinessRuleException si la cuenta no existe o no pertenece al cliente
      */
-    BigDecimal getAccountBalance(Long customerId, Long accountId);
+    BigDecimal getAccountBalance(String customerId, String accountId);
 
     /**
      * Consulta el crédito disponible de una tarjeta de crédito del cliente.
@@ -35,5 +35,5 @@ public interface GetAvailableBalanceUseCase {
      * @return crédito disponible de la tarjeta
      * @throws BusinessRuleException si la tarjeta no existe o no pertenece al cliente
      */
-    BigDecimal getCreditCardAvailableCredit(Long customerId, Long creditCardId);
+    BigDecimal getCreditCardAvailableCredit(String customerId, String creditCardId);
 }

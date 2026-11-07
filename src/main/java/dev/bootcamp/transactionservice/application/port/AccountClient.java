@@ -5,5 +5,5 @@ import java.util.Optional;
 
 /** Consulta de cuentas en account-service. */
 public interface AccountClient {
-    Optional<Account> findById(Long accountId);
+    Optional<Account> findById(String accountId);
 }

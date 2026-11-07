@@ -12,16 +12,16 @@ import org.junit.jupiter.api.Test;
 
 class CreditCardTest {
 
-    private final CreditCard card = new CreditCard(1L, 100L, new BigDecimal("1000"));
+    private final CreditCard card = new CreditCard("1", "100", new BigDecimal("1000"));
 
     private static Charge charge(String amount) {
-        return new Charge(1L, new BigDecimal(amount), LocalDate.of(2026, 11, 15));
+        return new Charge("1", new BigDecimal(amount), LocalDate.of(2026, 11, 15));
     }
 
     @Test
     void belongsToItsCustomerOnly() {
-        assertThat(card.belongsTo(100L)).isTrue();
-        assertThat(card.belongsTo(200L)).isFalse();
+        assertThat(card.belongsTo("100")).isTrue();
+        assertThat(card.belongsTo("200")).isFalse();
     }
 
     @Test

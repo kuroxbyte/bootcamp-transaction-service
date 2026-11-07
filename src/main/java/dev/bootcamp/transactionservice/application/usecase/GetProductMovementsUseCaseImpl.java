@@ -38,7 +38,7 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
     }
 
     @Override
-    public List<ProductMovement> getAccountMovements(Long customerId, Long accountId) {
+    public List<ProductMovement> getAccountMovements(String customerId, String accountId) {
         Account account = accountClient.findById(accountId)
                 .orElseThrow(() -> new BusinessRuleException("La cuenta no existe"));
         if (!account.belongsTo(customerId)) {
@@ -51,7 +51,7 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
     }
 
     @Override
-    public List<ProductMovement> getCreditMovements(Long customerId, Long creditId) {
+    public List<ProductMovement> getCreditMovements(String customerId, String creditId) {
         Credit credit = creditClient.findById(creditId)
                 .orElseThrow(() -> new BusinessRuleException("El crédito no existe"));
         if (!credit.belongsTo(customerId)) {
@@ -64,7 +64,7 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
     }
 
     @Override
-    public List<ProductMovement> getCreditCardMovements(Long customerId, Long creditCardId) {
+    public List<ProductMovement> getCreditCardMovements(String customerId, String creditCardId) {
         CreditCard creditCard = creditCardClient.findById(creditCardId)
                 .orElseThrow(() -> new BusinessRuleException("La tarjeta de crédito no existe"));
         if (!creditCard.belongsTo(customerId)) {
