@@ -12,7 +12,7 @@ import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.CreditClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
-import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
@@ -85,7 +85,7 @@ class GetProductMovementsUseCaseImplTest {
     void rejectsMovementsOfAccountOfAnotherCustomer() {
         when(accountClient.findById("1")).thenReturn(Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
 
-        useCase.getAccountMovements("999", "1").test().assertError(BusinessRuleException.class);
+        useCase.getAccountMovements("999", "1").test().assertError(NotFoundException.class);
         verify(movementRepository, never()).findByAccountId(any());
     }
 
@@ -93,7 +93,7 @@ class GetProductMovementsUseCaseImplTest {
     void rejectsMovementsOfUnknownAccount() {
         when(accountClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.getAccountMovements(CUSTOMER_ID, "99").test().assertError(BusinessRuleException.class);
+        useCase.getAccountMovements(CUSTOMER_ID, "99").test().assertError(NotFoundException.class);
     }
 
     @Test
@@ -110,7 +110,7 @@ class GetProductMovementsUseCaseImplTest {
     void rejectsMovementsOfCreditOfAnotherCustomer() {
         when(creditClient.findById("2")).thenReturn(Maybe.just(new Credit("2", CUSTOMER_ID)));
 
-        useCase.getCreditMovements("999", "2").test().assertError(BusinessRuleException.class);
+        useCase.getCreditMovements("999", "2").test().assertError(NotFoundException.class);
         verify(paymentRepository, never()).findByTargetAndProductId(any(), any());
     }
 
@@ -135,7 +135,7 @@ class GetProductMovementsUseCaseImplTest {
         when(creditCardClient.findById("3"))
                 .thenReturn(Maybe.just(new CreditCard("3", CUSTOMER_ID, new BigDecimal("1000"))));
 
-        useCase.getCreditCardMovements("999", "3").test().assertError(BusinessRuleException.class);
+        useCase.getCreditCardMovements("999", "3").test().assertError(NotFoundException.class);
         verify(chargeRepository, never()).findByCreditCardId(any());
         verify(paymentRepository, never()).findByTargetAndProductId(any(), any());
     }

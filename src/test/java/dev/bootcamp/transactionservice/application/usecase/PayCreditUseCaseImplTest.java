@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import dev.bootcamp.transactionservice.application.port.CreditClient;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
@@ -52,7 +53,7 @@ class PayCreditUseCaseImplTest {
     void rejectsPaymentToCreditOfAnotherCustomer() {
         when(creditClient.findById("1")).thenReturn(Maybe.just(new Credit("1", CUSTOMER_ID)));
 
-        useCase.pay("999", "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.pay("999", "1", AMOUNT, DATE).test().assertError(NotFoundException.class);
         verify(paymentRepository, never()).save(any());
     }
 
@@ -60,7 +61,7 @@ class PayCreditUseCaseImplTest {
     void rejectsUnknownCredit() {
         when(creditClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.pay(CUSTOMER_ID, "99", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.pay(CUSTOMER_ID, "99", AMOUNT, DATE).test().assertError(NotFoundException.class);
         verify(paymentRepository, never()).save(any());
     }
 

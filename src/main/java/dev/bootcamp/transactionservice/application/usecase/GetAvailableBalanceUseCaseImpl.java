@@ -4,7 +4,7 @@ import dev.bootcamp.transactionservice.application.port.AccountClient;
 import dev.bootcamp.transactionservice.application.port.ChargeRepository;
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
-import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import io.reactivex.rxjava3.core.Single;
@@ -27,7 +27,7 @@ public class GetAvailableBalanceUseCaseImpl implements GetAvailableBalanceUseCas
     @Override
     public Single<BigDecimal> getAccountBalance(String customerId, String accountId) {
         return accountClient.findById(accountId)
-                .switchIfEmpty(Single.error(() -> new BusinessRuleException("La cuenta no existe")))
+                .switchIfEmpty(Single.error(() -> new NotFoundException("La cuenta no existe")))
                 .map(account -> ensureBelongsTo(account, customerId))
                 .flatMap(account -> movementRepository.getBalance(accountId));
     }
@@ -35,21 +35,21 @@ public class GetAvailableBalanceUseCaseImpl implements GetAvailableBalanceUseCas
     @Override
     public Single<BigDecimal> getCreditCardAvailableCredit(String customerId, String creditCardId) {
         return creditCardClient.findById(creditCardId)
-                .switchIfEmpty(Single.error(() -> new BusinessRuleException("La tarjeta de crédito no existe")))
+                .switchIfEmpty(Single.error(() -> new NotFoundException("La tarjeta de crédito no existe")))
                 .map(creditCard -> ensureBelongsTo(creditCard, customerId))
                 .flatMap(creditCard -> chargeRepository.getDebt(creditCardId).map(creditCard::availableCredit));
     }
 
     private static Account ensureBelongsTo(Account account, String customerId) {
         if (!account.belongsTo(customerId)) {
-            throw new BusinessRuleException("La cuenta no pertenece al cliente");
+            throw new NotFoundException("La cuenta no pertenece al cliente");
         }
         return account;
     }
 
     private static CreditCard ensureBelongsTo(CreditCard creditCard, String customerId) {
         if (!creditCard.belongsTo(customerId)) {
-            throw new BusinessRuleException("La tarjeta de crédito no pertenece al cliente");
+            throw new NotFoundException("La tarjeta de crédito no pertenece al cliente");
         }
         return creditCard;
     }

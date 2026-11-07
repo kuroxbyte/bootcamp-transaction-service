@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import dev.bootcamp.transactionservice.application.port.AccountClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.FixedTermMovementPolicy;
@@ -81,8 +82,8 @@ class RegisterMovementUseCaseImplTest {
     void rejectsMovementOnAccountOfAnotherCustomer() {
         givenAccount(new CheckingMovementPolicy());
 
-        useCase.deposit("999", "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
-        useCase.withdraw("999", "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.deposit("999", "1", AMOUNT, DATE).test().assertError(NotFoundException.class);
+        useCase.withdraw("999", "1", AMOUNT, DATE).test().assertError(NotFoundException.class);
         verify(movementRepository, never()).save(any());
     }
 
@@ -97,7 +98,7 @@ class RegisterMovementUseCaseImplTest {
     void rejectsUnknownAccount() {
         when(accountClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.deposit(CUSTOMER_ID, "99", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.deposit(CUSTOMER_ID, "99", AMOUNT, DATE).test().assertError(NotFoundException.class);
         verify(movementRepository, never()).save(any());
     }
 
