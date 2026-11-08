@@ -15,6 +15,7 @@ import dev.bootcamp.transactionservice.domain.model.history.ProductMovementType;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Flowable;
+import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
 import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -150,6 +151,18 @@ class AccountTransactionControllerTest {
                 .header("X-Customer-Id", "999")
                 .exchange()
                 .expectStatus().isNotFound()
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    @Test
+    void returnsServiceUnavailableWhenAccountServiceIsDown() {
+        when(getAvailableBalanceUseCase.getAccountBalance("1", "10")).thenReturn(Single.error(
+                new ServiceUnavailableException("account-service no está disponible", new RuntimeException())));
+
+        webTestClient.get().uri("/api/v1/accounts/10/balance")
+                .header("X-Customer-Id", "1")
+                .exchange()
+                .expectStatus().isEqualTo(503)
                 .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
     }
 }

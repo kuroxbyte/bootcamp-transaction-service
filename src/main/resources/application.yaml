@@ -1,3 +1,6 @@
+server:
+  port: ${SERVER_PORT:8084}
+
 spring:
   application:
     name: transaction-service
@@ -8,3 +11,11 @@ spring:
     mongodb:
       # Crea los índices declarados con @Indexed y @CompoundIndex en los documentos.
       auto-index-creation: true
+
+clients:
+  account-service:
+    base-url: ${ACCOUNT_SERVICE_URL:http://localhost:8082}
+    timeout: 3s
+  credit-service:
+    base-url: ${CREDIT_SERVICE_URL:http://localhost:8083}
+    timeout: 3s
