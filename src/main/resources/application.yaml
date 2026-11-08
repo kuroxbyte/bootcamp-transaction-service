@@ -1,21 +1,10 @@
-server:
-  port: ${SERVER_PORT:8084}
-
 spring:
   application:
     name: transaction-service
-  mongodb:
-    # Una base de datos por microservicio; se puede sobrescribir con la variable MONGODB_URI.
-    uri: ${MONGODB_URI:mongodb://localhost:27017/transaction_db}
-  data:
-    mongodb:
-      # Crea los índices declarados con @Indexed y @CompoundIndex en los documentos.
-      auto-index-creation: true
-
-clients:
-  account-service:
-    base-url: ${ACCOUNT_SERVICE_URL:http://localhost:8082}
-    timeout: 3s
-  credit-service:
-    base-url: ${CREDIT_SERVICE_URL:http://localhost:8083}
-    timeout: 3s
+  config:
+    # Puerto, MongoDB y URLs de otros servicios viven en config-repo y los sirve config-server.
+    import: configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  cloud:
+    # Spring Cloud 2025.1 está certificado para Spring Boot 4.0; el proyecto usa 4.1.
+    compatibility-verifier:
+      enabled: false

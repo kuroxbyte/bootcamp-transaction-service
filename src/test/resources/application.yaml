@@ -1,0 +1,19 @@
+# Configuración de las pruebas: no se consulta config-server.
+spring:
+  application:
+    name: transaction-service
+  cloud:
+    config:
+      enabled: false
+    compatibility-verifier:
+      enabled: false
+  mongodb:
+    uri: mongodb://localhost:27017/transaction_test_db
+
+clients:
+  account-service:
+    base-url: http://localhost:8082
+    timeout: 3s
+  credit-service:
+    base-url: http://localhost:8083
+    timeout: 3s
