@@ -3,7 +3,9 @@ package dev.bootcamp.transactionservice.application.port;
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import io.reactivex.rxjava3.core.Maybe;
 
-/** Consulta de créditos personales y empresariales en credit-service. */
+/**
+ * Consulta de créditos personales y empresariales en credit-service.
+ */
 public interface CreditClient {
 
     /**

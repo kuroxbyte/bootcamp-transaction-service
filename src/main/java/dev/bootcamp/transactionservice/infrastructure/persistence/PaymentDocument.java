@@ -1,7 +1,5 @@
 package dev.bootcamp.transactionservice.infrastructure.persistence;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
@@ -10,7 +8,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
-/** Pago a un producto de crédito, en la colección {@code payments}. */
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+/**
+ * Pago a un producto de crédito, en la colección {@code payments}.
+ */
 @Getter
 @AllArgsConstructor
 @Document(collection = "payments")
@@ -18,7 +21,9 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 public class PaymentDocument {
     @Id private final String id;
 
-    /** CREDIT o CREDIT_CARD. */
+    /**
+     * CREDIT o CREDIT_CARD.
+     */
     private final String target;
 
     private final String productId;

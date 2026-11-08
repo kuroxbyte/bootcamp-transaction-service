@@ -5,12 +5,15 @@ import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
-import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-/** Implementa el puerto {@link ChargeRepository} con MongoDB reactivo. */
+import java.math.BigDecimal;
+
+/**
+ * Implementa el puerto {@link ChargeRepository} con MongoDB reactivo.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -19,7 +22,9 @@ public class ChargePersistenceAdapter implements ChargeRepository {
     private final ChargeMongoRepository chargeMongoRepository;
     private final PaymentMongoRepository paymentMongoRepository;
 
-    /** Suma los consumos de la tarjeta y resta los pagos hechos a ella. */
+    /**
+     * Suma los consumos de la tarjeta y resta los pagos hechos a ella.
+     */
     @Override
     public Single<BigDecimal> getDebt(String creditCardId) {
         Single<BigDecimal> charges =

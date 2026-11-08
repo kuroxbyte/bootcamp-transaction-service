@@ -3,6 +3,7 @@ package dev.bootcamp.transactionservice.domain.model.account;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
+
 import java.math.BigDecimal;
 
 /**
@@ -13,7 +14,9 @@ import java.math.BigDecimal;
  */
 public record Account(String id, String customerId, MovementPolicy movementPolicy) {
 
-    /** Indica si la cuenta pertenece al cliente. */
+    /**
+     * Indica si la cuenta pertenece al cliente.
+     */
     public boolean belongsTo(String customerId) {
         return this.customerId.equals(customerId);
     }

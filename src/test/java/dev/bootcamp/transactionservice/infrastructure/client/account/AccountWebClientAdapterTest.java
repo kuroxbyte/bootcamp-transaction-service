@@ -1,17 +1,18 @@
 package dev.bootcamp.transactionservice.infrastructure.client.account;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.FixedTermMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolicy;
 import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
 import dev.bootcamp.transactionservice.infrastructure.client.StubWebClient;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class AccountWebClientAdapterTest {
 

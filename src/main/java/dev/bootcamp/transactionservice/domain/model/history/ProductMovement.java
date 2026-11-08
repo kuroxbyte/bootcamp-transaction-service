@@ -4,6 +4,7 @@ import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -13,7 +14,9 @@ import java.time.LocalDate;
  */
 public record ProductMovement(ProductMovementType type, BigDecimal amount, LocalDate date) {
 
-    /** Convierte un depósito o retiro al formato común. */
+    /**
+     * Convierte un depósito o retiro al formato común.
+     */
     public static ProductMovement from(Movement movement) {
         ProductMovementType type =
                 movement.type() == MovementType.DEPOSIT
@@ -22,12 +25,16 @@ public record ProductMovement(ProductMovementType type, BigDecimal amount, Local
         return new ProductMovement(type, movement.amount(), movement.date());
     }
 
-    /** Convierte un pago al formato común. */
+    /**
+     * Convierte un pago al formato común.
+     */
     public static ProductMovement from(Payment payment) {
         return new ProductMovement(ProductMovementType.PAYMENT, payment.amount(), payment.date());
     }
 
-    /** Convierte un consumo al formato común. */
+    /**
+     * Convierte un consumo al formato común.
+     */
     public static ProductMovement from(Charge charge) {
         return new ProductMovement(ProductMovementType.CHARGE, charge.amount(), charge.date());
     }

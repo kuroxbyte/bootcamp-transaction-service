@@ -5,15 +5,18 @@ import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Range;
 import org.springframework.stereotype.Component;
 
-/** Implementa el puerto {@link MovementRepository} con MongoDB reactivo. */
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+
+/**
+ * Implementa el puerto {@link MovementRepository} con MongoDB reactivo.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -29,7 +32,9 @@ public class MovementPersistenceAdapter implements MovementRepository {
                 mongoRepository.countByAccountIdAndDateBetween(accountId, monthRange));
     }
 
-    /** Suma los depósitos y resta los retiros de la cuenta. */
+    /**
+     * Suma los depósitos y resta los retiros de la cuenta.
+     */
     @Override
     public Single<BigDecimal> getBalance(String accountId) {
         return findByAccountId(accountId)

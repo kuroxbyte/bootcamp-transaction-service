@@ -3,9 +3,12 @@ package dev.bootcamp.transactionservice.application.port;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+
 import java.math.BigDecimal;
 
-/** Puerto de persistencia de los consumos de tarjetas de crédito. */
+/**
+ * Puerto de persistencia de los consumos de tarjetas de crédito.
+ */
 public interface ChargeRepository {
 
     /**
@@ -15,9 +18,13 @@ public interface ChargeRepository {
      */
     Single<BigDecimal> getDebt(String creditCardId);
 
-    /** Consumos de la tarjeta. */
+    /**
+     * Consumos de la tarjeta.
+     */
     Flowable<Charge> findByCreditCardId(String creditCardId);
 
-    /** Guarda el consumo. */
+    /**
+     * Guarda el consumo.
+     */
     Single<Charge> save(Charge charge);
 }

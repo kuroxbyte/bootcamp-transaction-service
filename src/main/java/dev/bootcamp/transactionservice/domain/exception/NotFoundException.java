@@ -5,7 +5,9 @@ package dev.bootcamp.transactionservice.domain.exception;
  * BusinessRuleException}, que indica una regla de negocio incumplida.
  */
 public class NotFoundException extends RuntimeException {
-    /** Crea la excepción con el mensaje indicado. */
+    /**
+     * Crea la excepción con el mensaje indicado.
+     */
     public NotFoundException(String message) {
         super(message);
     }

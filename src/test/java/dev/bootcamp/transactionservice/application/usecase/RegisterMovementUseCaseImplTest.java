@@ -1,10 +1,5 @@
 package dev.bootcamp.transactionservice.application.usecase;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.bootcamp.transactionservice.application.port.AccountClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
@@ -18,14 +13,20 @@ import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RegisterMovementUseCaseImplTest {
@@ -45,9 +46,13 @@ class RegisterMovementUseCaseImplTest {
                 .thenReturn(Maybe.just(new Account("1", CUSTOMER_ID, movementPolicy)));
     }
 
-    /** Cuenta propia con los movimientos del mes y el saldo indicados. */
+    /**
+     * Cuenta propia con los movimientos del mes y el saldo indicados.
+     */
     private void givenAccount(
-            MovementPolicy movementPolicy, long movementsInMonth, String balance) {
+            MovementPolicy movementPolicy,
+            long movementsInMonth,
+            String balance) {
         givenAccount(movementPolicy);
         when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE)))
                 .thenReturn(Single.just(movementsInMonth));

@@ -5,8 +5,12 @@ package dev.bootcamp.transactionservice.domain.model.payment;
  * de crédito.
  */
 public enum PaymentTarget {
-    /** Crédito personal o empresarial. */
+    /**
+     * Crédito personal o empresarial.
+     */
     CREDIT,
-    /** Tarjeta de crédito. */
+    /**
+     * Tarjeta de crédito.
+     */
     CREDIT_CARD
 }

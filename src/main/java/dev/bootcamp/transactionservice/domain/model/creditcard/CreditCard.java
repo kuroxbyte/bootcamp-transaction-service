@@ -2,12 +2,17 @@ package dev.bootcamp.transactionservice.domain.model.creditcard;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
+
 import java.math.BigDecimal;
 
-/** Vista local de una tarjeta de crédito, obtenida de credit-service. */
+/**
+ * Vista local de una tarjeta de crédito, obtenida de credit-service.
+ */
 public record CreditCard(String id, String customerId, BigDecimal creditLimit) {
 
-    /** Indica si la tarjeta pertenece al cliente. */
+    /**
+     * Indica si la tarjeta pertenece al cliente.
+     */
     public boolean belongsTo(String customerId) {
         return this.customerId.equals(customerId);
     }

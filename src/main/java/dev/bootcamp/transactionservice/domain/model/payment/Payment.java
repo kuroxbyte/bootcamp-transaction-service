@@ -1,6 +1,7 @@
 package dev.bootcamp.transactionservice.domain.model.payment;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -13,7 +14,9 @@ import java.time.LocalDate;
  */
 public record Payment(PaymentTarget target, String productId, BigDecimal amount, LocalDate date) {
 
-    /** Valida que el monto del pago sea mayor a 0. */
+    /**
+     * Valida que el monto del pago sea mayor a 0.
+     */
     public Payment {
         if (amount == null || amount.signum() <= 0) {
             throw new BusinessRuleException("El monto del pago debe ser mayor a 0");

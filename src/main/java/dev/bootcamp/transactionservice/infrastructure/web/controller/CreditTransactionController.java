@@ -7,8 +7,6 @@ import dev.bootcamp.transactionservice.infrastructure.web.dto.AmountRequestDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.PaymentResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductMovementResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.mapper.TransactionWebMapper;
-import java.time.Clock;
-import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,7 +16,12 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/** Endpoints de pagos y movimientos de créditos personales y empresariales. */
+import java.time.Clock;
+import java.time.LocalDate;
+
+/**
+ * Endpoints de pagos y movimientos de créditos personales y empresariales.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -61,7 +64,9 @@ public class CreditTransactionController implements CreditTransactionsApi {
 
     @Override
     public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getCreditMovements(
-            String customerId, String creditId, ServerWebExchange exchange) {
+            String customerId,
+            String creditId,
+            ServerWebExchange exchange) {
         log.debug("Fetching movements creditId={} customerId={}", creditId, customerId);
         return MovementResponses.of(
                 getProductMovementsUseCase.getCreditMovements(customerId, creditId));

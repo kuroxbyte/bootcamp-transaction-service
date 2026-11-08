@@ -18,9 +18,10 @@ import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCase;
 import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCase;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCaseImpl;
-import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Clock;
 
 /**
  * Registra los casos de uso como beans. Los casos de uso no dependen de Spring; aquí se les
@@ -29,41 +30,57 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class UseCaseConfig {
 
-    /** Reloj con el que el servidor asigna la fecha de cada transacción. */
+    /**
+     * Reloj con el que el servidor asigna la fecha de cada transacción.
+     */
     @Bean
     public Clock clock() {
         return Clock.systemDefaultZone();
     }
 
-    /** Registra el caso de uso {@link RegisterMovementUseCase}. */
+    /**
+     * Registra el caso de uso {@link RegisterMovementUseCase}.
+     */
     @Bean
     public RegisterMovementUseCase registerMovementUseCase(
-            MovementRepository movementRepository, AccountClient accountClient) {
+            MovementRepository movementRepository,
+            AccountClient accountClient) {
         return new RegisterMovementUseCaseImpl(movementRepository, accountClient);
     }
 
-    /** Registra el caso de uso {@link PayCreditUseCase}. */
+    /**
+     * Registra el caso de uso {@link PayCreditUseCase}.
+     */
     @Bean
     public PayCreditUseCase payCreditUseCase(
-            PaymentRepository paymentRepository, CreditClient creditClient) {
+            PaymentRepository paymentRepository,
+            CreditClient creditClient) {
         return new PayCreditUseCaseImpl(paymentRepository, creditClient);
     }
 
-    /** Registra el caso de uso {@link PayCreditCardUseCase}. */
+    /**
+     * Registra el caso de uso {@link PayCreditCardUseCase}.
+     */
     @Bean
     public PayCreditCardUseCase payCreditCardUseCase(
-            PaymentRepository paymentRepository, CreditCardClient creditCardClient) {
+            PaymentRepository paymentRepository,
+            CreditCardClient creditCardClient) {
         return new PayCreditCardUseCaseImpl(paymentRepository, creditCardClient);
     }
 
-    /** Registra el caso de uso {@link ChargeCreditCardUseCase}. */
+    /**
+     * Registra el caso de uso {@link ChargeCreditCardUseCase}.
+     */
     @Bean
     public ChargeCreditCardUseCase chargeCreditCardUseCase(
-            ChargeRepository chargeRepository, CreditCardClient creditCardClient) {
+            ChargeRepository chargeRepository,
+            CreditCardClient creditCardClient) {
         return new ChargeCreditCardUseCaseImpl(chargeRepository, creditCardClient);
     }
 
-    /** Registra el caso de uso {@link GetAvailableBalanceUseCase}. */
+    /**
+     * Registra el caso de uso {@link GetAvailableBalanceUseCase}.
+     */
     @Bean
     public GetAvailableBalanceUseCase getAvailableBalanceUseCase(
             AccountClient accountClient,
@@ -74,7 +91,9 @@ public class UseCaseConfig {
                 accountClient, movementRepository, creditCardClient, chargeRepository);
     }
 
-    /** Registra el caso de uso {@link GetProductMovementsUseCase}. */
+    /**
+     * Registra el caso de uso {@link GetProductMovementsUseCase}.
+     */
     @Bean
     public GetProductMovementsUseCase getProductMovementsUseCase(
             AccountClient accountClient,

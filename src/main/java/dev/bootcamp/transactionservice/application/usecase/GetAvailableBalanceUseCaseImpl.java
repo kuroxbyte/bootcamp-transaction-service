@@ -8,16 +8,21 @@ import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import io.reactivex.rxjava3.core.Single;
+
 import java.math.BigDecimal;
 
-/** Implementación de {@link GetAvailableBalanceUseCase}. */
+/**
+ * Implementación de {@link GetAvailableBalanceUseCase}.
+ */
 public class GetAvailableBalanceUseCaseImpl implements GetAvailableBalanceUseCase {
     private final AccountClient accountClient;
     private final MovementRepository movementRepository;
     private final CreditCardClient creditCardClient;
     private final ChargeRepository chargeRepository;
 
-    /** Crea el caso de uso con los adaptadores de sus puertos. */
+    /**
+     * Crea el caso de uso con los adaptadores de sus puertos.
+     */
     public GetAvailableBalanceUseCaseImpl(
             AccountClient accountClient,
             MovementRepository movementRepository,

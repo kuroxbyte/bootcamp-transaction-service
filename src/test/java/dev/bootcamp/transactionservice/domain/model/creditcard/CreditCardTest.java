@@ -1,14 +1,15 @@
 package dev.bootcamp.transactionservice.domain.model.creditcard;
 
+import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.transactionservice.domain.model.charge.Charge;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
-import dev.bootcamp.transactionservice.domain.model.charge.Charge;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import org.junit.jupiter.api.Test;
 
 class CreditCardTest {
 

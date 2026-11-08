@@ -3,7 +3,9 @@ package dev.bootcamp.transactionservice.application.port;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
 import io.reactivex.rxjava3.core.Maybe;
 
-/** Consulta de cuentas en account-service. */
+/**
+ * Consulta de cuentas en account-service.
+ */
 public interface AccountClient {
 
     /**

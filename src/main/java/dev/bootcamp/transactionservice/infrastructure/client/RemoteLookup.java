@@ -1,10 +1,11 @@
 package dev.bootcamp.transactionservice.infrastructure.client;
 
 import io.reactivex.rxjava3.core.Maybe;
-import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 /**
  * Reglas comunes para consultar un recurso por id en otro microservicio.
@@ -30,7 +31,10 @@ public final class RemoteLookup {
      * @return el recurso, vacío si no existe, o error {@link ServiceUnavailableException}
      */
     public static <T> Maybe<T> findById(
-            Mono<T> request, Duration timeout, String serviceName, String resourceId) {
+            Mono<T> request,
+            Duration timeout,
+            String serviceName,
+            String resourceId) {
         Mono<T> lookup =
                 request.timeout(timeout)
                         .doOnSubscribe(
