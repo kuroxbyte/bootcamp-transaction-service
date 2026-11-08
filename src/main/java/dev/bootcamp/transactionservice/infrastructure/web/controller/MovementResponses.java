@@ -11,14 +11,15 @@ import reactor.core.publisher.Mono;
 /** Arma la respuesta de las consultas de movimientos de un producto. */
 final class MovementResponses {
 
-    private MovementResponses() {
-    }
+    private MovementResponses() {}
 
     /**
-     * Convierte el historial en la respuesta HTTP. Si el producto no existe o no pertenece al cliente,
-     * el error se propaga antes de responder, para que el manejador global devuelva 404 y no un 200 vacío.
+     * Convierte el historial en la respuesta HTTP. Si el producto no existe o no pertenece al
+     * cliente, el error se propaga antes de responder, para que el manejador global devuelva 404 y
+     * no un 200 vacío.
      */
-    static Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> of(Flowable<ProductMovement> movements) {
+    static Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> of(
+            Flowable<ProductMovement> movements) {
         return Flux.from(movements)
                 .map(TransactionWebMapper::toResponse)
                 .collectList()

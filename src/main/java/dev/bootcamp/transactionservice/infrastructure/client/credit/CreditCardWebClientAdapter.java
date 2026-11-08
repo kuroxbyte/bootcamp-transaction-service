@@ -19,9 +19,11 @@ public class CreditCardWebClientAdapter implements CreditCardClient {
     private final WebClient webClient;
     private final Duration timeout;
 
-    public CreditCardWebClientAdapter(WebClient.Builder webClientBuilder,
-                                      @Value("${clients.credit-service.base-url}") String baseUrl,
-                                      @Value("${clients.credit-service.timeout}") Duration timeout) {
+    /** Crea el cliente con la URL base y el tiempo de espera configurados. */
+    public CreditCardWebClientAdapter(
+            WebClient.Builder webClientBuilder,
+            @Value("${clients.credit-service.base-url}") String baseUrl,
+            @Value("${clients.credit-service.timeout}") Duration timeout) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
         this.timeout = timeout;
     }
@@ -29,12 +31,19 @@ public class CreditCardWebClientAdapter implements CreditCardClient {
     @Override
     public Maybe<CreditCard> findById(String creditCardId) {
         return RemoteLookup.findById(
-                webClient.get()
+                webClient
+                        .get()
                         .uri("/api/v1/credit-cards/{creditCardId}", creditCardId)
                         .retrieve()
                         .bodyToMono(CreditCardResponseDto.class)
-                        .map(response -> new CreditCard(response.getId(), response.getCustomerId(),
-                                response.getCreditLimit())),
-                timeout, SERVICE_NAME, creditCardId);
+                        .map(
+                                response ->
+                                        new CreditCard(
+                                                response.getId(),
+                                                response.getCustomerId(),
+                                                response.getCreditLimit())),
+                timeout,
+                SERVICE_NAME,
+                creditCardId);
     }
 }

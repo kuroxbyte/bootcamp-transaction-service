@@ -25,18 +25,20 @@ public class MovementPersistenceAdapter implements MovementRepository {
     public Single<Long> countByAccountIdAndMonth(String accountId, YearMonth month) {
         // [primer día del mes, primer día del mes siguiente)
         Range<LocalDate> monthRange = Range.rightOpen(month.atDay(1), month.plusMonths(1).atDay(1));
-        return Single.fromPublisher(mongoRepository.countByAccountIdAndDateBetween(accountId, monthRange));
+        return Single.fromPublisher(
+                mongoRepository.countByAccountIdAndDateBetween(accountId, monthRange));
     }
 
-    /**
-     * Suma los depósitos y resta los retiros de la cuenta.
-     */
+    /** Suma los depósitos y resta los retiros de la cuenta. */
     @Override
     public Single<BigDecimal> getBalance(String accountId) {
         return findByAccountId(accountId)
-                .reduce(BigDecimal.ZERO, (balance, movement) -> movement.type() == MovementType.DEPOSIT
-                        ? balance.add(movement.amount())
-                        : balance.subtract(movement.amount()));
+                .reduce(
+                        BigDecimal.ZERO,
+                        (balance, movement) ->
+                                movement.type() == MovementType.DEPOSIT
+                                        ? balance.add(movement.amount())
+                                        : balance.subtract(movement.amount()));
     }
 
     @Override
@@ -47,9 +49,14 @@ public class MovementPersistenceAdapter implements MovementRepository {
 
     @Override
     public Single<Movement> save(Movement movement) {
-        return Single.fromPublisher(mongoRepository.save(TransactionPersistenceMapper.toDocument(movement)))
-                .doOnSuccess(saved -> log.debug("Movement saved movementId={} accountId={}",
-                        saved.getId(), saved.getAccountId()))
+        return Single.fromPublisher(
+                        mongoRepository.save(TransactionPersistenceMapper.toDocument(movement)))
+                .doOnSuccess(
+                        saved ->
+                                log.debug(
+                                        "Movement saved movementId={} accountId={}",
+                                        saved.getId(),
+                                        saved.getAccountId()))
                 .map(TransactionPersistenceMapper::toDomain);
     }
 }

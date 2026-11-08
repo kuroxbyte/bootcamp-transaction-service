@@ -15,11 +15,11 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 @AllArgsConstructor
 @Document(collection = "charges")
 public class ChargeDocument {
-    @Id
-    private final String id;
-    @Indexed
-    private final String creditCardId;
+    @Id private final String id;
+    @Indexed private final String creditCardId;
+
     @Field(targetType = FieldType.DECIMAL128)
     private final BigDecimal amount;
+
     private final LocalDate date;
 }

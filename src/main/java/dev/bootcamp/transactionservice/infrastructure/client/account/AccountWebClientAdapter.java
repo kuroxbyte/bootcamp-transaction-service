@@ -23,9 +23,11 @@ public class AccountWebClientAdapter implements AccountClient {
     private final WebClient webClient;
     private final Duration timeout;
 
-    public AccountWebClientAdapter(WebClient.Builder webClientBuilder,
-                                   @Value("${clients.account-service.base-url}") String baseUrl,
-                                   @Value("${clients.account-service.timeout}") Duration timeout) {
+    /** Crea el cliente con la URL base y el tiempo de espera configurados. */
+    public AccountWebClientAdapter(
+            WebClient.Builder webClientBuilder,
+            @Value("${clients.account-service.base-url}") String baseUrl,
+            @Value("${clients.account-service.timeout}") Duration timeout) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
         this.timeout = timeout;
     }
@@ -33,23 +35,26 @@ public class AccountWebClientAdapter implements AccountClient {
     @Override
     public Maybe<Account> findById(String accountId) {
         return RemoteLookup.findById(
-                webClient.get()
+                webClient
+                        .get()
                         .uri("/api/v1/accounts/{accountId}", accountId)
                         .retrieve()
                         .bodyToMono(AccountResponseDto.class)
                         .map(AccountWebClientAdapter::toDomain),
-                timeout, SERVICE_NAME, accountId);
+                timeout,
+                SERVICE_NAME,
+                accountId);
     }
 
-    /**
-     * Convierte la cuenta en la vista local, con la regla de movimientos de su tipo.
-     */
+    /** Convierte la cuenta en la vista local, con la regla de movimientos de su tipo. */
     private static Account toDomain(AccountResponseDto response) {
-        MovementPolicy movementPolicy = switch (response.getType()) {
-            case SAVINGS -> new SavingsMovementPolicy(response.getMaxMonthlyMovements());
-            case CHECKING -> new CheckingMovementPolicy();
-            case FIXED_TERM -> new FixedTermMovementPolicy(response.getMovementDayOfMonth());
-        };
+        MovementPolicy movementPolicy =
+                switch (response.getType()) {
+                    case SAVINGS -> new SavingsMovementPolicy(response.getMaxMonthlyMovements());
+                    case CHECKING -> new CheckingMovementPolicy();
+                    case FIXED_TERM ->
+                            new FixedTermMovementPolicy(response.getMovementDayOfMonth());
+                };
         return new Account(response.getId(), response.getCustomerId(), movementPolicy);
     }
 }

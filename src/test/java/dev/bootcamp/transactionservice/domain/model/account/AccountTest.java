@@ -40,22 +40,33 @@ class AccountTest {
 
     @Test
     void allowsWithdrawalUpToBalance() {
-        assertThatCode(() -> checking().validateMovement(withdrawal("50"), 0, new BigDecimal("100")))
+        assertThatCode(
+                        () ->
+                                checking()
+                                        .validateMovement(
+                                                withdrawal("50"), 0, new BigDecimal("100")))
                 .doesNotThrowAnyException();
-        assertThatCode(() -> checking().validateMovement(withdrawal("100"), 0, new BigDecimal("100")))
+        assertThatCode(
+                        () ->
+                                checking()
+                                        .validateMovement(
+                                                withdrawal("100"), 0, new BigDecimal("100")))
                 .doesNotThrowAnyException();
     }
 
     @Test
     void rejectsWithdrawalOverBalanceInEveryAccountType() {
         Account[] accounts = {
-                new Account("1", "100", new SavingsMovementPolicy(5)),
-                checking(),
-                new Account("1", "100", new FixedTermMovementPolicy(15))
+            new Account("1", "100", new SavingsMovementPolicy(5)),
+            checking(),
+            new Account("1", "100", new FixedTermMovementPolicy(15))
         };
 
         for (Account account : accounts) {
-            assertThatThrownBy(() -> account.validateMovement(withdrawal("100.01"), 0, new BigDecimal("100")))
+            assertThatThrownBy(
+                            () ->
+                                    account.validateMovement(
+                                            withdrawal("100.01"), 0, new BigDecimal("100")))
                     .isInstanceOf(BusinessRuleException.class)
                     .hasMessage("Saldo insuficiente para el retiro");
         }

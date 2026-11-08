@@ -14,7 +14,8 @@ class PaymentTest {
 
     @Test
     void acceptsPositiveAmount() {
-        assertThatCode(() -> new Payment(PaymentTarget.CREDIT, "1", BigDecimal.ONE, DATE)).doesNotThrowAnyException();
+        assertThatCode(() -> new Payment(PaymentTarget.CREDIT, "1", BigDecimal.ONE, DATE))
+                .doesNotThrowAnyException();
     }
 
     @Test

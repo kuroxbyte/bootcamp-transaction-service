@@ -27,30 +27,27 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class GetAvailableBalanceUseCaseImplTest {
 
     private static final String CUSTOMER_ID = "100";
-    private static final Account ACCOUNT = new Account("1", CUSTOMER_ID, new CheckingMovementPolicy());
+    private static final Account ACCOUNT =
+            new Account("1", CUSTOMER_ID, new CheckingMovementPolicy());
     private static final CreditCard CARD = new CreditCard("2", CUSTOMER_ID, new BigDecimal("1000"));
 
-    @Mock
-    private AccountClient accountClient;
+    @Mock private AccountClient accountClient;
 
-    @Mock
-    private MovementRepository movementRepository;
+    @Mock private MovementRepository movementRepository;
 
-    @Mock
-    private CreditCardClient creditCardClient;
+    @Mock private CreditCardClient creditCardClient;
 
-    @Mock
-    private ChargeRepository chargeRepository;
+    @Mock private ChargeRepository chargeRepository;
 
-    @InjectMocks
-    private GetAvailableBalanceUseCaseImpl useCase;
+    @InjectMocks private GetAvailableBalanceUseCaseImpl useCase;
 
     @Test
     void returnsBalanceOfOwnAccount() {
         when(accountClient.findById("1")).thenReturn(Maybe.just(ACCOUNT));
         when(movementRepository.getBalance("1")).thenReturn(Single.just(new BigDecimal("350.50")));
 
-        assertThat(useCase.getAccountBalance(CUSTOMER_ID, "1").blockingGet()).isEqualByComparingTo("350.50");
+        assertThat(useCase.getAccountBalance(CUSTOMER_ID, "1").blockingGet())
+                .isEqualByComparingTo("350.50");
     }
 
     @Test
@@ -73,7 +70,8 @@ class GetAvailableBalanceUseCaseImplTest {
         when(creditCardClient.findById("2")).thenReturn(Maybe.just(CARD));
         when(chargeRepository.getDebt("2")).thenReturn(Single.just(new BigDecimal("800")));
 
-        assertThat(useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "2").blockingGet()).isEqualByComparingTo("200");
+        assertThat(useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "2").blockingGet())
+                .isEqualByComparingTo("200");
     }
 
     @Test
@@ -81,14 +79,17 @@ class GetAvailableBalanceUseCaseImplTest {
         when(creditCardClient.findById("2")).thenReturn(Maybe.just(CARD));
         when(chargeRepository.getDebt("2")).thenReturn(Single.just(BigDecimal.ZERO));
 
-        assertThat(useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "2").blockingGet()).isEqualByComparingTo("1000");
+        assertThat(useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "2").blockingGet())
+                .isEqualByComparingTo("1000");
     }
 
     @Test
     void rejectsAvailableCreditOfCardOfAnotherCustomer() {
         when(creditCardClient.findById("2")).thenReturn(Maybe.just(CARD));
 
-        useCase.getCreditCardAvailableCredit("999", "2").test().assertError(NotFoundException.class);
+        useCase.getCreditCardAvailableCredit("999", "2")
+                .test()
+                .assertError(NotFoundException.class);
         verify(chargeRepository, never()).getDebt(any());
     }
 
@@ -96,6 +97,8 @@ class GetAvailableBalanceUseCaseImplTest {
     void rejectsAvailableCreditOfUnknownCard() {
         when(creditCardClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "99").test().assertError(NotFoundException.class);
+        useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "99")
+                .test()
+                .assertError(NotFoundException.class);
     }
 }

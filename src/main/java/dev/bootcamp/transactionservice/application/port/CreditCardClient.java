@@ -7,6 +7,8 @@ import io.reactivex.rxjava3.core.Maybe;
 public interface CreditCardClient {
 
     /**
+     * Busca el recurso por su id.
+     *
      * @return la tarjeta, o vacío si no existe
      */
     Maybe<CreditCard> findById(String creditCardId);

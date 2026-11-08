@@ -15,7 +15,8 @@ class FixedTermMovementPolicyTest {
     private final MovementPolicy policy = new FixedTermMovementPolicy(15);
 
     private static Movement movementOn(int day) {
-        return new Movement("1", MovementType.WITHDRAWAL, BigDecimal.TEN, LocalDate.of(2026, 11, day));
+        return new Movement(
+                "1", MovementType.WITHDRAWAL, BigDecimal.TEN, LocalDate.of(2026, 11, day));
     }
 
     @Test

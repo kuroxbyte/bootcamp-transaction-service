@@ -16,12 +16,15 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 @Document(collection = "payments")
 @CompoundIndex(name = "target_product", def = "{'target': 1, 'productId': 1}")
 public class PaymentDocument {
-    @Id
-    private final String id;
+    @Id private final String id;
+
     /** CREDIT o CREDIT_CARD. */
     private final String target;
+
     private final String productId;
+
     @Field(targetType = FieldType.DECIMAL128)
     private final BigDecimal amount;
+
     private final LocalDate date;
 }

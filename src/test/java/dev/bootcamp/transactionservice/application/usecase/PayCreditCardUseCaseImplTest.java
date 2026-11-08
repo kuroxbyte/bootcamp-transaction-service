@@ -31,14 +31,11 @@ class PayCreditCardUseCaseImplTest {
     private static final BigDecimal AMOUNT = new BigDecimal("250.00");
     private static final CreditCard CARD = new CreditCard("1", CUSTOMER_ID, new BigDecimal("1000"));
 
-    @Mock
-    private PaymentRepository paymentRepository;
+    @Mock private PaymentRepository paymentRepository;
 
-    @Mock
-    private CreditCardClient creditCardClient;
+    @Mock private CreditCardClient creditCardClient;
 
-    @InjectMocks
-    private PayCreditCardUseCaseImpl useCase;
+    @InjectMocks private PayCreditCardUseCaseImpl useCase;
 
     @Test
     void customerPaysOwnCreditCard() {
@@ -68,7 +65,9 @@ class PayCreditCardUseCaseImplTest {
 
     @Test
     void rejectsInvalidAmountBeforeQueryingCard() {
-        useCase.pay(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE).test().assertError(BusinessRuleException.class);
+        useCase.pay(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE)
+                .test()
+                .assertError(BusinessRuleException.class);
         verify(creditCardClient, never()).findById(any());
         verify(paymentRepository, never()).save(any());
     }

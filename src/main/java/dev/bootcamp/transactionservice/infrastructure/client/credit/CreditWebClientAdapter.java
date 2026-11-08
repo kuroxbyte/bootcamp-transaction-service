@@ -19,9 +19,11 @@ public class CreditWebClientAdapter implements CreditClient {
     private final WebClient webClient;
     private final Duration timeout;
 
-    public CreditWebClientAdapter(WebClient.Builder webClientBuilder,
-                                  @Value("${clients.credit-service.base-url}") String baseUrl,
-                                  @Value("${clients.credit-service.timeout}") Duration timeout) {
+    /** Crea el cliente con la URL base y el tiempo de espera configurados. */
+    public CreditWebClientAdapter(
+            WebClient.Builder webClientBuilder,
+            @Value("${clients.credit-service.base-url}") String baseUrl,
+            @Value("${clients.credit-service.timeout}") Duration timeout) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
         this.timeout = timeout;
     }
@@ -29,11 +31,14 @@ public class CreditWebClientAdapter implements CreditClient {
     @Override
     public Maybe<Credit> findById(String creditId) {
         return RemoteLookup.findById(
-                webClient.get()
+                webClient
+                        .get()
                         .uri("/api/v1/credits/{creditId}", creditId)
                         .retrieve()
                         .bodyToMono(CreditResponseDto.class)
                         .map(response -> new Credit(response.getId(), response.getCustomerId())),
-                timeout, SERVICE_NAME, creditId);
+                timeout,
+                SERVICE_NAME,
+                creditId);
     }
 }

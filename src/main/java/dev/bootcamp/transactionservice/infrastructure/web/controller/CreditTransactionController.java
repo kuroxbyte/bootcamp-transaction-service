@@ -18,6 +18,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/** Endpoints de pagos y movimientos de créditos personales y empresariales. */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -28,23 +29,41 @@ public class CreditTransactionController implements CreditTransactionsApi {
     private final Clock clock;
 
     @Override
-    public Mono<ResponseEntity<PaymentResponseDto>> payCredit(String xCustomerId, String creditId,
-                                                              Mono<AmountRequestDto> amountRequestDto,
-                                                              ServerWebExchange exchange) {
+    public Mono<ResponseEntity<PaymentResponseDto>> payCredit(
+            String customerId,
+            String creditId,
+            Mono<AmountRequestDto> amountRequestDto,
+            ServerWebExchange exchange) {
         return amountRequestDto
-                .flatMap(request -> Mono.from(payCreditUseCase
-                        .pay(xCustomerId, creditId, request.getAmount(), LocalDate.now(clock))
-                        .toFlowable()))
-                .doOnNext(payment -> log.info("Credit payment registered creditId={} customerId={} amount={}",
-                        creditId, xCustomerId, payment.amount()))
-                .map(payment -> ResponseEntity.status(HttpStatus.CREATED).body(TransactionWebMapper.toResponse(payment)));
+                .flatMap(
+                        request ->
+                                Mono.from(
+                                        payCreditUseCase
+                                                .pay(
+                                                        customerId,
+                                                        creditId,
+                                                        request.getAmount(),
+                                                        LocalDate.now(clock))
+                                                .toFlowable()))
+                .doOnNext(
+                        payment ->
+                                log.info(
+                                        "Credit payment registered creditId={} customerId={}"
+                                                + " amount={}",
+                                        creditId,
+                                        customerId,
+                                        payment.amount()))
+                .map(
+                        payment ->
+                                ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(TransactionWebMapper.toResponse(payment)));
     }
 
     @Override
-    public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getCreditMovements(String xCustomerId,
-                                                                                     String creditId,
-                                                                                     ServerWebExchange exchange) {
-        log.debug("Fetching movements creditId={} customerId={}", creditId, xCustomerId);
-        return MovementResponses.of(getProductMovementsUseCase.getCreditMovements(xCustomerId, creditId));
+    public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getCreditMovements(
+            String customerId, String creditId, ServerWebExchange exchange) {
+        log.debug("Fetching movements creditId={} customerId={}", creditId, customerId);
+        return MovementResponses.of(
+                getProductMovementsUseCase.getCreditMovements(customerId, creditId));
     }
 }

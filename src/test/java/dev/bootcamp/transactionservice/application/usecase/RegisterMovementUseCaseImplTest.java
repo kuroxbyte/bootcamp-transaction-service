@@ -34,14 +34,11 @@ class RegisterMovementUseCaseImplTest {
     private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
     private static final BigDecimal AMOUNT = BigDecimal.TEN;
 
-    @Mock
-    private MovementRepository movementRepository;
+    @Mock private MovementRepository movementRepository;
 
-    @Mock
-    private AccountClient accountClient;
+    @Mock private AccountClient accountClient;
 
-    @InjectMocks
-    private RegisterMovementUseCaseImpl useCase;
+    @InjectMocks private RegisterMovementUseCaseImpl useCase;
 
     private void givenAccount(MovementPolicy movementPolicy) {
         when(accountClient.findById("1"))
@@ -49,7 +46,8 @@ class RegisterMovementUseCaseImplTest {
     }
 
     /** Cuenta propia con los movimientos del mes y el saldo indicados. */
-    private void givenAccount(MovementPolicy movementPolicy, long movementsInMonth, String balance) {
+    private void givenAccount(
+            MovementPolicy movementPolicy, long movementsInMonth, String balance) {
         givenAccount(movementPolicy);
         when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE)))
                 .thenReturn(Single.just(movementsInMonth));
@@ -65,7 +63,8 @@ class RegisterMovementUseCaseImplTest {
         givenAccount(new CheckingMovementPolicy(), 0, "0");
         givenSaveReturnsMovement();
 
-        useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE).test()
+        useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE)
+                .test()
                 .assertValue(new Movement("1", MovementType.DEPOSIT, AMOUNT, DATE));
     }
 
@@ -74,7 +73,8 @@ class RegisterMovementUseCaseImplTest {
         givenAccount(new CheckingMovementPolicy(), 0, "100");
         givenSaveReturnsMovement();
 
-        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE).test()
+        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE)
+                .test()
                 .assertValue(new Movement("1", MovementType.WITHDRAWAL, AMOUNT, DATE));
     }
 
@@ -89,7 +89,9 @@ class RegisterMovementUseCaseImplTest {
 
     @Test
     void rejectsInvalidAmountBeforeQueryingAccount() {
-        useCase.deposit(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE).test().assertError(BusinessRuleException.class);
+        useCase.deposit(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE)
+                .test()
+                .assertError(BusinessRuleException.class);
         verify(accountClient, never()).findById(any());
         verify(movementRepository, never()).save(any());
     }
@@ -98,7 +100,9 @@ class RegisterMovementUseCaseImplTest {
     void rejectsUnknownAccount() {
         when(accountClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.deposit(CUSTOMER_ID, "99", AMOUNT, DATE).test().assertError(NotFoundException.class);
+        useCase.deposit(CUSTOMER_ID, "99", AMOUNT, DATE)
+                .test()
+                .assertError(NotFoundException.class);
         verify(movementRepository, never()).save(any());
     }
 
@@ -116,7 +120,9 @@ class RegisterMovementUseCaseImplTest {
     void doesNotSaveMovementOverSavingsLimit() {
         givenAccount(new SavingsMovementPolicy(2), 2, "100");
 
-        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE)
+                .test()
+                .assertError(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
     }
 
@@ -124,7 +130,9 @@ class RegisterMovementUseCaseImplTest {
     void doesNotSaveSecondFixedTermMovementInMonth() {
         givenAccount(new FixedTermMovementPolicy(15), 1, "100");
 
-        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE)
+                .test()
+                .assertError(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
     }
 
@@ -132,7 +140,9 @@ class RegisterMovementUseCaseImplTest {
     void doesNotSaveWithdrawalOverBalance() {
         givenAccount(new CheckingMovementPolicy(), 0, "5");
 
-        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertError(BusinessRuleException.class);
+        useCase.withdraw(CUSTOMER_ID, "1", AMOUNT, DATE)
+                .test()
+                .assertError(BusinessRuleException.class);
         verify(movementRepository, never()).save(any());
     }
 
