@@ -9,32 +9,54 @@ import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/** Implementación de {@link ChargeCreditCardUseCase}. */
 public class ChargeCreditCardUseCaseImpl implements ChargeCreditCardUseCase {
+    private static final String CREDIT_CARD_NOT_FOUND = "La tarjeta de crédito no existe";
+    private static final String CREDIT_CARD_NOT_OWNED =
+            "La tarjeta de crédito no pertenece al cliente";
+
     private final ChargeRepository chargeRepository;
     private final CreditCardClient creditCardClient;
 
-    public ChargeCreditCardUseCaseImpl(ChargeRepository chargeRepository, CreditCardClient creditCardClient) {
+    /** Crea el caso de uso con los adaptadores de sus puertos. */
+    public ChargeCreditCardUseCaseImpl(
+            ChargeRepository chargeRepository, CreditCardClient creditCardClient) {
         this.chargeRepository = chargeRepository;
         this.creditCardClient = creditCardClient;
     }
 
     @Override
-    public Single<Charge> charge(String customerId, String creditCardId, BigDecimal amount, LocalDate date) {
+    public Single<Charge> charge(
+            String customerId, String creditCardId, BigDecimal amount, LocalDate date) {
         return Single.fromCallable(() -> new Charge(creditCardId, amount, date))
-                .flatMap(charge -> creditCardClient.findById(creditCardId)
-                        .switchIfEmpty(Single.error(() -> new NotFoundException("La tarjeta de crédito no existe")))
-                        .map(creditCard -> ensureBelongsTo(creditCard, customerId))
-                        .flatMap(creditCard -> chargeRepository.getDebt(creditCardId)
-                                .map(debt -> {
-                                    creditCard.validateCharge(charge, debt);
-                                    return charge;
-                                })))
+                .flatMap(
+                        charge ->
+                                creditCardClient
+                                        .findById(creditCardId)
+                                        .switchIfEmpty(
+                                                Single.error(
+                                                        () ->
+                                                                new NotFoundException(
+                                                                        CREDIT_CARD_NOT_FOUND)))
+                                        .map(creditCard -> ensureBelongsTo(creditCard, customerId))
+                                        .flatMap(
+                                                creditCard ->
+                                                        chargeRepository
+                                                                .getDebt(creditCardId)
+                                                                .map(
+                                                                        debt -> {
+                                                                            creditCard
+                                                                                    .validateCharge(
+                                                                                            charge,
+                                                                                            debt);
+                                                                            return charge;
+                                                                        })))
                 .flatMap(chargeRepository::save);
     }
 
     private static CreditCard ensureBelongsTo(CreditCard creditCard, String customerId) {
         if (!creditCard.belongsTo(customerId)) {
-            throw new NotFoundException("La tarjeta de crédito no pertenece al cliente");
+            throw new NotFoundException(CREDIT_CARD_NOT_OWNED);
         }
         return creditCard;
     }

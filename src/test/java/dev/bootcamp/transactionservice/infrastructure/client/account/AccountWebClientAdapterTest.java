@@ -17,39 +17,53 @@ class AccountWebClientAdapterTest {
 
     private static Account fetch(String json) {
         StubWebClient stub = StubWebClient.respondingWith(HttpStatus.OK, json);
-        return new AccountWebClientAdapter(stub.builder(), "http://account-service", Duration.ofSeconds(1))
-                .findById("10").blockingGet();
+        return new AccountWebClientAdapter(
+                        stub.builder(), "http://account-service", Duration.ofSeconds(1))
+                .findById("10")
+                .blockingGet();
     }
 
     @Test
     void mapsSavingsAccountToItsMovementPolicy() {
-        Account account = fetch("{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"SAVINGS\",\"maxMonthlyMovements\":5}");
+        Account account =
+                fetch(
+                        "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"SAVINGS\","
+                                + "\"maxMonthlyMovements\":5}");
 
         assertThat(account).isEqualTo(new Account("10", "1", new SavingsMovementPolicy(5)));
     }
 
     @Test
     void mapsCheckingAccountToItsMovementPolicy() {
-        Account account = fetch("{\"id\":\"10\",\"customerId\":\"2\",\"type\":\"CHECKING\",\"maintenanceFee\":15.0,"
-                + "\"holderIds\":[\"h1\"],\"authorizedSignerIds\":[]}");
+        Account account =
+                fetch(
+                        "{\"id\":\"10\",\"customerId\":\"2\",\"type\":\"CHECKING\","
+                                + "\"maintenanceFee\":15.0,"
+                                + "\"holderIds\":[\"h1\"],\"authorizedSignerIds\":[]}");
 
         assertThat(account).isEqualTo(new Account("10", "2", new CheckingMovementPolicy()));
     }
 
     @Test
     void mapsFixedTermAccountToItsMovementPolicy() {
-        Account account = fetch("{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"FIXED_TERM\",\"movementDayOfMonth\":15}");
+        Account account =
+                fetch(
+                        "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"FIXED_TERM\","
+                                + "\"movementDayOfMonth\":15}");
 
         assertThat(account).isEqualTo(new Account("10", "1", new FixedTermMovementPolicy(15)));
     }
 
     @Test
     void callsAccountByIdEndpoint() {
-        StubWebClient stub = StubWebClient.respondingWith(HttpStatus.OK,
-                "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\"}");
+        StubWebClient stub =
+                StubWebClient.respondingWith(
+                        HttpStatus.OK,
+                        "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\"}");
 
         new AccountWebClientAdapter(stub.builder(), "http://account-service", Duration.ofSeconds(1))
-                .findById("10").blockingGet();
+                .findById("10")
+                .blockingGet();
 
         assertThat(stub.lastPath()).isEqualTo("/api/v1/accounts/10");
     }
@@ -59,16 +73,22 @@ class AccountWebClientAdapterTest {
         StubWebClient stub = StubWebClient.respondingWith(HttpStatus.NOT_FOUND, "{\"status\":404}");
 
         new AccountWebClientAdapter(stub.builder(), "http://account-service", Duration.ofSeconds(1))
-                .findById("99").test().awaitDone(2, TimeUnit.SECONDS)
+                .findById("99")
+                .test()
+                .awaitDone(2, TimeUnit.SECONDS)
                 .assertComplete()
                 .assertNoValues();
     }
 
     @Test
     void failsAsUnavailableOnTimeout() {
-        new AccountWebClientAdapter(StubWebClient.neverResponding().builder(), "http://account-service",
-                Duration.ofMillis(100))
-                .findById("10").test().awaitDone(2, TimeUnit.SECONDS)
+        new AccountWebClientAdapter(
+                        StubWebClient.neverResponding().builder(),
+                        "http://account-service",
+                        Duration.ofMillis(100))
+                .findById("10")
+                .test()
+                .awaitDone(2, TimeUnit.SECONDS)
                 .assertError(ServiceUnavailableException.class);
     }
 }

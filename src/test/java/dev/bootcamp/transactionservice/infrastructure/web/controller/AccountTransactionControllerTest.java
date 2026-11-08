@@ -14,8 +14,8 @@ import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovementType;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
-import io.reactivex.rxjava3.core.Flowable;
 import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -45,58 +45,68 @@ class AccountTransactionControllerTest {
         }
     }
 
-    @Autowired
-    private WebTestClient webTestClient;
+    @Autowired private WebTestClient webTestClient;
 
-    @MockitoBean
-    private RegisterMovementUseCase registerMovementUseCase;
+    @MockitoBean private RegisterMovementUseCase registerMovementUseCase;
 
-    @MockitoBean
-    private GetAvailableBalanceUseCase getAvailableBalanceUseCase;
+    @MockitoBean private GetAvailableBalanceUseCase getAvailableBalanceUseCase;
 
-    @MockitoBean
-    private GetProductMovementsUseCase getProductMovementsUseCase;
+    @MockitoBean private GetProductMovementsUseCase getProductMovementsUseCase;
 
     @Test
     void registersDepositWithServerDate() {
         when(registerMovementUseCase.deposit("1", "10", AMOUNT, TODAY))
                 .thenReturn(Single.just(new Movement("10", MovementType.DEPOSIT, AMOUNT, TODAY)));
 
-        webTestClient.post().uri("/api/v1/accounts/10/deposits")
+        webTestClient
+                .post()
+                .uri("/api/v1/accounts/10/deposits")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":100.0}")
                 .exchange()
-                .expectStatus().isCreated()
+                .expectStatus()
+                .isCreated()
                 .expectBody()
-                .jsonPath("$.accountId").isEqualTo("10")
-                .jsonPath("$.type").isEqualTo("DEPOSIT")
-                .jsonPath("$.date").isEqualTo("2026-11-15");
+                .jsonPath("$.accountId")
+                .isEqualTo("10")
+                .jsonPath("$.type")
+                .isEqualTo("DEPOSIT")
+                .jsonPath("$.date")
+                .isEqualTo("2026-11-15");
     }
 
     @Test
     void registersWithdrawal() {
         when(registerMovementUseCase.withdraw("1", "10", AMOUNT, TODAY))
-                .thenReturn(Single.just(new Movement("10", MovementType.WITHDRAWAL, AMOUNT, TODAY)));
+                .thenReturn(
+                        Single.just(new Movement("10", MovementType.WITHDRAWAL, AMOUNT, TODAY)));
 
-        webTestClient.post().uri("/api/v1/accounts/10/withdrawals")
+        webTestClient
+                .post()
+                .uri("/api/v1/accounts/10/withdrawals")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":100.0}")
                 .exchange()
-                .expectStatus().isCreated()
+                .expectStatus()
+                .isCreated()
                 .expectBody()
-                .jsonPath("$.type").isEqualTo("WITHDRAWAL");
+                .jsonPath("$.type")
+                .isEqualTo("WITHDRAWAL");
     }
 
     @Test
     void rejectsNonPositiveAmount() {
-        webTestClient.post().uri("/api/v1/accounts/10/deposits")
+        webTestClient
+                .post()
+                .uri("/api/v1/accounts/10/deposits")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":0}")
                 .exchange()
-                .expectStatus().isBadRequest();
+                .expectStatus()
+                .isBadRequest();
 
         verify(registerMovementUseCase, never()).deposit(any(), any(), any(), any());
     }
@@ -104,65 +114,96 @@ class AccountTransactionControllerTest {
     @Test
     void returnsUnprocessableWhenWithdrawalExceedsBalance() {
         when(registerMovementUseCase.withdraw("1", "10", AMOUNT, TODAY))
-                .thenReturn(Single.error(new BusinessRuleException("Saldo insuficiente para el retiro")));
+                .thenReturn(
+                        Single.error(
+                                new BusinessRuleException("Saldo insuficiente para el retiro")));
 
-        webTestClient.post().uri("/api/v1/accounts/10/withdrawals")
+        webTestClient
+                .post()
+                .uri("/api/v1/accounts/10/withdrawals")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":100.0}")
                 .exchange()
-                .expectStatus().isEqualTo(422)
+                .expectStatus()
+                .isEqualTo(422)
                 .expectBody()
-                .jsonPath("$.detail").isEqualTo("Saldo insuficiente para el retiro");
+                .jsonPath("$.detail")
+                .isEqualTo("Saldo insuficiente para el retiro");
     }
 
     @Test
     void returnsBalance() {
-        when(getAvailableBalanceUseCase.getAccountBalance("1", "10")).thenReturn(Single.just(new BigDecimal("350.5")));
+        when(getAvailableBalanceUseCase.getAccountBalance("1", "10"))
+                .thenReturn(Single.just(new BigDecimal("350.5")));
 
-        webTestClient.get().uri("/api/v1/accounts/10/balance")
+        webTestClient
+                .get()
+                .uri("/api/v1/accounts/10/balance")
                 .header("X-Customer-Id", "1")
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus()
+                .isOk()
                 .expectBody()
-                .jsonPath("$.accountId").isEqualTo("10")
-                .jsonPath("$.balance").isEqualTo(350.5);
+                .jsonPath("$.accountId")
+                .isEqualTo("10")
+                .jsonPath("$.balance")
+                .isEqualTo(350.5);
     }
 
     @Test
     void returnsMovements() {
-        when(getProductMovementsUseCase.getAccountMovements("1", "10")).thenReturn(Flowable.just(
-                new ProductMovement(ProductMovementType.DEPOSIT, AMOUNT, TODAY)));
+        when(getProductMovementsUseCase.getAccountMovements("1", "10"))
+                .thenReturn(
+                        Flowable.just(
+                                new ProductMovement(ProductMovementType.DEPOSIT, AMOUNT, TODAY)));
 
-        webTestClient.get().uri("/api/v1/accounts/10/movements")
+        webTestClient
+                .get()
+                .uri("/api/v1/accounts/10/movements")
                 .header("X-Customer-Id", "1")
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus()
+                .isOk()
                 .expectBody()
-                .jsonPath("$[0].type").isEqualTo("DEPOSIT");
+                .jsonPath("$[0].type")
+                .isEqualTo("DEPOSIT");
     }
 
     @Test
     void returnsNotFoundForMovementsOfAccountOfAnotherCustomer() {
         when(getProductMovementsUseCase.getAccountMovements("999", "10"))
-                .thenReturn(Flowable.error(new NotFoundException("La cuenta no pertenece al cliente")));
+                .thenReturn(
+                        Flowable.error(new NotFoundException("La cuenta no pertenece al cliente")));
 
-        webTestClient.get().uri("/api/v1/accounts/10/movements")
+        webTestClient
+                .get()
+                .uri("/api/v1/accounts/10/movements")
                 .header("X-Customer-Id", "999")
                 .exchange()
-                .expectStatus().isNotFound()
-                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
+                .expectStatus()
+                .isNotFound()
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON);
     }
 
     @Test
     void returnsServiceUnavailableWhenAccountServiceIsDown() {
-        when(getAvailableBalanceUseCase.getAccountBalance("1", "10")).thenReturn(Single.error(
-                new ServiceUnavailableException("account-service no está disponible", new RuntimeException())));
+        when(getAvailableBalanceUseCase.getAccountBalance("1", "10"))
+                .thenReturn(
+                        Single.error(
+                                new ServiceUnavailableException(
+                                        "account-service no está disponible",
+                                        new RuntimeException())));
 
-        webTestClient.get().uri("/api/v1/accounts/10/balance")
+        webTestClient
+                .get()
+                .uri("/api/v1/accounts/10/balance")
                 .header("X-Customer-Id", "1")
                 .exchange()
-                .expectStatus().isEqualTo(503)
-                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
+                .expectStatus()
+                .isEqualTo(503)
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON);
     }
 }

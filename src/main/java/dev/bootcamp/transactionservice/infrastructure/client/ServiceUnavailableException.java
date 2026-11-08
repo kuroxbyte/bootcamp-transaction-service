@@ -5,6 +5,7 @@ package dev.bootcamp.transactionservice.infrastructure.client;
  * Se traduce a una respuesta 503.
  */
 public class ServiceUnavailableException extends RuntimeException {
+    /** Crea la excepción con el mensaje y la causa original. */
     public ServiceUnavailableException(String message, Throwable cause) {
         super(message, cause);
     }

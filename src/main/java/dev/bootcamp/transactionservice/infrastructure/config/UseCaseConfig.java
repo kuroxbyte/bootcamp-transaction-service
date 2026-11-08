@@ -23,8 +23,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Registra los casos de uso como beans. Los casos de uso no dependen de Spring;
- * aquí se les inyectan los adaptadores de sus puertos.
+ * Registra los casos de uso como beans. Los casos de uso no dependen de Spring; aquí se les
+ * inyectan los adaptadores de sus puertos.
  */
 @Configuration
 public class UseCaseConfig {
@@ -35,45 +35,60 @@ public class UseCaseConfig {
         return Clock.systemDefaultZone();
     }
 
+    /** Registra el caso de uso {@link RegisterMovementUseCase}. */
     @Bean
-    public RegisterMovementUseCase registerMovementUseCase(MovementRepository movementRepository,
-                                                           AccountClient accountClient) {
+    public RegisterMovementUseCase registerMovementUseCase(
+            MovementRepository movementRepository, AccountClient accountClient) {
         return new RegisterMovementUseCaseImpl(movementRepository, accountClient);
     }
 
+    /** Registra el caso de uso {@link PayCreditUseCase}. */
     @Bean
-    public PayCreditUseCase payCreditUseCase(PaymentRepository paymentRepository, CreditClient creditClient) {
+    public PayCreditUseCase payCreditUseCase(
+            PaymentRepository paymentRepository, CreditClient creditClient) {
         return new PayCreditUseCaseImpl(paymentRepository, creditClient);
     }
 
+    /** Registra el caso de uso {@link PayCreditCardUseCase}. */
     @Bean
-    public PayCreditCardUseCase payCreditCardUseCase(PaymentRepository paymentRepository,
-                                                     CreditCardClient creditCardClient) {
+    public PayCreditCardUseCase payCreditCardUseCase(
+            PaymentRepository paymentRepository, CreditCardClient creditCardClient) {
         return new PayCreditCardUseCaseImpl(paymentRepository, creditCardClient);
     }
 
+    /** Registra el caso de uso {@link ChargeCreditCardUseCase}. */
     @Bean
-    public ChargeCreditCardUseCase chargeCreditCardUseCase(ChargeRepository chargeRepository,
-                                                           CreditCardClient creditCardClient) {
+    public ChargeCreditCardUseCase chargeCreditCardUseCase(
+            ChargeRepository chargeRepository, CreditCardClient creditCardClient) {
         return new ChargeCreditCardUseCaseImpl(chargeRepository, creditCardClient);
     }
 
+    /** Registra el caso de uso {@link GetAvailableBalanceUseCase}. */
     @Bean
-    public GetAvailableBalanceUseCase getAvailableBalanceUseCase(AccountClient accountClient,
-                                                                 MovementRepository movementRepository,
-                                                                 CreditCardClient creditCardClient,
-                                                                 ChargeRepository chargeRepository) {
-        return new GetAvailableBalanceUseCaseImpl(accountClient, movementRepository, creditCardClient, chargeRepository);
+    public GetAvailableBalanceUseCase getAvailableBalanceUseCase(
+            AccountClient accountClient,
+            MovementRepository movementRepository,
+            CreditCardClient creditCardClient,
+            ChargeRepository chargeRepository) {
+        return new GetAvailableBalanceUseCaseImpl(
+                accountClient, movementRepository, creditCardClient, chargeRepository);
     }
 
+    /** Registra el caso de uso {@link GetProductMovementsUseCase}. */
     @Bean
-    public GetProductMovementsUseCase getProductMovementsUseCase(AccountClient accountClient,
-                                                                 CreditClient creditClient,
-                                                                 CreditCardClient creditCardClient,
-                                                                 MovementRepository movementRepository,
-                                                                 PaymentRepository paymentRepository,
-                                                                 ChargeRepository chargeRepository) {
-        return new GetProductMovementsUseCaseImpl(accountClient, creditClient, creditCardClient,
-                movementRepository, paymentRepository, chargeRepository);
+    public GetProductMovementsUseCase getProductMovementsUseCase(
+            AccountClient accountClient,
+            CreditClient creditClient,
+            CreditCardClient creditCardClient,
+            MovementRepository movementRepository,
+            PaymentRepository paymentRepository,
+            ChargeRepository chargeRepository) {
+        return new GetProductMovementsUseCaseImpl(
+                accountClient,
+                creditClient,
+                creditCardClient,
+                movementRepository,
+                paymentRepository,
+                chargeRepository);
     }
 }

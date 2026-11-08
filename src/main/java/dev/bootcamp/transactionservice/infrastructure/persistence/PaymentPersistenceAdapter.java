@@ -19,15 +19,22 @@ public class PaymentPersistenceAdapter implements PaymentRepository {
 
     @Override
     public Flowable<Payment> findByTargetAndProductId(PaymentTarget target, String productId) {
-        return Flowable.fromPublisher(mongoRepository.findByTargetAndProductId(target.name(), productId))
+        return Flowable.fromPublisher(
+                        mongoRepository.findByTargetAndProductId(target.name(), productId))
                 .map(TransactionPersistenceMapper::toDomain);
     }
 
     @Override
     public Single<Payment> save(Payment payment) {
-        return Single.fromPublisher(mongoRepository.save(TransactionPersistenceMapper.toDocument(payment)))
-                .doOnSuccess(saved -> log.debug("Payment saved paymentId={} target={} productId={}",
-                        saved.getId(), saved.getTarget(), saved.getProductId()))
+        return Single.fromPublisher(
+                        mongoRepository.save(TransactionPersistenceMapper.toDocument(payment)))
+                .doOnSuccess(
+                        saved ->
+                                log.debug(
+                                        "Payment saved paymentId={} target={} productId={}",
+                                        saved.getId(),
+                                        saved.getTarget(),
+                                        saved.getProductId()))
                 .map(TransactionPersistenceMapper::toDomain);
     }
 }

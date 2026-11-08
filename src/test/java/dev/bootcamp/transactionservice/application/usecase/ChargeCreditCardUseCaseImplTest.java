@@ -29,14 +29,11 @@ class ChargeCreditCardUseCaseImplTest {
     private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
     private static final CreditCard CARD = new CreditCard("1", CUSTOMER_ID, new BigDecimal("1000"));
 
-    @Mock
-    private ChargeRepository chargeRepository;
+    @Mock private ChargeRepository chargeRepository;
 
-    @Mock
-    private CreditCardClient creditCardClient;
+    @Mock private CreditCardClient creditCardClient;
 
-    @InjectMocks
-    private ChargeCreditCardUseCaseImpl useCase;
+    @InjectMocks private ChargeCreditCardUseCaseImpl useCase;
 
     @Test
     void customerChargesOwnCardWithinAvailableCredit() {
@@ -54,7 +51,9 @@ class ChargeCreditCardUseCaseImplTest {
         when(creditCardClient.findById("1")).thenReturn(Maybe.just(CARD));
         when(chargeRepository.getDebt("1")).thenReturn(Single.just(new BigDecimal("800")));
 
-        useCase.charge(CUSTOMER_ID, "1", new BigDecimal("200.01"), DATE).test().assertError(BusinessRuleException.class);
+        useCase.charge(CUSTOMER_ID, "1", new BigDecimal("200.01"), DATE)
+                .test()
+                .assertError(BusinessRuleException.class);
         verify(chargeRepository, never()).save(any());
     }
 
@@ -62,7 +61,9 @@ class ChargeCreditCardUseCaseImplTest {
     void rejectsChargeToCardOfAnotherCustomer() {
         when(creditCardClient.findById("1")).thenReturn(Maybe.just(CARD));
 
-        useCase.charge("999", "1", BigDecimal.TEN, DATE).test().assertError(NotFoundException.class);
+        useCase.charge("999", "1", BigDecimal.TEN, DATE)
+                .test()
+                .assertError(NotFoundException.class);
         verify(chargeRepository, never()).save(any());
     }
 
@@ -70,13 +71,17 @@ class ChargeCreditCardUseCaseImplTest {
     void rejectsUnknownCard() {
         when(creditCardClient.findById("99")).thenReturn(Maybe.empty());
 
-        useCase.charge(CUSTOMER_ID, "99", BigDecimal.TEN, DATE).test().assertError(NotFoundException.class);
+        useCase.charge(CUSTOMER_ID, "99", BigDecimal.TEN, DATE)
+                .test()
+                .assertError(NotFoundException.class);
         verify(chargeRepository, never()).save(any());
     }
 
     @Test
     void rejectsInvalidAmountBeforeQueryingCard() {
-        useCase.charge(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE).test().assertError(BusinessRuleException.class);
+        useCase.charge(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE)
+                .test()
+                .assertError(BusinessRuleException.class);
         verify(creditCardClient, never()).findById(any());
         verify(chargeRepository, never()).save(any());
     }

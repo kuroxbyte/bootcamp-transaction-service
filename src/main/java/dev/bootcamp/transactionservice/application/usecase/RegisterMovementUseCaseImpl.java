@@ -11,38 +11,51 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
+/** Implementación de {@link RegisterMovementUseCase}. */
 public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
     private final MovementRepository movementRepository;
     private final AccountClient accountClient;
 
-    public RegisterMovementUseCaseImpl(MovementRepository movementRepository, AccountClient accountClient) {
+    /** Crea el caso de uso con los adaptadores de sus puertos. */
+    public RegisterMovementUseCaseImpl(
+            MovementRepository movementRepository, AccountClient accountClient) {
         this.movementRepository = movementRepository;
         this.accountClient = accountClient;
     }
 
     @Override
-    public Single<Movement> deposit(String customerId, String accountId, BigDecimal amount, LocalDate date) {
-        return Single.fromCallable(() -> new Movement(accountId, MovementType.DEPOSIT, amount, date))
+    public Single<Movement> deposit(
+            String customerId, String accountId, BigDecimal amount, LocalDate date) {
+        return Single.fromCallable(
+                        () -> new Movement(accountId, MovementType.DEPOSIT, amount, date))
                 .flatMap(movement -> register(customerId, movement));
     }
 
     @Override
-    public Single<Movement> withdraw(String customerId, String accountId, BigDecimal amount, LocalDate date) {
-        return Single.fromCallable(() -> new Movement(accountId, MovementType.WITHDRAWAL, amount, date))
+    public Single<Movement> withdraw(
+            String customerId, String accountId, BigDecimal amount, LocalDate date) {
+        return Single.fromCallable(
+                        () -> new Movement(accountId, MovementType.WITHDRAWAL, amount, date))
                 .flatMap(movement -> register(customerId, movement));
     }
 
     private Single<Movement> register(String customerId, Movement movement) {
-        return accountClient.findById(movement.accountId())
+        return accountClient
+                .findById(movement.accountId())
                 .switchIfEmpty(Single.error(() -> new NotFoundException("La cuenta no existe")))
                 .map(account -> ensureBelongsTo(account, customerId))
-                .flatMap(account -> Single.zip(
-                        movementRepository.countByAccountIdAndMonth(movement.accountId(), YearMonth.from(movement.date())),
-                        movementRepository.getBalance(movement.accountId()),
-                        (movementsInMonth, balance) -> {
-                            account.validateMovement(movement, movementsInMonth, balance);
-                            return movement;
-                        }))
+                .flatMap(
+                        account ->
+                                Single.zip(
+                                        movementRepository.countByAccountIdAndMonth(
+                                                movement.accountId(),
+                                                YearMonth.from(movement.date())),
+                                        movementRepository.getBalance(movement.accountId()),
+                                        (movementsInMonth, balance) -> {
+                                            account.validateMovement(
+                                                    movement, movementsInMonth, balance);
+                                            return movement;
+                                        }))
                 .flatMap(movementRepository::save);
     }
 

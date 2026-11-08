@@ -20,6 +20,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/** Endpoints de depósitos, retiros, saldo y movimientos de cuentas bancarias. */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -31,44 +32,85 @@ public class AccountTransactionController implements AccountTransactionsApi {
     private final Clock clock;
 
     @Override
-    public Mono<ResponseEntity<MovementResponseDto>> deposit(String xCustomerId, String accountId,
-                                                             Mono<AmountRequestDto> amountRequestDto,
-                                                             ServerWebExchange exchange) {
+    public Mono<ResponseEntity<MovementResponseDto>> deposit(
+            String customerId,
+            String accountId,
+            Mono<AmountRequestDto> amountRequestDto,
+            ServerWebExchange exchange) {
         return amountRequestDto
-                .flatMap(request -> Mono.from(registerMovementUseCase
-                        .deposit(xCustomerId, accountId, request.getAmount(), LocalDate.now(clock))
-                        .toFlowable()))
-                .doOnNext(movement -> log.info("Deposit registered accountId={} customerId={} amount={}",
-                        accountId, xCustomerId, movement.amount()))
-                .map(movement -> ResponseEntity.status(HttpStatus.CREATED).body(TransactionWebMapper.toResponse(movement)));
+                .flatMap(
+                        request ->
+                                Mono.from(
+                                        registerMovementUseCase
+                                                .deposit(
+                                                        customerId,
+                                                        accountId,
+                                                        request.getAmount(),
+                                                        LocalDate.now(clock))
+                                                .toFlowable()))
+                .doOnNext(
+                        movement ->
+                                log.info(
+                                        "Deposit registered accountId={} customerId={} amount={}",
+                                        accountId,
+                                        customerId,
+                                        movement.amount()))
+                .map(
+                        movement ->
+                                ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(TransactionWebMapper.toResponse(movement)));
     }
 
     @Override
-    public Mono<ResponseEntity<MovementResponseDto>> withdraw(String xCustomerId, String accountId,
-                                                              Mono<AmountRequestDto> amountRequestDto,
-                                                              ServerWebExchange exchange) {
+    public Mono<ResponseEntity<MovementResponseDto>> withdraw(
+            String customerId,
+            String accountId,
+            Mono<AmountRequestDto> amountRequestDto,
+            ServerWebExchange exchange) {
         return amountRequestDto
-                .flatMap(request -> Mono.from(registerMovementUseCase
-                        .withdraw(xCustomerId, accountId, request.getAmount(), LocalDate.now(clock))
-                        .toFlowable()))
-                .doOnNext(movement -> log.info("Withdrawal registered accountId={} customerId={} amount={}",
-                        accountId, xCustomerId, movement.amount()))
-                .map(movement -> ResponseEntity.status(HttpStatus.CREATED).body(TransactionWebMapper.toResponse(movement)));
+                .flatMap(
+                        request ->
+                                Mono.from(
+                                        registerMovementUseCase
+                                                .withdraw(
+                                                        customerId,
+                                                        accountId,
+                                                        request.getAmount(),
+                                                        LocalDate.now(clock))
+                                                .toFlowable()))
+                .doOnNext(
+                        movement ->
+                                log.info(
+                                        "Withdrawal registered accountId={} customerId={}"
+                                                + " amount={}",
+                                        accountId,
+                                        customerId,
+                                        movement.amount()))
+                .map(
+                        movement ->
+                                ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(TransactionWebMapper.toResponse(movement)));
     }
 
     @Override
-    public Mono<ResponseEntity<AccountBalanceResponseDto>> getAccountBalance(String xCustomerId, String accountId,
-                                                                             ServerWebExchange exchange) {
-        log.debug("Fetching balance accountId={} customerId={}", accountId, xCustomerId);
-        return Mono.from(getAvailableBalanceUseCase.getAccountBalance(xCustomerId, accountId).toFlowable())
-                .map(balance -> ResponseEntity.ok(new AccountBalanceResponseDto(accountId, balance)));
+    public Mono<ResponseEntity<AccountBalanceResponseDto>> getAccountBalance(
+            String customerId, String accountId, ServerWebExchange exchange) {
+        log.debug("Fetching balance accountId={} customerId={}", accountId, customerId);
+        return Mono.from(
+                        getAvailableBalanceUseCase
+                                .getAccountBalance(customerId, accountId)
+                                .toFlowable())
+                .map(
+                        balance ->
+                                ResponseEntity.ok(
+                                        new AccountBalanceResponseDto(accountId, balance)));
     }
 
     @Override
-    public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getAccountMovements(String xCustomerId,
-                                                                                      String accountId,
-                                                                                      ServerWebExchange exchange) {
-        log.debug("Fetching movements accountId={} customerId={}", accountId, xCustomerId);
-        return MovementResponses.of(getProductMovementsUseCase.getAccountMovements(xCustomerId, accountId));
+    public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getAccountMovements(
+            String customerId, String accountId, ServerWebExchange exchange) {
+        log.debug("Fetching movements accountId={} customerId={}", accountId, customerId);
+        return MovementResponses.of(
+                getProductMovementsUseCase.getAccountMovements(customerId, accountId));
     }
 }

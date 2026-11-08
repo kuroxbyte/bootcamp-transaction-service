@@ -18,11 +18,14 @@ class CreditWebClientAdaptersTest {
 
     @Test
     void returnsCreditFromCreditService() {
-        StubWebClient stub = StubWebClient.respondingWith(HttpStatus.OK,
-                "{\"id\":\"5\",\"customerId\":\"1\",\"type\":\"PERSONAL\"}");
+        StubWebClient stub =
+                StubWebClient.respondingWith(
+                        HttpStatus.OK, "{\"id\":\"5\",\"customerId\":\"1\",\"type\":\"PERSONAL\"}");
 
-        Credit credit = new CreditWebClientAdapter(stub.builder(), "http://credit-service", TIMEOUT)
-                .findById("5").blockingGet();
+        Credit credit =
+                new CreditWebClientAdapter(stub.builder(), "http://credit-service", TIMEOUT)
+                        .findById("5")
+                        .blockingGet();
 
         assertThat(credit).isEqualTo(new Credit("5", "1"));
         assertThat(stub.lastPath()).isEqualTo("/api/v1/credits/5");
@@ -30,11 +33,15 @@ class CreditWebClientAdaptersTest {
 
     @Test
     void returnsCreditCardWithItsLimit() {
-        StubWebClient stub = StubWebClient.respondingWith(HttpStatus.OK,
-                "{\"id\":\"7\",\"customerId\":\"1\",\"creditLimit\":5000.50}");
+        StubWebClient stub =
+                StubWebClient.respondingWith(
+                        HttpStatus.OK,
+                        "{\"id\":\"7\",\"customerId\":\"1\",\"creditLimit\":5000.50}");
 
-        CreditCard card = new CreditCardWebClientAdapter(stub.builder(), "http://credit-service", TIMEOUT)
-                .findById("7").blockingGet();
+        CreditCard card =
+                new CreditCardWebClientAdapter(stub.builder(), "http://credit-service", TIMEOUT)
+                        .findById("7")
+                        .blockingGet();
 
         assertThat(card.id()).isEqualTo("7");
         assertThat(card.customerId()).isEqualTo("1");
@@ -47,17 +54,28 @@ class CreditWebClientAdaptersTest {
         StubWebClient stub = StubWebClient.respondingWith(HttpStatus.NOT_FOUND, "{\"status\":404}");
 
         new CreditWebClientAdapter(stub.builder(), "http://credit-service", TIMEOUT)
-                .findById("99").test().awaitDone(2, TimeUnit.SECONDS).assertComplete().assertNoValues();
+                .findById("99")
+                .test()
+                .awaitDone(2, TimeUnit.SECONDS)
+                .assertComplete()
+                .assertNoValues();
         new CreditCardWebClientAdapter(stub.builder(), "http://credit-service", TIMEOUT)
-                .findById("99").test().awaitDone(2, TimeUnit.SECONDS).assertComplete().assertNoValues();
+                .findById("99")
+                .test()
+                .awaitDone(2, TimeUnit.SECONDS)
+                .assertComplete()
+                .assertNoValues();
     }
 
     @Test
     void failsAsUnavailableOnServerError() {
-        StubWebClient stub = StubWebClient.respondingWith(HttpStatus.SERVICE_UNAVAILABLE, "{\"status\":503}");
+        StubWebClient stub =
+                StubWebClient.respondingWith(HttpStatus.SERVICE_UNAVAILABLE, "{\"status\":503}");
 
         new CreditCardWebClientAdapter(stub.builder(), "http://credit-service", TIMEOUT)
-                .findById("7").test().awaitDone(2, TimeUnit.SECONDS)
+                .findById("7")
+                .test()
+                .awaitDone(2, TimeUnit.SECONDS)
                 .assertError(ServiceUnavailableException.class);
     }
 }

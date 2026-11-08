@@ -43,39 +43,49 @@ class GetProductMovementsUseCaseImplTest {
     private static final LocalDate DAY_2 = LocalDate.of(2026, 11, 2);
     private static final LocalDate DAY_3 = LocalDate.of(2026, 11, 3);
 
-    @Mock
-    private AccountClient accountClient;
-    @Mock
-    private CreditClient creditClient;
-    @Mock
-    private CreditCardClient creditCardClient;
-    @Mock
-    private MovementRepository movementRepository;
-    @Mock
-    private PaymentRepository paymentRepository;
-    @Mock
-    private ChargeRepository chargeRepository;
+    @Mock private AccountClient accountClient;
+    @Mock private CreditClient creditClient;
+    @Mock private CreditCardClient creditCardClient;
+    @Mock private MovementRepository movementRepository;
+    @Mock private PaymentRepository paymentRepository;
+    @Mock private ChargeRepository chargeRepository;
 
-    @InjectMocks
-    private GetProductMovementsUseCaseImpl useCase;
+    @InjectMocks private GetProductMovementsUseCaseImpl useCase;
 
     @Test
     void returnsAccountMovementsSortedByDate() {
-        when(accountClient.findById("1")).thenReturn(Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
-        when(movementRepository.findByAccountId("1")).thenReturn(Flowable.fromIterable(List.of(
-                new Movement("1", MovementType.WITHDRAWAL, BigDecimal.ONE, DAY_2),
-                new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DAY_1))));
+        when(accountClient.findById("1"))
+                .thenReturn(
+                        Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
+        when(movementRepository.findByAccountId("1"))
+                .thenReturn(
+                        Flowable.fromIterable(
+                                List.of(
+                                        new Movement(
+                                                "1",
+                                                MovementType.WITHDRAWAL,
+                                                BigDecimal.ONE,
+                                                DAY_2),
+                                        new Movement(
+                                                "1",
+                                                MovementType.DEPOSIT,
+                                                BigDecimal.TEN,
+                                                DAY_1))));
 
-        List<ProductMovement> movements = useCase.getAccountMovements(CUSTOMER_ID, "1").toList().blockingGet();
+        List<ProductMovement> movements =
+                useCase.getAccountMovements(CUSTOMER_ID, "1").toList().blockingGet();
 
-        assertThat(movements).containsExactly(
-                new ProductMovement(ProductMovementType.DEPOSIT, BigDecimal.TEN, DAY_1),
-                new ProductMovement(ProductMovementType.WITHDRAWAL, BigDecimal.ONE, DAY_2));
+        assertThat(movements)
+                .containsExactly(
+                        new ProductMovement(ProductMovementType.DEPOSIT, BigDecimal.TEN, DAY_1),
+                        new ProductMovement(ProductMovementType.WITHDRAWAL, BigDecimal.ONE, DAY_2));
     }
 
     @Test
     void returnsEmptyListWhenAccountHasNoMovements() {
-        when(accountClient.findById("1")).thenReturn(Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
+        when(accountClient.findById("1"))
+                .thenReturn(
+                        Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
         when(movementRepository.findByAccountId("1")).thenReturn(Flowable.fromIterable(List.of()));
 
         assertThat(useCase.getAccountMovements(CUSTOMER_ID, "1").toList().blockingGet()).isEmpty();
@@ -83,7 +93,9 @@ class GetProductMovementsUseCaseImplTest {
 
     @Test
     void rejectsMovementsOfAccountOfAnotherCustomer() {
-        when(accountClient.findById("1")).thenReturn(Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
+        when(accountClient.findById("1"))
+                .thenReturn(
+                        Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
 
         useCase.getAccountMovements("999", "1").test().assertError(NotFoundException.class);
         verify(movementRepository, never()).findByAccountId(any());
@@ -99,11 +111,19 @@ class GetProductMovementsUseCaseImplTest {
     @Test
     void returnsCreditPayments() {
         when(creditClient.findById("2")).thenReturn(Maybe.just(new Credit("2", CUSTOMER_ID)));
-        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT, "2")).thenReturn(Flowable.fromIterable(List.of(
-                new Payment(PaymentTarget.CREDIT, "2", BigDecimal.TEN, DAY_1))));
+        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT, "2"))
+                .thenReturn(
+                        Flowable.fromIterable(
+                                List.of(
+                                        new Payment(
+                                                PaymentTarget.CREDIT,
+                                                "2",
+                                                BigDecimal.TEN,
+                                                DAY_1))));
 
-        assertThat(useCase.getCreditMovements(CUSTOMER_ID, "2").toList().blockingGet()).containsExactly(
-                new ProductMovement(ProductMovementType.PAYMENT, BigDecimal.TEN, DAY_1));
+        assertThat(useCase.getCreditMovements(CUSTOMER_ID, "2").toList().blockingGet())
+                .containsExactly(
+                        new ProductMovement(ProductMovementType.PAYMENT, BigDecimal.TEN, DAY_1));
     }
 
     @Test
@@ -118,16 +138,30 @@ class GetProductMovementsUseCaseImplTest {
     void returnsCardChargesAndPaymentsMergedAndSortedByDate() {
         when(creditCardClient.findById("3"))
                 .thenReturn(Maybe.just(new CreditCard("3", CUSTOMER_ID, new BigDecimal("1000"))));
-        when(chargeRepository.findByCreditCardId("3")).thenReturn(Flowable.fromIterable(List.of(
-                new Charge("3", new BigDecimal("300"), DAY_1),
-                new Charge("3", new BigDecimal("50"), DAY_3))));
-        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT_CARD, "3")).thenReturn(Flowable.fromIterable(List.of(
-                new Payment(PaymentTarget.CREDIT_CARD, "3", new BigDecimal("100"), DAY_2))));
+        when(chargeRepository.findByCreditCardId("3"))
+                .thenReturn(
+                        Flowable.fromIterable(
+                                List.of(
+                                        new Charge("3", new BigDecimal("300"), DAY_1),
+                                        new Charge("3", new BigDecimal("50"), DAY_3))));
+        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT_CARD, "3"))
+                .thenReturn(
+                        Flowable.fromIterable(
+                                List.of(
+                                        new Payment(
+                                                PaymentTarget.CREDIT_CARD,
+                                                "3",
+                                                new BigDecimal("100"),
+                                                DAY_2))));
 
-        assertThat(useCase.getCreditCardMovements(CUSTOMER_ID, "3").toList().blockingGet()).containsExactly(
-                new ProductMovement(ProductMovementType.CHARGE, new BigDecimal("300"), DAY_1),
-                new ProductMovement(ProductMovementType.PAYMENT, new BigDecimal("100"), DAY_2),
-                new ProductMovement(ProductMovementType.CHARGE, new BigDecimal("50"), DAY_3));
+        assertThat(useCase.getCreditCardMovements(CUSTOMER_ID, "3").toList().blockingGet())
+                .containsExactly(
+                        new ProductMovement(
+                                ProductMovementType.CHARGE, new BigDecimal("300"), DAY_1),
+                        new ProductMovement(
+                                ProductMovementType.PAYMENT, new BigDecimal("100"), DAY_2),
+                        new ProductMovement(
+                                ProductMovementType.CHARGE, new BigDecimal("50"), DAY_3));
     }
 
     @Test

@@ -42,63 +42,74 @@ class CreditCardTransactionControllerTest {
         }
     }
 
-    @Autowired
-    private WebTestClient webTestClient;
+    @Autowired private WebTestClient webTestClient;
 
-    @MockitoBean
-    private ChargeCreditCardUseCase chargeCreditCardUseCase;
+    @MockitoBean private ChargeCreditCardUseCase chargeCreditCardUseCase;
 
-    @MockitoBean
-    private PayCreditCardUseCase payCreditCardUseCase;
+    @MockitoBean private PayCreditCardUseCase payCreditCardUseCase;
 
-    @MockitoBean
-    private GetAvailableBalanceUseCase getAvailableBalanceUseCase;
+    @MockitoBean private GetAvailableBalanceUseCase getAvailableBalanceUseCase;
 
-    @MockitoBean
-    private GetProductMovementsUseCase getProductMovementsUseCase;
+    @MockitoBean private GetProductMovementsUseCase getProductMovementsUseCase;
 
     @Test
     void registersCharge() {
         when(chargeCreditCardUseCase.charge("1", "7", AMOUNT, TODAY))
                 .thenReturn(Single.just(new Charge("7", AMOUNT, TODAY)));
 
-        webTestClient.post().uri("/api/v1/credit-cards/7/charges")
+        webTestClient
+                .post()
+                .uri("/api/v1/credit-cards/7/charges")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":80.5}")
                 .exchange()
-                .expectStatus().isCreated()
+                .expectStatus()
+                .isCreated()
                 .expectBody()
-                .jsonPath("$.creditCardId").isEqualTo("7")
-                .jsonPath("$.amount").isEqualTo(80.5);
+                .jsonPath("$.creditCardId")
+                .isEqualTo("7")
+                .jsonPath("$.amount")
+                .isEqualTo(80.5);
     }
 
     @Test
     void returnsUnprocessableWhenChargeExceedsAvailableCredit() {
-        when(chargeCreditCardUseCase.charge("1", "7", AMOUNT, TODAY)).thenReturn(Single.error(
-                new BusinessRuleException("El consumo supera el crédito disponible de la tarjeta")));
+        when(chargeCreditCardUseCase.charge("1", "7", AMOUNT, TODAY))
+                .thenReturn(
+                        Single.error(
+                                new BusinessRuleException(
+                                        "El consumo supera el crédito disponible de la tarjeta")));
 
-        webTestClient.post().uri("/api/v1/credit-cards/7/charges")
+        webTestClient
+                .post()
+                .uri("/api/v1/credit-cards/7/charges")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":80.5}")
                 .exchange()
-                .expectStatus().isEqualTo(422);
+                .expectStatus()
+                .isEqualTo(422);
     }
 
     @Test
     void registersCardPayment() {
         when(payCreditCardUseCase.pay("1", "7", AMOUNT, TODAY))
-                .thenReturn(Single.just(new Payment(PaymentTarget.CREDIT_CARD, "7", AMOUNT, TODAY)));
+                .thenReturn(
+                        Single.just(new Payment(PaymentTarget.CREDIT_CARD, "7", AMOUNT, TODAY)));
 
-        webTestClient.post().uri("/api/v1/credit-cards/7/payments")
+        webTestClient
+                .post()
+                .uri("/api/v1/credit-cards/7/payments")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":80.5}")
                 .exchange()
-                .expectStatus().isCreated()
+                .expectStatus()
+                .isCreated()
                 .expectBody()
-                .jsonPath("$.target").isEqualTo("CREDIT_CARD");
+                .jsonPath("$.target")
+                .isEqualTo("CREDIT_CARD");
     }
 
     @Test
@@ -106,25 +117,35 @@ class CreditCardTransactionControllerTest {
         when(getAvailableBalanceUseCase.getCreditCardAvailableCredit("1", "7"))
                 .thenReturn(Single.just(new BigDecimal("4200")));
 
-        webTestClient.get().uri("/api/v1/credit-cards/7/available-credit")
+        webTestClient
+                .get()
+                .uri("/api/v1/credit-cards/7/available-credit")
                 .header("X-Customer-Id", "1")
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus()
+                .isOk()
                 .expectBody()
-                .jsonPath("$.availableCredit").isEqualTo(4200);
+                .jsonPath("$.availableCredit")
+                .isEqualTo(4200);
     }
 
     @Test
     void returnsCardMovements() {
-        when(getProductMovementsUseCase.getCreditCardMovements("1", "7")).thenReturn(Flowable.just(
-                new ProductMovement(ProductMovementType.CHARGE, AMOUNT, TODAY),
-                new ProductMovement(ProductMovementType.PAYMENT, AMOUNT, TODAY)));
+        when(getProductMovementsUseCase.getCreditCardMovements("1", "7"))
+                .thenReturn(
+                        Flowable.just(
+                                new ProductMovement(ProductMovementType.CHARGE, AMOUNT, TODAY),
+                                new ProductMovement(ProductMovementType.PAYMENT, AMOUNT, TODAY)));
 
-        webTestClient.get().uri("/api/v1/credit-cards/7/movements")
+        webTestClient
+                .get()
+                .uri("/api/v1/credit-cards/7/movements")
                 .header("X-Customer-Id", "1")
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus()
+                .isOk()
                 .expectBody()
-                .jsonPath("$.length()").isEqualTo(2);
+                .jsonPath("$.length()")
+                .isEqualTo(2);
     }
 }

@@ -22,6 +22,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/** Endpoints de consumos, pagos, crédito disponible y movimientos de tarjetas. */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -34,45 +35,88 @@ public class CreditCardTransactionController implements CreditCardTransactionsAp
     private final Clock clock;
 
     @Override
-    public Mono<ResponseEntity<ChargeResponseDto>> chargeCreditCard(String xCustomerId, String creditCardId,
-                                                                    Mono<AmountRequestDto> amountRequestDto,
-                                                                    ServerWebExchange exchange) {
+    public Mono<ResponseEntity<ChargeResponseDto>> chargeCreditCard(
+            String customerId,
+            String creditCardId,
+            Mono<AmountRequestDto> amountRequestDto,
+            ServerWebExchange exchange) {
         return amountRequestDto
-                .flatMap(request -> Mono.from(chargeCreditCardUseCase
-                        .charge(xCustomerId, creditCardId, request.getAmount(), LocalDate.now(clock))
-                        .toFlowable()))
-                .doOnNext(charge -> log.info("Charge registered creditCardId={} customerId={} amount={}",
-                        creditCardId, xCustomerId, charge.amount()))
-                .map(charge -> ResponseEntity.status(HttpStatus.CREATED).body(TransactionWebMapper.toResponse(charge)));
+                .flatMap(
+                        request ->
+                                Mono.from(
+                                        chargeCreditCardUseCase
+                                                .charge(
+                                                        customerId,
+                                                        creditCardId,
+                                                        request.getAmount(),
+                                                        LocalDate.now(clock))
+                                                .toFlowable()))
+                .doOnNext(
+                        charge ->
+                                log.info(
+                                        "Charge registered creditCardId={} customerId={} amount={}",
+                                        creditCardId,
+                                        customerId,
+                                        charge.amount()))
+                .map(
+                        charge ->
+                                ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(TransactionWebMapper.toResponse(charge)));
     }
 
     @Override
-    public Mono<ResponseEntity<PaymentResponseDto>> payCreditCard(String xCustomerId, String creditCardId,
-                                                                  Mono<AmountRequestDto> amountRequestDto,
-                                                                  ServerWebExchange exchange) {
+    public Mono<ResponseEntity<PaymentResponseDto>> payCreditCard(
+            String customerId,
+            String creditCardId,
+            Mono<AmountRequestDto> amountRequestDto,
+            ServerWebExchange exchange) {
         return amountRequestDto
-                .flatMap(request -> Mono.from(payCreditCardUseCase
-                        .pay(xCustomerId, creditCardId, request.getAmount(), LocalDate.now(clock))
-                        .toFlowable()))
-                .doOnNext(payment -> log.info("Credit card payment registered creditCardId={} customerId={} amount={}",
-                        creditCardId, xCustomerId, payment.amount()))
-                .map(payment -> ResponseEntity.status(HttpStatus.CREATED).body(TransactionWebMapper.toResponse(payment)));
+                .flatMap(
+                        request ->
+                                Mono.from(
+                                        payCreditCardUseCase
+                                                .pay(
+                                                        customerId,
+                                                        creditCardId,
+                                                        request.getAmount(),
+                                                        LocalDate.now(clock))
+                                                .toFlowable()))
+                .doOnNext(
+                        payment ->
+                                log.info(
+                                        "Credit card payment registered creditCardId={}"
+                                                + " customerId={} amount={}",
+                                        creditCardId,
+                                        customerId,
+                                        payment.amount()))
+                .map(
+                        payment ->
+                                ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(TransactionWebMapper.toResponse(payment)));
     }
 
     @Override
-    public Mono<ResponseEntity<AvailableCreditResponseDto>> getCreditCardAvailableCredit(String xCustomerId,
-                                                                                         String creditCardId,
-                                                                                         ServerWebExchange exchange) {
-        log.debug("Fetching available credit creditCardId={} customerId={}", creditCardId, xCustomerId);
-        return Mono.from(getAvailableBalanceUseCase.getCreditCardAvailableCredit(xCustomerId, creditCardId).toFlowable())
-                .map(available -> ResponseEntity.ok(new AvailableCreditResponseDto(creditCardId, available)));
+    public Mono<ResponseEntity<AvailableCreditResponseDto>> getCreditCardAvailableCredit(
+            String customerId, String creditCardId, ServerWebExchange exchange) {
+        log.debug(
+                "Fetching available credit creditCardId={} customerId={}",
+                creditCardId,
+                customerId);
+        return Mono.from(
+                        getAvailableBalanceUseCase
+                                .getCreditCardAvailableCredit(customerId, creditCardId)
+                                .toFlowable())
+                .map(
+                        available ->
+                                ResponseEntity.ok(
+                                        new AvailableCreditResponseDto(creditCardId, available)));
     }
 
     @Override
-    public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getCreditCardMovements(String xCustomerId,
-                                                                                         String creditCardId,
-                                                                                         ServerWebExchange exchange) {
-        log.debug("Fetching movements creditCardId={} customerId={}", creditCardId, xCustomerId);
-        return MovementResponses.of(getProductMovementsUseCase.getCreditCardMovements(xCustomerId, creditCardId));
+    public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getCreditCardMovements(
+            String customerId, String creditCardId, ServerWebExchange exchange) {
+        log.debug("Fetching movements creditCardId={} customerId={}", creditCardId, customerId);
+        return MovementResponses.of(
+                getProductMovementsUseCase.getCreditCardMovements(customerId, creditCardId));
     }
 }

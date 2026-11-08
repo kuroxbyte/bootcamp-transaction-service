@@ -39,29 +39,31 @@ class CreditTransactionControllerTest {
         }
     }
 
-    @Autowired
-    private WebTestClient webTestClient;
+    @Autowired private WebTestClient webTestClient;
 
-    @MockitoBean
-    private PayCreditUseCase payCreditUseCase;
+    @MockitoBean private PayCreditUseCase payCreditUseCase;
 
-    @MockitoBean
-    private GetProductMovementsUseCase getProductMovementsUseCase;
+    @MockitoBean private GetProductMovementsUseCase getProductMovementsUseCase;
 
     @Test
     void registersCreditPayment() {
         when(payCreditUseCase.pay("1", "5", AMOUNT, TODAY))
                 .thenReturn(Single.just(new Payment(PaymentTarget.CREDIT, "5", AMOUNT, TODAY)));
 
-        webTestClient.post().uri("/api/v1/credits/5/payments")
+        webTestClient
+                .post()
+                .uri("/api/v1/credits/5/payments")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":250.0}")
                 .exchange()
-                .expectStatus().isCreated()
+                .expectStatus()
+                .isCreated()
                 .expectBody()
-                .jsonPath("$.target").isEqualTo("CREDIT")
-                .jsonPath("$.productId").isEqualTo("5");
+                .jsonPath("$.target")
+                .isEqualTo("CREDIT")
+                .jsonPath("$.productId")
+                .isEqualTo("5");
     }
 
     @Test
@@ -69,24 +71,33 @@ class CreditTransactionControllerTest {
         when(payCreditUseCase.pay("1", "99", AMOUNT, TODAY))
                 .thenReturn(Single.error(new NotFoundException("El crédito no existe")));
 
-        webTestClient.post().uri("/api/v1/credits/99/payments")
+        webTestClient
+                .post()
+                .uri("/api/v1/credits/99/payments")
                 .header("X-Customer-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"amount\":250.0}")
                 .exchange()
-                .expectStatus().isNotFound();
+                .expectStatus()
+                .isNotFound();
     }
 
     @Test
     void returnsCreditMovements() {
-        when(getProductMovementsUseCase.getCreditMovements("1", "5")).thenReturn(Flowable.just(
-                new ProductMovement(ProductMovementType.PAYMENT, AMOUNT, TODAY)));
+        when(getProductMovementsUseCase.getCreditMovements("1", "5"))
+                .thenReturn(
+                        Flowable.just(
+                                new ProductMovement(ProductMovementType.PAYMENT, AMOUNT, TODAY)));
 
-        webTestClient.get().uri("/api/v1/credits/5/movements")
+        webTestClient
+                .get()
+                .uri("/api/v1/credits/5/movements")
                 .header("X-Customer-Id", "1")
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus()
+                .isOk()
                 .expectBody()
-                .jsonPath("$[0].type").isEqualTo("PAYMENT");
+                .jsonPath("$[0].type")
+                .isEqualTo("PAYMENT");
     }
 }

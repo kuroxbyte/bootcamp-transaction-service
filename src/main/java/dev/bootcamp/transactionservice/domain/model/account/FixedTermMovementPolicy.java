@@ -10,13 +10,16 @@ import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 public record FixedTermMovementPolicy(int movementDayOfMonth) implements MovementPolicy {
 
     /**
-     * @throws BusinessRuleException si el movimiento no cae en el día configurado
-     *                               o si ya existe un movimiento en ese mes
+     * Valida el movimiento según la regla de este tipo de cuenta.
+     *
+     * @throws BusinessRuleException si el movimiento no cae en el día configurado o si ya existe un
+     *     movimiento en ese mes
      */
     @Override
     public void validate(Movement movement, long movementsInMonth) {
         if (movement.date().getDayOfMonth() != movementDayOfMonth) {
-            throw new BusinessRuleException("Solo se permiten movimientos el día " + movementDayOfMonth + " del mes");
+            throw new BusinessRuleException(
+                    "Solo se permiten movimientos el día " + movementDayOfMonth + " del mes");
         }
         if (movementsInMonth > 0) {
             throw new BusinessRuleException("Solo se permite un movimiento al mes");

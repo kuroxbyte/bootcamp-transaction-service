@@ -7,6 +7,8 @@ import io.reactivex.rxjava3.core.Maybe;
 public interface AccountClient {
 
     /**
+     * Busca el recurso por su id.
+     *
      * @return la cuenta, o vacío si no existe
      */
     Maybe<Account> findById(String accountId);

@@ -30,14 +30,11 @@ class PayCreditUseCaseImplTest {
     private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
     private static final BigDecimal AMOUNT = new BigDecimal("250.00");
 
-    @Mock
-    private PaymentRepository paymentRepository;
+    @Mock private PaymentRepository paymentRepository;
 
-    @Mock
-    private CreditClient creditClient;
+    @Mock private CreditClient creditClient;
 
-    @InjectMocks
-    private PayCreditUseCaseImpl useCase;
+    @InjectMocks private PayCreditUseCaseImpl useCase;
 
     @Test
     void customerPaysOwnCredit() {
@@ -67,7 +64,9 @@ class PayCreditUseCaseImplTest {
 
     @Test
     void rejectsInvalidAmountBeforeQueryingCredit() {
-        useCase.pay(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE).test().assertError(BusinessRuleException.class);
+        useCase.pay(CUSTOMER_ID, "1", BigDecimal.ZERO, DATE)
+                .test()
+                .assertError(BusinessRuleException.class);
         verify(creditClient, never()).findById(any());
         verify(paymentRepository, never()).save(any());
     }
