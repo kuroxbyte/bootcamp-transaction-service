@@ -3,7 +3,9 @@ package dev.bootcamp.transactionservice;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-/** Punto de entrada de transaction-service. */
+/**
+ * Punto de entrada de transaction-service.
+ */
 @SpringBootApplication
 public class TransactionServiceApplication {
 

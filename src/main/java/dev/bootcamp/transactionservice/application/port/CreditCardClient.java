@@ -3,7 +3,9 @@ package dev.bootcamp.transactionservice.application.port;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import io.reactivex.rxjava3.core.Maybe;
 
-/** Consulta de tarjetas de crédito en credit-service. */
+/**
+ * Consulta de tarjetas de crédito en credit-service.
+ */
 public interface CreditCardClient {
 
     /**

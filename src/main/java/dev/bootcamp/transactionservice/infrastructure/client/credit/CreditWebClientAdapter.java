@@ -5,12 +5,15 @@ import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.infrastructure.client.RemoteLookup;
 import dev.bootcamp.transactionservice.infrastructure.client.credit.dto.CreditResponseDto;
 import io.reactivex.rxjava3.core.Maybe;
-import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-/** Implementa el puerto {@link CreditClient} consultando credit-service con WebClient. */
+import java.time.Duration;
+
+/**
+ * Implementa el puerto {@link CreditClient} consultando credit-service con WebClient.
+ */
 @Component
 public class CreditWebClientAdapter implements CreditClient {
 
@@ -19,7 +22,9 @@ public class CreditWebClientAdapter implements CreditClient {
     private final WebClient webClient;
     private final Duration timeout;
 
-    /** Crea el cliente con la URL base y el tiempo de espera configurados. */
+    /**
+     * Crea el cliente con la URL base y el tiempo de espera configurados.
+     */
     public CreditWebClientAdapter(
             WebClient.Builder webClientBuilder,
             @Value("${clients.credit-service.base-url}") String baseUrl,

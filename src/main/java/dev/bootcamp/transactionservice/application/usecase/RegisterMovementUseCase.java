@@ -4,6 +4,7 @@ import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import io.reactivex.rxjava3.core.Single;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -40,7 +41,10 @@ public interface RegisterMovementUseCase {
      *     incumple una regla de la cuenta
      */
     Single<Movement> deposit(
-            String customerId, String accountId, BigDecimal amount, LocalDate date);
+            String customerId,
+            String accountId,
+            BigDecimal amount,
+            LocalDate date);
 
     /**
      * Registra un retiro en una cuenta del cliente.
@@ -54,5 +58,8 @@ public interface RegisterMovementUseCase {
      *     saldo o se incumple una regla de la cuenta
      */
     Single<Movement> withdraw(
-            String customerId, String accountId, BigDecimal amount, LocalDate date);
+            String customerId,
+            String accountId,
+            BigDecimal amount,
+            LocalDate date);
 }

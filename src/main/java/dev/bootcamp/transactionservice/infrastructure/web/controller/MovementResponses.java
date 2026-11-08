@@ -8,7 +8,9 @@ import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/** Arma la respuesta de las consultas de movimientos de un producto. */
+/**
+ * Arma la respuesta de las consultas de movimientos de un producto.
+ */
 final class MovementResponses {
 
     private MovementResponses() {}

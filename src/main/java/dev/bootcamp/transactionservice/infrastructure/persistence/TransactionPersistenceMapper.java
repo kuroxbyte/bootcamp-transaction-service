@@ -6,7 +6,9 @@ import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 
-/** Conversión entre el dominio y los documentos de MongoDB. */
+/**
+ * Conversión entre el dominio y los documentos de MongoDB.
+ */
 final class TransactionPersistenceMapper {
     private TransactionPersistenceMapper() {}
 

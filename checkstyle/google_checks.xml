@@ -341,7 +341,16 @@
     <module name="CustomImportOrder">
       <property name="sortImportsInGroupAlphabetically" value="true"/>
       <property name="separateLineBetweenGroups" value="true"/>
-      <property name="customImportOrderRules" value="STATIC###THIRD_PARTY_PACKAGE"/>
+      <!-- Adaptación del proyecto: terceros, luego java/javax y al final estáticos (orden de IntelliJ). -->
+      <property name="customImportOrderRules"
+                value="THIRD_PARTY_PACKAGE###STANDARD_JAVA_PACKAGE###STATIC"/>
+    </module>
+    <!-- Adaptación del proyecto: el Javadoc se escribe siempre en varias líneas. -->
+    <module name="RegexpSinglelineJava">
+      <property name="id" value="multiLineJavadoc"/>
+      <property name="format" value="^\s*/\*\*.*\*/\s*$"/>
+      <property name="message" value="El Javadoc debe escribirse en varias líneas."/>
+      <property name="ignoreComments" value="false"/>
     </module>
     <module name="MethodParamPad">
       <property name="tokens"

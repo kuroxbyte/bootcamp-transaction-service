@@ -1,16 +1,17 @@
 package dev.bootcamp.transactionservice.infrastructure.client.credit;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
 import dev.bootcamp.transactionservice.infrastructure.client.StubWebClient;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class CreditWebClientAdaptersTest {
 

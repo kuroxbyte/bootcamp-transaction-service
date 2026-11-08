@@ -1,7 +1,5 @@
 package dev.bootcamp.transactionservice.infrastructure.client;
 
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -10,7 +8,12 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-/** WebClient de prueba que responde sin red y guarda la última petición recibida. */
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+
+/**
+ * WebClient de prueba que responde sin red y guarda la última petición recibida.
+ */
 public final class StubWebClient {
 
     private final AtomicReference<ClientRequest> lastRequest = new AtomicReference<>();
@@ -26,7 +29,9 @@ public final class StubWebClient {
                                 });
     }
 
-    /** Crea un stub que responde siempre con el estado y el JSON indicados. */
+    /**
+     * Crea un stub que responde siempre con el estado y el JSON indicados.
+     */
     public static StubWebClient respondingWith(HttpStatus status, String json) {
         return new StubWebClient(
                 request ->
@@ -39,22 +44,30 @@ public final class StubWebClient {
                                         .build()));
     }
 
-    /** Crea un stub cuya llamada falla siempre con el error indicado. */
+    /**
+     * Crea un stub cuya llamada falla siempre con el error indicado.
+     */
     public static StubWebClient failingWith(Throwable error) {
         return new StubWebClient(request -> Mono.error(error));
     }
 
-    /** Crea un stub que nunca responde, para probar el tiempo de espera. */
+    /**
+     * Crea un stub que nunca responde, para probar el tiempo de espera.
+     */
     public static StubWebClient neverResponding() {
         return new StubWebClient(request -> Mono.never());
     }
 
-    /** Builder de WebClient que usa este stub en lugar de la red. */
+    /**
+     * Builder de WebClient que usa este stub en lugar de la red.
+     */
     public WebClient.Builder builder() {
         return builder;
     }
 
-    /** Ruta de la última petición recibida. */
+    /**
+     * Ruta de la última petición recibida.
+     */
     public String lastPath() {
         return lastRequest.get().url().getPath();
     }

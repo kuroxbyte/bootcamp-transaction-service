@@ -6,10 +6,13 @@ import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import io.reactivex.rxjava3.core.Single;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/** Implementación de {@link ChargeCreditCardUseCase}. */
+/**
+ * Implementación de {@link ChargeCreditCardUseCase}.
+ */
 public class ChargeCreditCardUseCaseImpl implements ChargeCreditCardUseCase {
     private static final String CREDIT_CARD_NOT_FOUND = "La tarjeta de crédito no existe";
     private static final String CREDIT_CARD_NOT_OWNED =
@@ -18,16 +21,22 @@ public class ChargeCreditCardUseCaseImpl implements ChargeCreditCardUseCase {
     private final ChargeRepository chargeRepository;
     private final CreditCardClient creditCardClient;
 
-    /** Crea el caso de uso con los adaptadores de sus puertos. */
+    /**
+     * Crea el caso de uso con los adaptadores de sus puertos.
+     */
     public ChargeCreditCardUseCaseImpl(
-            ChargeRepository chargeRepository, CreditCardClient creditCardClient) {
+            ChargeRepository chargeRepository,
+            CreditCardClient creditCardClient) {
         this.chargeRepository = chargeRepository;
         this.creditCardClient = creditCardClient;
     }
 
     @Override
     public Single<Charge> charge(
-            String customerId, String creditCardId, BigDecimal amount, LocalDate date) {
+            String customerId,
+            String creditCardId,
+            BigDecimal amount,
+            LocalDate date) {
         return Single.fromCallable(() -> new Charge(creditCardId, amount, date))
                 .flatMap(
                         charge ->

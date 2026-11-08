@@ -7,15 +7,20 @@ import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Single;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/** Implementación de {@link PayCreditUseCase}. */
+/**
+ * Implementación de {@link PayCreditUseCase}.
+ */
 public class PayCreditUseCaseImpl implements PayCreditUseCase {
     private final PaymentRepository paymentRepository;
     private final CreditClient creditClient;
 
-    /** Crea el caso de uso con los adaptadores de sus puertos. */
+    /**
+     * Crea el caso de uso con los adaptadores de sus puertos.
+     */
     public PayCreditUseCaseImpl(PaymentRepository paymentRepository, CreditClient creditClient) {
         this.paymentRepository = paymentRepository;
         this.creditClient = creditClient;
@@ -23,7 +28,10 @@ public class PayCreditUseCaseImpl implements PayCreditUseCase {
 
     @Override
     public Single<Payment> pay(
-            String customerId, String creditId, BigDecimal amount, LocalDate date) {
+            String customerId,
+            String creditId,
+            BigDecimal amount,
+            LocalDate date) {
         return Single.fromCallable(() -> new Payment(PaymentTarget.CREDIT, creditId, amount, date))
                 .flatMap(
                         payment ->

@@ -4,6 +4,7 @@ import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import io.reactivex.rxjava3.core.Single;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -38,5 +39,8 @@ public interface ChargeCreditCardUseCase {
      *     supera el crédito disponible
      */
     Single<Charge> charge(
-            String customerId, String creditCardId, BigDecimal amount, LocalDate date);
+            String customerId,
+            String creditCardId,
+            BigDecimal amount,
+            LocalDate date);
 }

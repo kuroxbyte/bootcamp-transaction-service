@@ -1,12 +1,13 @@
 package dev.bootcamp.transactionservice.domain.model.account;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
-
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
+import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class CheckingMovementPolicyTest {
 

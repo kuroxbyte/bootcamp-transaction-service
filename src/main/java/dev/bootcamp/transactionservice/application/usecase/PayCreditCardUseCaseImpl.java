@@ -7,10 +7,13 @@ import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Single;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/** Implementación de {@link PayCreditCardUseCase}. */
+/**
+ * Implementación de {@link PayCreditCardUseCase}.
+ */
 public class PayCreditCardUseCaseImpl implements PayCreditCardUseCase {
     private static final String CREDIT_CARD_NOT_FOUND = "La tarjeta de crédito no existe";
     private static final String CREDIT_CARD_NOT_OWNED =
@@ -19,16 +22,22 @@ public class PayCreditCardUseCaseImpl implements PayCreditCardUseCase {
     private final PaymentRepository paymentRepository;
     private final CreditCardClient creditCardClient;
 
-    /** Crea el caso de uso con los adaptadores de sus puertos. */
+    /**
+     * Crea el caso de uso con los adaptadores de sus puertos.
+     */
     public PayCreditCardUseCaseImpl(
-            PaymentRepository paymentRepository, CreditCardClient creditCardClient) {
+            PaymentRepository paymentRepository,
+            CreditCardClient creditCardClient) {
         this.paymentRepository = paymentRepository;
         this.creditCardClient = creditCardClient;
     }
 
     @Override
     public Single<Payment> pay(
-            String customerId, String creditCardId, BigDecimal amount, LocalDate date) {
+            String customerId,
+            String creditCardId,
+            BigDecimal amount,
+            LocalDate date) {
         return Single.fromCallable(
                         () -> new Payment(PaymentTarget.CREDIT_CARD, creditCardId, amount, date))
                 .flatMap(

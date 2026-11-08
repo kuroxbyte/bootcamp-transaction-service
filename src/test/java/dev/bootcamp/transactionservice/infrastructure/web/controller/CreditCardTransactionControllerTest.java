@@ -1,7 +1,5 @@
 package dev.bootcamp.transactionservice.infrastructure.web.controller;
 
-import static org.mockito.Mockito.when;
-
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetProductMovementsUseCase;
@@ -14,11 +12,6 @@ import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
-import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -27,6 +20,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+
+import static org.mockito.Mockito.when;
 
 @WebFluxTest(CreditCardTransactionController.class)
 class CreditCardTransactionControllerTest {
