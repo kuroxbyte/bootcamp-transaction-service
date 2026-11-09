@@ -17,3 +17,8 @@ clients:
   credit-service:
     base-url: http://localhost:8083
     timeout: 3s
+
+eureka:
+  client:
+    # Las pruebas no se registran en Eureka.
+    enabled: false
