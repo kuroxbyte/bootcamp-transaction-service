@@ -10,6 +10,8 @@ import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCa
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUseCaseImpl;
+import dev.bootcamp.transactionservice.application.usecase.GetDailyAverageBalanceUseCase;
+import dev.bootcamp.transactionservice.application.usecase.GetDailyAverageBalanceUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.GetProductMovementsUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetProductMovementsUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.PayCreditCardUseCase;
@@ -109,5 +111,16 @@ public class UseCaseConfig {
                 movementRepository,
                 paymentRepository,
                 chargeRepository);
+    }
+
+    /**
+     * Registra el caso de uso {@link GetDailyAverageBalanceUseCase}.
+     */
+    @Bean
+    public GetDailyAverageBalanceUseCase getDailyAverageBalanceUseCase(
+            AccountClient accountClient,
+            MovementRepository movementRepository,
+            Clock clock) {
+        return new GetDailyAverageBalanceUseCaseImpl(accountClient, movementRepository, clock);
     }
 }

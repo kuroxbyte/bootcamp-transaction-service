@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,7 +35,19 @@ class AccountWebClientAdapterTest {
                                 + "\"maxMonthlyMovements\":5,\"openingAmount\":0}");
 
         assertThat(account).isEqualTo(
-                new Account("10", "1", new SavingsMovementPolicy(5), BigDecimal.ZERO));
+                new Account("10", "1", new SavingsMovementPolicy(5), BigDecimal.ZERO, null, null));
+    }
+
+    @Test
+    void mapsOpeningDateAndMinimumDailyAverageOfVipSavingsAccount() {
+        Account account =
+                fetch(
+                        "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"SAVINGS\","
+                                + "\"maxMonthlyMovements\":5,\"openingAmount\":0,"
+                                + "\"openedAt\":\"2026-11-10\",\"minimumDailyAverage\":500}");
+
+        assertThat(account.openedAt()).isEqualTo(LocalDate.of(2026, 11, 10));
+        assertThat(account.minimumDailyAverage()).isEqualByComparingTo("500");
     }
 
     @Test
@@ -47,7 +60,7 @@ class AccountWebClientAdapterTest {
                                 + "\"openingAmount\":0}");
 
         assertThat(account).isEqualTo(
-                new Account("10", "2", new CheckingMovementPolicy(), BigDecimal.ZERO));
+                new Account("10", "2", new CheckingMovementPolicy(), BigDecimal.ZERO, null, null));
     }
 
     @Test
@@ -58,7 +71,13 @@ class AccountWebClientAdapterTest {
                                 + "\"movementDayOfMonth\":15,\"openingAmount\":0}");
 
         assertThat(account).isEqualTo(
-                new Account("10", "1", new FixedTermMovementPolicy(15), BigDecimal.ZERO));
+                new Account(
+                        "10",
+                        "1",
+                        new FixedTermMovementPolicy(15),
+                        BigDecimal.ZERO,
+                        null,
+                        null));
     }
 
     @Test

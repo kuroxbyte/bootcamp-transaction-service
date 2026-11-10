@@ -1,10 +1,12 @@
 package dev.bootcamp.transactionservice.infrastructure.web.mapper;
 
+import dev.bootcamp.transactionservice.domain.model.account.DailyAverageBalance;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ChargeResponseDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.DailyAverageBalanceResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.MovementResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.MovementTypeDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.PaymentResponseDto;
@@ -56,5 +58,21 @@ public final class TransactionWebMapper {
                 ProductMovementTypeDto.valueOf(movement.type().name()),
                 movement.amount(),
                 movement.date());
+    }
+
+    /**
+     * Convierte {@link DailyAverageBalance} en su DTO de respuesta; el mínimo y si se alcanza solo
+     * vienen si la cuenta exige un mínimo.
+     */
+    public static DailyAverageBalanceResponseDto toResponse(
+            String accountId,
+            DailyAverageBalance average) {
+        return new DailyAverageBalanceResponseDto(
+                accountId,
+                average.month().toString(),
+                average.days(),
+                average.average())
+                .minimumDailyAverage(average.minimumDailyAverage())
+                .meetsMinimum(average.meetsMinimum());
     }
 }

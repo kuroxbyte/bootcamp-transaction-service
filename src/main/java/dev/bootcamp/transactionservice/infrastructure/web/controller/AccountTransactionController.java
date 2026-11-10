@@ -1,11 +1,13 @@
 package dev.bootcamp.transactionservice.infrastructure.web.controller;
 
 import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUseCase;
+import dev.bootcamp.transactionservice.application.usecase.GetDailyAverageBalanceUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetProductMovementsUseCase;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCase;
 import dev.bootcamp.transactionservice.infrastructure.web.api.AccountTransactionsApi;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.AccountBalanceResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.AmountRequestDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.DailyAverageBalanceResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.MovementResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductMovementResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.mapper.TransactionWebMapper;
@@ -20,6 +22,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 /**
  * Endpoints de depósitos, retiros, saldo y movimientos de cuentas bancarias.
@@ -32,6 +35,7 @@ public class AccountTransactionController implements AccountTransactionsApi {
     private final RegisterMovementUseCase registerMovementUseCase;
     private final GetAvailableBalanceUseCase getAvailableBalanceUseCase;
     private final GetProductMovementsUseCase getProductMovementsUseCase;
+    private final GetDailyAverageBalanceUseCase getDailyAverageBalanceUseCase;
     private final Clock clock;
 
     @Override
@@ -109,6 +113,25 @@ public class AccountTransactionController implements AccountTransactionsApi {
                         balance ->
                                 ResponseEntity.ok(
                                         new AccountBalanceResponseDto(accountId, balance)));
+    }
+
+    @Override
+    public Mono<ResponseEntity<DailyAverageBalanceResponseDto>> getAccountDailyAverage(
+            String customerId,
+            String accountId,
+            String month,
+            ServerWebExchange exchange) {
+        log.debug(
+                "Fetching daily average accountId={} customerId={} month={}",
+                accountId,
+                customerId,
+                month);
+        return Mono.from(
+                        getDailyAverageBalanceUseCase
+                                .execute(customerId, accountId, YearMonth.parse(month))
+                                .toFlowable())
+                .map(average -> ResponseEntity.ok(
+                        TransactionWebMapper.toResponse(accountId, average)));
     }
 
     @Override

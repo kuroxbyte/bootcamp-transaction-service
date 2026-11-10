@@ -82,6 +82,41 @@ paths:
           $ref: '#/components/responses/ProductNotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/{accountId}/daily-average:
+    get:
+      tags: [AccountTransactions]
+      operationId: getAccountDailyAverage
+      summary: Consultar el saldo promedio diario de una cuenta del cliente en un mes
+      description: |
+        Promedia el saldo al final de cada día del mes en que la cuenta estuvo abierta, hasta hoy.
+        Si la cuenta exige un monto mínimo de promedio diario (ahorro VIP), indica si lo alcanza.
+        Es informativo: no bloquea ni cobra nada.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/AccountId'
+        - name: month
+          in: query
+          required: true
+          description: Mes consultado (YYYY-MM)
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+            example: '2026-11'
+      responses:
+        '200':
+          description: Saldo promedio diario del mes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyAverageBalanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/accounts/{accountId}/movements:
     get:
       tags: [AccountTransactions]
@@ -324,6 +359,31 @@ components:
         balance:
           type: number
           example: 1250.00
+    DailyAverageBalanceResponse:
+      type: object
+      required: [accountId, month, days, averageDailyBalance]
+      properties:
+        accountId:
+          type: string
+        month:
+          type: string
+          example: '2026-11'
+        days:
+          type: integer
+          format: int32
+          description: Días del mes en que la cuenta estuvo abierta hasta hoy
+          example: 15
+        averageDailyBalance:
+          type: number
+          description: Saldo promedio diario de esos días
+          example: 640.50
+        minimumDailyAverage:
+          type: number
+          description: Solo si la cuenta lo exige (ahorro VIP); monto mínimo de promedio diario del mes
+          example: 500
+        meetsMinimum:
+          type: boolean
+          description: Solo si la cuenta exige un mínimo; indica si el promedio lo alcanza
     AvailableCreditResponse:
       type: object
       required: [creditCardId, availableCredit]

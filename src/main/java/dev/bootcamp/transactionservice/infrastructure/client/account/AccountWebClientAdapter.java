@@ -63,6 +63,8 @@ public class AccountWebClientAdapter implements AccountClient {
                 response.getId(),
                 response.getCustomerId(),
                 movementPolicy,
-                response.getOpeningAmount());
+                response.getOpeningAmount(),
+                response.getOpenedAt(),
+                response.getMinimumDailyAverage());
     }
 }
