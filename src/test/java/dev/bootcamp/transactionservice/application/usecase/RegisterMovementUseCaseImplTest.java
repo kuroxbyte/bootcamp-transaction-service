@@ -43,7 +43,8 @@ class RegisterMovementUseCaseImplTest {
 
     private void givenAccount(MovementPolicy movementPolicy) {
         when(accountClient.findById("1"))
-                .thenReturn(Maybe.just(new Account("1", CUSTOMER_ID, movementPolicy)));
+                .thenReturn(
+                        Maybe.just(new Account("1", CUSTOMER_ID, movementPolicy, BigDecimal.ZERO)));
     }
 
     /**
@@ -159,5 +160,20 @@ class RegisterMovementUseCaseImplTest {
         useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertComplete();
 
         verify(movementRepository).save(new Movement("1", MovementType.DEPOSIT, AMOUNT, DATE));
+    }
+
+    @Test
+    void openingAmountCoversWithdrawalWithoutDeposits() {
+        when(accountClient.findById("1")).thenReturn(Maybe.just(new Account(
+                "1",
+                CUSTOMER_ID,
+                new CheckingMovementPolicy(),
+                new BigDecimal("150"))));
+        when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE)))
+                .thenReturn(Single.just(0L));
+        when(movementRepository.getBalance("1")).thenReturn(Single.just(BigDecimal.ZERO));
+        givenSaveReturnsMovement();
+
+        useCase.withdraw(CUSTOMER_ID, "1", new BigDecimal("150"), DATE).test().assertComplete();
     }
 }

@@ -25,7 +25,10 @@ class CreditWebClientAdaptersTest {
                         HttpStatus.OK, "{\"id\":\"5\",\"customerId\":\"1\",\"type\":\"PERSONAL\"}");
 
         Credit credit =
-                new CreditWebClientAdapter(stub.builder(), "http://credit-service", TestCircuitBreakers.remoteLookup(TIMEOUT))
+                new CreditWebClientAdapter(
+                        stub.builder(),
+                        "http://credit-service",
+                        TestCircuitBreakers.remoteLookup(TIMEOUT))
                         .findById("5")
                         .blockingGet();
 
@@ -41,7 +44,10 @@ class CreditWebClientAdaptersTest {
                         "{\"id\":\"7\",\"customerId\":\"1\",\"creditLimit\":5000.50}");
 
         CreditCard card =
-                new CreditCardWebClientAdapter(stub.builder(), "http://credit-service", TestCircuitBreakers.remoteLookup(TIMEOUT))
+                new CreditCardWebClientAdapter(
+                        stub.builder(),
+                        "http://credit-service",
+                        TestCircuitBreakers.remoteLookup(TIMEOUT))
                         .findById("7")
                         .blockingGet();
 
@@ -55,13 +61,19 @@ class CreditWebClientAdaptersTest {
     void returnsEmptyWhenProductDoesNotExist() {
         StubWebClient stub = StubWebClient.respondingWith(HttpStatus.NOT_FOUND, "{\"status\":404}");
 
-        new CreditWebClientAdapter(stub.builder(), "http://credit-service", TestCircuitBreakers.remoteLookup(TIMEOUT))
+        new CreditWebClientAdapter(
+                stub.builder(),
+                "http://credit-service",
+                TestCircuitBreakers.remoteLookup(TIMEOUT))
                 .findById("99")
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)
                 .assertComplete()
                 .assertNoValues();
-        new CreditCardWebClientAdapter(stub.builder(), "http://credit-service", TestCircuitBreakers.remoteLookup(TIMEOUT))
+        new CreditCardWebClientAdapter(
+                stub.builder(),
+                "http://credit-service",
+                TestCircuitBreakers.remoteLookup(TIMEOUT))
                 .findById("99")
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)
@@ -74,7 +86,10 @@ class CreditWebClientAdaptersTest {
         StubWebClient stub =
                 StubWebClient.respondingWith(HttpStatus.SERVICE_UNAVAILABLE, "{\"status\":503}");
 
-        new CreditCardWebClientAdapter(stub.builder(), "http://credit-service", TestCircuitBreakers.remoteLookup(TIMEOUT))
+        new CreditCardWebClientAdapter(
+                stub.builder(),
+                "http://credit-service",
+                TestCircuitBreakers.remoteLookup(TIMEOUT))
                 .findById("7")
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)

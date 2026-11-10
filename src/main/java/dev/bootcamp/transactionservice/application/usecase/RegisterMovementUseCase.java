@@ -16,7 +16,8 @@ import java.time.LocalDate;
  * <ul>
  *   <li>La cuenta debe existir en account-service y pertenecer al cliente.
  *   <li>El monto debe ser mayor a 0.
- *   <li>Un retiro no puede superar el saldo de la cuenta (depósitos menos retiros).
+ *   <li>Un retiro no puede superar el saldo de la cuenta (monto de apertura más depósitos
+ *       menos retiros).
  *   <li>Ahorro: no se puede superar el límite máximo de movimientos mensuales.
  *   <li>Cuenta corriente: sin límite de movimientos.
  *   <li>Plazo fijo: un solo movimiento al mes, en el día configurado.

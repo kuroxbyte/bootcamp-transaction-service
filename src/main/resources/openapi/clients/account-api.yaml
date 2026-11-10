@@ -36,6 +36,7 @@ paths:
       description: |
         Sin comisión de mantenimiento y con límite máximo de movimientos mensuales.
         Un cliente personal solo puede tener una; un cliente empresarial no puede tener ninguna.
+        El monto de apertura debe ser al menos el mínimo configurado para el tipo (puede ser 0).
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
       requestBody:
@@ -64,6 +65,7 @@ paths:
         Con comisión de mantenimiento y sin límite de movimientos mensuales.
         Un cliente personal solo puede tener una; un cliente empresarial puede tener varias
         y debe indicar al menos un titular (los firmantes autorizados son opcionales).
+        El monto de apertura debe ser al menos el mínimo configurado para el tipo (puede ser 0).
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
       requestBody:
@@ -91,6 +93,7 @@ paths:
       description: |
         Sin comisión de mantenimiento; permite un solo depósito o retiro al mes, en el día indicado.
         Un cliente personal puede tener varias; un cliente empresarial no puede tener ninguna.
+        El monto de apertura debe ser al menos el mínimo configurado para el tipo (puede ser 0).
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
       requestBody:
@@ -150,8 +153,13 @@ components:
       enum: [SAVINGS, CHECKING, FIXED_TERM]
     SavingsAccountRequest:
       type: object
-      required: [maxMonthlyMovements]
+      required: [maxMonthlyMovements, openingAmount]
       properties:
+        openingAmount:
+          type: number
+          minimum: 0
+          description: Monto de apertura; debe ser al menos el mínimo de apertura del tipo de cuenta (que puede ser 0). Es el saldo inicial.
+          example: 0
         maxMonthlyMovements:
           type: integer
           format: int32
@@ -160,8 +168,13 @@ components:
           example: 5
     CheckingAccountRequest:
       type: object
-      required: [maintenanceFee]
+      required: [maintenanceFee, openingAmount]
       properties:
+        openingAmount:
+          type: number
+          minimum: 0
+          description: Monto de apertura; debe ser al menos el mínimo de apertura del tipo de cuenta (que puede ser 0). Es el saldo inicial.
+          example: 0
         maintenanceFee:
           type: number
           minimum: 0
@@ -180,8 +193,13 @@ components:
             type: string
     FixedTermAccountRequest:
       type: object
-      required: [movementDayOfMonth]
+      required: [movementDayOfMonth, openingAmount]
       properties:
+        openingAmount:
+          type: number
+          minimum: 0
+          description: Monto de apertura; debe ser al menos el mínimo de apertura del tipo de cuenta (que puede ser 0). Es el saldo inicial.
+          example: 0
         movementDayOfMonth:
           type: integer
           format: int32
@@ -192,7 +210,7 @@ components:
     AccountResponse:
       type: object
       description: Cuenta bancaria; los campos propios de cada tipo solo vienen en ese tipo.
-      required: [id, customerId, type]
+      required: [id, customerId, type, minimumOpeningAmount, openingAmount]
       properties:
         id:
           type: string
@@ -223,6 +241,14 @@ components:
           type: integer
           format: int32
           description: Solo FIXED_TERM
+        minimumOpeningAmount:
+          type: number
+          description: Monto mínimo de apertura del tipo de cuenta al momento de abrirla
+          example: 0
+        openingAmount:
+          type: number
+          description: Monto con el que se abrió la cuenta (saldo inicial)
+          example: 0
     Problem:
       type: object
       description: Detalle de error (RFC 7807)

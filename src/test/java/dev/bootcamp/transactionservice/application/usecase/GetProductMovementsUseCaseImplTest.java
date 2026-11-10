@@ -57,7 +57,12 @@ class GetProductMovementsUseCaseImplTest {
     void returnsAccountMovementsSortedByDate() {
         when(accountClient.findById("1"))
                 .thenReturn(
-                        Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
+                        Maybe.just(
+                                new Account(
+                                        "1",
+                                        CUSTOMER_ID,
+                                        new CheckingMovementPolicy(),
+                                        BigDecimal.ZERO)));
         when(movementRepository.findByAccountId("1"))
                 .thenReturn(
                         Flowable.fromIterable(
@@ -86,7 +91,12 @@ class GetProductMovementsUseCaseImplTest {
     void returnsEmptyListWhenAccountHasNoMovements() {
         when(accountClient.findById("1"))
                 .thenReturn(
-                        Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
+                        Maybe.just(
+                                new Account(
+                                        "1",
+                                        CUSTOMER_ID,
+                                        new CheckingMovementPolicy(),
+                                        BigDecimal.ZERO)));
         when(movementRepository.findByAccountId("1")).thenReturn(Flowable.fromIterable(List.of()));
 
         assertThat(useCase.getAccountMovements(CUSTOMER_ID, "1").toList().blockingGet()).isEmpty();
@@ -96,7 +106,12 @@ class GetProductMovementsUseCaseImplTest {
     void rejectsMovementsOfAccountOfAnotherCustomer() {
         when(accountClient.findById("1"))
                 .thenReturn(
-                        Maybe.just(new Account("1", CUSTOMER_ID, new CheckingMovementPolicy())));
+                        Maybe.just(
+                                new Account(
+                                        "1",
+                                        CUSTOMER_ID,
+                                        new CheckingMovementPolicy(),
+                                        BigDecimal.ZERO)));
 
         useCase.getAccountMovements("999", "1").test().assertError(NotFoundException.class);
         verify(movementRepository, never()).findByAccountId(any());
