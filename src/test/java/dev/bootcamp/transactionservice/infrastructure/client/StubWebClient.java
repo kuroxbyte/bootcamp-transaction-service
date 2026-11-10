@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -17,6 +18,7 @@ import java.util.function.Function;
 public final class StubWebClient {
 
     private final AtomicReference<ClientRequest> lastRequest = new AtomicReference<>();
+    private final AtomicInteger requestCount = new AtomicInteger();
     private final WebClient.Builder builder;
 
     private StubWebClient(Function<ClientRequest, Mono<ClientResponse>> responder) {
@@ -25,6 +27,7 @@ public final class StubWebClient {
                         .exchangeFunction(
                                 request -> {
                                     lastRequest.set(request);
+                                    requestCount.incrementAndGet();
                                     return responder.apply(request);
                                 });
     }
@@ -70,5 +73,12 @@ public final class StubWebClient {
      */
     public String lastPath() {
         return lastRequest.get().url().getPath();
+    }
+
+    /**
+     * Cantidad de peticiones que llegaron al stub.
+     */
+    public int requestCount() {
+        return requestCount.get();
     }
 }

@@ -6,6 +6,7 @@ import dev.bootcamp.transactionservice.domain.model.account.FixedTermMovementPol
 import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolicy;
 import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
 import dev.bootcamp.transactionservice.infrastructure.client.StubWebClient;
+import dev.bootcamp.transactionservice.infrastructure.client.TestCircuitBreakers;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -19,7 +20,7 @@ class AccountWebClientAdapterTest {
     private static Account fetch(String json) {
         StubWebClient stub = StubWebClient.respondingWith(HttpStatus.OK, json);
         return new AccountWebClientAdapter(
-                        stub.builder(), "http://account-service", Duration.ofSeconds(1))
+                        stub.builder(), "http://account-service", TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
                 .findById("10")
                 .blockingGet();
     }
@@ -62,7 +63,7 @@ class AccountWebClientAdapterTest {
                         HttpStatus.OK,
                         "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\"}");
 
-        new AccountWebClientAdapter(stub.builder(), "http://account-service", Duration.ofSeconds(1))
+        new AccountWebClientAdapter(stub.builder(), "http://account-service", TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
                 .findById("10")
                 .blockingGet();
 
@@ -73,7 +74,7 @@ class AccountWebClientAdapterTest {
     void returnsEmptyWhenAccountDoesNotExist() {
         StubWebClient stub = StubWebClient.respondingWith(HttpStatus.NOT_FOUND, "{\"status\":404}");
 
-        new AccountWebClientAdapter(stub.builder(), "http://account-service", Duration.ofSeconds(1))
+        new AccountWebClientAdapter(stub.builder(), "http://account-service", TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
                 .findById("99")
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)
@@ -86,7 +87,7 @@ class AccountWebClientAdapterTest {
         new AccountWebClientAdapter(
                         StubWebClient.neverResponding().builder(),
                         "http://account-service",
-                        Duration.ofMillis(100))
+                        TestCircuitBreakers.remoteLookup(Duration.ofMillis(100)))
                 .findById("10")
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)
