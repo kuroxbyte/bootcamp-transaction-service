@@ -1,10 +1,12 @@
 package dev.bootcamp.transactionservice.infrastructure.web.controller;
 
 import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUseCase;
+import dev.bootcamp.transactionservice.application.usecase.GetDailyAverageBalanceUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetProductMovementsUseCase;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCase;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
+import dev.bootcamp.transactionservice.domain.model.account.DailyAverageBalance;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovementType;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
@@ -25,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneOffset;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -53,6 +56,67 @@ class AccountTransactionControllerTest {
     @MockitoBean private GetAvailableBalanceUseCase getAvailableBalanceUseCase;
 
     @MockitoBean private GetProductMovementsUseCase getProductMovementsUseCase;
+
+    @MockitoBean private GetDailyAverageBalanceUseCase getDailyAverageBalanceUseCase;
+
+    @Test
+    void returnsDailyAverageOfTheMonth() {
+        when(getDailyAverageBalanceUseCase.execute("1", "10", YearMonth.of(2026, 11)))
+                .thenReturn(Single.just(new DailyAverageBalance(
+                        YearMonth.of(2026, 11),
+                        15,
+                        new BigDecimal("640.50"),
+                        new BigDecimal("500"))));
+
+        webTestClient
+                .get()
+                .uri("/api/v1/accounts/10/daily-average?month=2026-11")
+                .header("X-Customer-Id", "1")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.accountId")
+                .isEqualTo("10")
+                .jsonPath("$.month")
+                .isEqualTo("2026-11")
+                .jsonPath("$.days")
+                .isEqualTo(15)
+                .jsonPath("$.averageDailyBalance")
+                .isEqualTo(640.50)
+                .jsonPath("$.minimumDailyAverage")
+                .isEqualTo(500)
+                .jsonPath("$.meetsMinimum")
+                .isEqualTo(true);
+    }
+
+    @Test
+    void rejectsInvalidMonth() {
+        webTestClient
+                .get()
+                .uri("/api/v1/accounts/10/daily-average?month=2026-13")
+                .header("X-Customer-Id", "1")
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+
+        verify(getDailyAverageBalanceUseCase, never()).execute(any(), any(), any());
+    }
+
+    @Test
+    void returnsUnprocessableWhenAccountWasNotOpenInTheMonth() {
+        when(getDailyAverageBalanceUseCase.execute("1", "10", YearMonth.of(2026, 1)))
+                .thenReturn(Single.error(new BusinessRuleException(
+                        "La cuenta no estuvo abierta ningún día del mes consultado")));
+
+        webTestClient
+                .get()
+                .uri("/api/v1/accounts/10/daily-average?month=2026-01")
+                .header("X-Customer-Id", "1")
+                .exchange()
+                .expectStatus()
+                .isEqualTo(422);
+    }
 
     @Test
     void registersDepositWithServerDate() {

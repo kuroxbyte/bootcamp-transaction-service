@@ -44,7 +44,14 @@ class RegisterMovementUseCaseImplTest {
     private void givenAccount(MovementPolicy movementPolicy) {
         when(accountClient.findById("1"))
                 .thenReturn(
-                        Maybe.just(new Account("1", CUSTOMER_ID, movementPolicy, BigDecimal.ZERO)));
+                        Maybe.just(
+                                new Account(
+                                        "1",
+                                        CUSTOMER_ID,
+                                        movementPolicy,
+                                        BigDecimal.ZERO,
+                                        null,
+                                        null)));
     }
 
     /**
@@ -168,7 +175,9 @@ class RegisterMovementUseCaseImplTest {
                 "1",
                 CUSTOMER_ID,
                 new CheckingMovementPolicy(),
-                new BigDecimal("150"))));
+                new BigDecimal("150"),
+                null,
+                null)));
         when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE)))
                 .thenReturn(Single.just(0L));
         when(movementRepository.getBalance("1")).thenReturn(Single.just(BigDecimal.ZERO));

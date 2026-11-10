@@ -3,6 +3,7 @@ package dev.bootcamp.transactionservice.infrastructure.web;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -17,7 +18,8 @@ import reactor.core.publisher.Mono;
  *
  * <ul>
  *   <li>400: datos de entrada inválidos o falta un header; lo resuelve {@link
- *       ResponseEntityExceptionHandler}.
+ *       ResponseEntityExceptionHandler}. Un parámetro de consulta inválido llega como {@link
+ *       ConstraintViolationException}.
  *   <li>404: {@link NotFoundException}.
  *   <li>422: {@link BusinessRuleException}.
  *   <li>503: {@link ServiceUnavailableException}; el detalle ya lo registra el cliente HTTP.
@@ -27,6 +29,16 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    /**
+     * Responde 400 cuando un parámetro de consulta no cumple el contrato.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleConstraintViolation(
+            ConstraintViolationException ex) {
+        log.warn("Invalid request parameter: {}", ex.getMessage());
+        return problem(HttpStatus.BAD_REQUEST, "Solicitud inválida", ex.getMessage());
+    }
 
     /**
      * Responde 404 cuando el recurso no existe o no pertenece al cliente.

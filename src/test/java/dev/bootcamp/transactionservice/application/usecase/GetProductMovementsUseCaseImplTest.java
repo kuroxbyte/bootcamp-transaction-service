@@ -62,7 +62,9 @@ class GetProductMovementsUseCaseImplTest {
                                         "1",
                                         CUSTOMER_ID,
                                         new CheckingMovementPolicy(),
-                                        BigDecimal.ZERO)));
+                                        BigDecimal.ZERO,
+                                        null,
+                                        null)));
         when(movementRepository.findByAccountId("1"))
                 .thenReturn(
                         Flowable.fromIterable(
@@ -96,7 +98,9 @@ class GetProductMovementsUseCaseImplTest {
                                         "1",
                                         CUSTOMER_ID,
                                         new CheckingMovementPolicy(),
-                                        BigDecimal.ZERO)));
+                                        BigDecimal.ZERO,
+                                        null,
+                                        null)));
         when(movementRepository.findByAccountId("1")).thenReturn(Flowable.fromIterable(List.of()));
 
         assertThat(useCase.getAccountMovements(CUSTOMER_ID, "1").toList().blockingGet()).isEmpty();
@@ -111,7 +115,9 @@ class GetProductMovementsUseCaseImplTest {
                                         "1",
                                         CUSTOMER_ID,
                                         new CheckingMovementPolicy(),
-                                        BigDecimal.ZERO)));
+                                        BigDecimal.ZERO,
+                                        null,
+                                        null)));
 
         useCase.getAccountMovements("999", "1").test().assertError(NotFoundException.class);
         verify(movementRepository, never()).findByAccountId(any());

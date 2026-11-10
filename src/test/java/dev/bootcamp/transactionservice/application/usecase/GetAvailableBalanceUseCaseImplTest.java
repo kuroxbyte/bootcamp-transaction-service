@@ -29,7 +29,13 @@ class GetAvailableBalanceUseCaseImplTest {
 
     private static final String CUSTOMER_ID = "100";
     private static final Account ACCOUNT =
-            new Account("1", CUSTOMER_ID, new CheckingMovementPolicy(), BigDecimal.ZERO);
+            new Account(
+                    "1",
+                    CUSTOMER_ID,
+                    new CheckingMovementPolicy(),
+                    BigDecimal.ZERO,
+                    null,
+                    null);
     private static final CreditCard CARD = new CreditCard("2", CUSTOMER_ID, new BigDecimal("1000"));
 
     @Mock private AccountClient accountClient;
@@ -109,7 +115,9 @@ class GetAvailableBalanceUseCaseImplTest {
                 "1",
                 CUSTOMER_ID,
                 new CheckingMovementPolicy(),
-                new BigDecimal("200"));
+                new BigDecimal("200"),
+                null,
+                null);
         when(accountClient.findById("1")).thenReturn(Maybe.just(opened));
         when(movementRepository.getBalance("1")).thenReturn(Single.just(new BigDecimal("30")));
 

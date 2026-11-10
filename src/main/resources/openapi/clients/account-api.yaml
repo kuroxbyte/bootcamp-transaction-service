@@ -36,6 +36,8 @@ paths:
       description: |
         Sin comisión de mantenimiento y con límite máximo de movimientos mensuales.
         Un cliente personal solo puede tener una; un cliente empresarial no puede tener ninguna.
+        Si el cliente es VIP, la cuenta es de ahorro VIP: exige un monto mínimo de promedio diario
+        cada mes y el cliente debe tener una tarjeta de crédito con el banco al abrirla.
         El monto de apertura debe ser al menos el mínimo configurado para el tipo (puede ser 0).
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
@@ -65,6 +67,8 @@ paths:
         Con comisión de mantenimiento y sin límite de movimientos mensuales.
         Un cliente personal solo puede tener una; un cliente empresarial puede tener varias
         y debe indicar al menos un titular (los firmantes autorizados son opcionales).
+        Si el cliente es PYME, la cuenta no tiene comisión de mantenimiento (se omite o se envía 0)
+        y el cliente debe tener una tarjeta de crédito con el banco al abrirla.
         El monto de apertura debe ser al menos el mínimo configurado para el tipo (puede ser 0).
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
@@ -168,7 +172,7 @@ components:
           example: 5
     CheckingAccountRequest:
       type: object
-      required: [maintenanceFee, openingAmount]
+      required: [openingAmount]
       properties:
         openingAmount:
           type: number
@@ -178,8 +182,7 @@ components:
         maintenanceFee:
           type: number
           minimum: 0
-          exclusiveMinimum: true
-          description: Comisión de mantenimiento
+          description: Comisión de mantenimiento; obligatoria y mayor a 0, salvo si el cliente es PYME (se omite o es 0)
           example: 15.00
         holderIds:
           type: array
@@ -210,7 +213,7 @@ components:
     AccountResponse:
       type: object
       description: Cuenta bancaria; los campos propios de cada tipo solo vienen en ese tipo.
-      required: [id, customerId, type, minimumOpeningAmount, openingAmount]
+      required: [id, customerId, type, minimumOpeningAmount, openingAmount, openedAt]
       properties:
         id:
           type: string
@@ -224,6 +227,10 @@ components:
           type: integer
           format: int32
           description: Solo SAVINGS
+        minimumDailyAverage:
+          type: number
+          description: Solo SAVINGS de un cliente VIP; monto mínimo de promedio diario que exige cada mes
+          example: 500
         maintenanceFee:
           type: number
           description: Solo CHECKING
@@ -249,6 +256,11 @@ components:
           type: number
           description: Monto con el que se abrió la cuenta (saldo inicial)
           example: 0
+        openedAt:
+          type: string
+          format: date
+          description: Fecha de apertura de la cuenta
+          example: '2026-11-15'
     Problem:
       type: object
       description: Detalle de error (RFC 7807)
@@ -298,7 +310,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     ServiceUnavailable:
-      description: customer-service no está disponible
+      description: customer-service o credit-service no está disponible
       content:
         application/problem+json:
           schema:
