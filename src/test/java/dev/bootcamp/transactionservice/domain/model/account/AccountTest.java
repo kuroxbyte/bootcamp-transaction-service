@@ -21,7 +21,7 @@ class AccountTest {
     }
 
     private static Account checking() {
-        return new Account("1", "100", new CheckingMovementPolicy());
+        return new Account("1", "100", new CheckingMovementPolicy(), BigDecimal.ZERO);
     }
 
     @Test
@@ -32,7 +32,7 @@ class AccountTest {
 
     @Test
     void appliesMovementPolicyOfAccountType() {
-        Account savings = new Account("1", "100", new SavingsMovementPolicy(2));
+        Account savings = new Account("1", "100", new SavingsMovementPolicy(2), BigDecimal.ZERO);
         Movement deposit = new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DATE);
 
         assertThatThrownBy(() -> savings.validateMovement(deposit, 2, BigDecimal.ZERO))
@@ -58,9 +58,9 @@ class AccountTest {
     @Test
     void rejectsWithdrawalOverBalanceInEveryAccountType() {
         Account[] accounts = {
-            new Account("1", "100", new SavingsMovementPolicy(5)),
+            new Account("1", "100", new SavingsMovementPolicy(5), BigDecimal.ZERO),
             checking(),
-            new Account("1", "100", new FixedTermMovementPolicy(15))
+            new Account("1", "100", new FixedTermMovementPolicy(15), BigDecimal.ZERO)
         };
 
         for (Account account : accounts) {
@@ -79,5 +79,16 @@ class AccountTest {
 
         assertThatCode(() -> checking().validateMovement(deposit, 0, BigDecimal.ZERO))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    void balanceIsOpeningAmountPlusMovements() {
+        Account account = new Account(
+                "1",
+                "100",
+                new CheckingMovementPolicy(),
+                new BigDecimal("200"));
+
+        assertThat(account.balance(new BigDecimal("-50.25"))).isEqualByComparingTo("149.75");
     }
 }

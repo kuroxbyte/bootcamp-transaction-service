@@ -10,6 +10,7 @@ import dev.bootcamp.transactionservice.infrastructure.client.TestCircuitBreakers
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +33,8 @@ class AccountWebClientAdapterTest {
                         "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"SAVINGS\","
                                 + "\"maxMonthlyMovements\":5}");
 
-        assertThat(account).isEqualTo(new Account("10", "1", new SavingsMovementPolicy(5)));
+        assertThat(account).isEqualTo(
+                new Account("10", "1", new SavingsMovementPolicy(5), BigDecimal.ZERO));
     }
 
     @Test
@@ -43,7 +45,8 @@ class AccountWebClientAdapterTest {
                                 + "\"maintenanceFee\":15.0,"
                                 + "\"holderIds\":[\"h1\"],\"authorizedSignerIds\":[]}");
 
-        assertThat(account).isEqualTo(new Account("10", "2", new CheckingMovementPolicy()));
+        assertThat(account).isEqualTo(
+                new Account("10", "2", new CheckingMovementPolicy(), BigDecimal.ZERO));
     }
 
     @Test
@@ -53,7 +56,8 @@ class AccountWebClientAdapterTest {
                         "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"FIXED_TERM\","
                                 + "\"movementDayOfMonth\":15}");
 
-        assertThat(account).isEqualTo(new Account("10", "1", new FixedTermMovementPolicy(15)));
+        assertThat(account).isEqualTo(
+                new Account("10", "1", new FixedTermMovementPolicy(15), BigDecimal.ZERO));
     }
 
     @Test
@@ -63,7 +67,10 @@ class AccountWebClientAdapterTest {
                         HttpStatus.OK,
                         "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\"}");
 
-        new AccountWebClientAdapter(stub.builder(), "http://account-service", TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
+        new AccountWebClientAdapter(
+                stub.builder(),
+                "http://account-service",
+                TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
                 .findById("10")
                 .blockingGet();
 
@@ -74,7 +81,10 @@ class AccountWebClientAdapterTest {
     void returnsEmptyWhenAccountDoesNotExist() {
         StubWebClient stub = StubWebClient.respondingWith(HttpStatus.NOT_FOUND, "{\"status\":404}");
 
-        new AccountWebClientAdapter(stub.builder(), "http://account-service", TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
+        new AccountWebClientAdapter(
+                stub.builder(),
+                "http://account-service",
+                TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
                 .findById("99")
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)
@@ -92,5 +102,16 @@ class AccountWebClientAdapterTest {
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)
                 .assertError(ServiceUnavailableException.class);
+    }
+
+    @Test
+    void mapsOpeningAmountAndTreatsMissingOneAsZero() {
+        Account withOpening = fetch(
+                "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\","
+                        + "\"minimumOpeningAmount\":0,\"openingAmount\":250.5}");
+        Account legacy = fetch("{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\"}");
+
+        assertThat(withOpening.openingAmount()).isEqualByComparingTo("250.5");
+        assertThat(legacy.openingAmount()).isEqualByComparingTo("0");
     }
 }

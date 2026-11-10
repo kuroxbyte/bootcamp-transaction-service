@@ -12,8 +12,8 @@ import java.math.BigDecimal;
  *
  * <ul>
  *   <li>El producto debe existir y pertenecer al cliente.
- *   <li>Cuenta bancaria: el saldo disponible es la suma de sus depósitos menos la suma de sus
- *       retiros.
+ *   <li>Cuenta bancaria: el saldo disponible es su monto de apertura más la suma de sus
+ *       depósitos menos la suma de sus retiros.
  *   <li>Tarjeta de crédito: el saldo disponible es el límite de crédito menos la deuda (consumos
  *       menos pagos a la tarjeta).
  * </ul>

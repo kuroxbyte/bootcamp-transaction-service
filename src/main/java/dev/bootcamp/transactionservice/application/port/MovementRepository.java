@@ -18,8 +18,8 @@ public interface MovementRepository {
     Single<Long> countByAccountIdAndMonth(String accountId, YearMonth month);
 
     /**
-     * Saldo de la cuenta: suma de sus depósitos menos suma de sus retiros (0 si no tiene
-     * movimientos).
+     * Saldo de los movimientos de la cuenta: suma de sus depósitos menos suma de sus retiros (0 si
+     * no tiene movimientos). No incluye el monto de apertura.
      */
     Single<BigDecimal> getBalance(String accountId);
 

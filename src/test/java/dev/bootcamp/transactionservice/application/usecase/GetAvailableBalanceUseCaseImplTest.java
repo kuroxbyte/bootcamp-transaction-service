@@ -29,7 +29,7 @@ class GetAvailableBalanceUseCaseImplTest {
 
     private static final String CUSTOMER_ID = "100";
     private static final Account ACCOUNT =
-            new Account("1", CUSTOMER_ID, new CheckingMovementPolicy());
+            new Account("1", CUSTOMER_ID, new CheckingMovementPolicy(), BigDecimal.ZERO);
     private static final CreditCard CARD = new CreditCard("2", CUSTOMER_ID, new BigDecimal("1000"));
 
     @Mock private AccountClient accountClient;
@@ -101,5 +101,19 @@ class GetAvailableBalanceUseCaseImplTest {
         useCase.getCreditCardAvailableCredit(CUSTOMER_ID, "99")
                 .test()
                 .assertError(NotFoundException.class);
+    }
+
+    @Test
+    void accountBalanceIncludesOpeningAmount() {
+        Account opened = new Account(
+                "1",
+                CUSTOMER_ID,
+                new CheckingMovementPolicy(),
+                new BigDecimal("200"));
+        when(accountClient.findById("1")).thenReturn(Maybe.just(opened));
+        when(movementRepository.getBalance("1")).thenReturn(Single.just(new BigDecimal("30")));
+
+        assertThat(useCase.getAccountBalance(CUSTOMER_ID, "1").blockingGet())
+                .isEqualByComparingTo("230");
     }
 }

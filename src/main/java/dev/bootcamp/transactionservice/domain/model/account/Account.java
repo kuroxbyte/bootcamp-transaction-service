@@ -7,12 +7,26 @@ import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import java.math.BigDecimal;
 
 /**
- * Vista local de la cuenta, obtenida de account-service.
+ * Vista local de la cuenta, obtenida de account-service, con su monto de apertura (saldo inicial).
  *
  * @param movementPolicy regla de movimientos según el tipo de cuenta ({@link
  *     SavingsMovementPolicy}, {@link CheckingMovementPolicy} o {@link FixedTermMovementPolicy})
  */
-public record Account(String id, String customerId, MovementPolicy movementPolicy) {
+public record Account(
+        String id,
+        String customerId,
+        MovementPolicy movementPolicy,
+        BigDecimal openingAmount) {
+
+    /**
+     * Saldo de la cuenta: monto de apertura más depósitos menos retiros.
+     *
+     * @param movementsBalance suma de depósitos menos suma de retiros
+     * @return saldo actual
+     */
+    public BigDecimal balance(BigDecimal movementsBalance) {
+        return openingAmount.add(movementsBalance);
+    }
 
     /**
      * Indica si la cuenta pertenece al cliente.
@@ -40,7 +54,7 @@ public record Account(String id, String customerId, MovementPolicy movementPolic
      * @param movement movimiento a validar
      * @param movementsInMonth cantidad de movimientos ya guardados en esta cuenta durante el mes
      *     calendario de {@code movement.date()}, sin contar el nuevo
-     * @param balance saldo actual de la cuenta antes del movimiento
+     * @param balance saldo actual de la cuenta antes del movimiento (ver {@link #balance})
      * @throws BusinessRuleException si la regla del tipo de cuenta no lo permite o si un retiro
      *     supera el saldo disponible
      */

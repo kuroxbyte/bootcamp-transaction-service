@@ -40,7 +40,7 @@ public class GetAvailableBalanceUseCaseImpl implements GetAvailableBalanceUseCas
                 .findById(accountId)
                 .switchIfEmpty(Single.error(() -> new NotFoundException("La cuenta no existe")))
                 .map(account -> ensureBelongsTo(account, customerId))
-                .flatMap(account -> movementRepository.getBalance(accountId));
+                .flatMap(account -> movementRepository.getBalance(accountId).map(account::balance));
     }
 
     @Override
