@@ -4,6 +4,7 @@ import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.FixedTermMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolicy;
+import dev.bootcamp.transactionservice.domain.model.account.TransactionFee;
 import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
 import dev.bootcamp.transactionservice.infrastructure.client.StubWebClient;
 import dev.bootcamp.transactionservice.infrastructure.client.TestCircuitBreakers;
@@ -19,8 +20,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AccountWebClientAdapterTest {
 
+    private static final TransactionFee FEE = new TransactionFee(3, new BigDecimal("2"));
+
+    /**
+     * Consulta la cuenta respondiendo con el JSON indicado más la comisión por transacción {@link
+     * #FEE}.
+     */
     private static Account fetch(String json) {
-        StubWebClient stub = StubWebClient.respondingWith(HttpStatus.OK, json);
+        StubWebClient stub = StubWebClient.respondingWith(
+                HttpStatus.OK,
+                json.replaceFirst("\\{", "{\"freeMonthlyTransactions\":3,\"transactionFee\":2,"));
         return new AccountWebClientAdapter(
                         stub.builder(), "http://account-service", TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
                 .findById("10")
@@ -35,7 +44,14 @@ class AccountWebClientAdapterTest {
                                 + "\"maxMonthlyMovements\":5,\"openingAmount\":0}");
 
         assertThat(account).isEqualTo(
-                new Account("10", "1", new SavingsMovementPolicy(5), BigDecimal.ZERO, null, null));
+                new Account(
+                        "10",
+                        "1",
+                        new SavingsMovementPolicy(5),
+                        BigDecimal.ZERO,
+                        null,
+                        null,
+                        FEE));
     }
 
     @Test
@@ -51,6 +67,15 @@ class AccountWebClientAdapterTest {
     }
 
     @Test
+    void mapsTransactionFee() {
+        Account account = fetch("{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\","
+                + "\"openingAmount\":0}");
+
+        assertThat(account.transactionFee().freeMonthlyTransactions()).isEqualTo(3);
+        assertThat(account.transactionFee().amount()).isEqualByComparingTo("2");
+    }
+
+    @Test
     void mapsCheckingAccountToItsMovementPolicy() {
         Account account =
                 fetch(
@@ -60,7 +85,14 @@ class AccountWebClientAdapterTest {
                                 + "\"openingAmount\":0}");
 
         assertThat(account).isEqualTo(
-                new Account("10", "2", new CheckingMovementPolicy(), BigDecimal.ZERO, null, null));
+                new Account(
+                        "10",
+                        "2",
+                        new CheckingMovementPolicy(),
+                        BigDecimal.ZERO,
+                        null,
+                        null,
+                        FEE));
     }
 
     @Test
@@ -77,7 +109,8 @@ class AccountWebClientAdapterTest {
                         new FixedTermMovementPolicy(15),
                         BigDecimal.ZERO,
                         null,
-                        null));
+                        null,
+                        FEE));
     }
 
     @Test
@@ -85,7 +118,9 @@ class AccountWebClientAdapterTest {
         StubWebClient stub =
                 StubWebClient.respondingWith(
                         HttpStatus.OK,
-                        "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\"}");
+                        "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\","
+                                + "\"openingAmount\":0,\"freeMonthlyTransactions\":3,"
+                                + "\"transactionFee\":2}");
 
         new AccountWebClientAdapter(
                 stub.builder(),

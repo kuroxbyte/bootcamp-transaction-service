@@ -25,7 +25,8 @@ class DailyAverageBalanceTest {
                 new SavingsMovementPolicy(5),
                 new BigDecimal(openingAmount),
                 openedAt,
-                VIP_MINIMUM);
+                VIP_MINIMUM,
+                null);
     }
 
     private static Movement movement(MovementType type, String amount, LocalDate date) {
@@ -74,6 +75,7 @@ class DailyAverageBalanceTest {
                 new CheckingMovementPolicy(),
                 new BigDecimal("50"),
                 LocalDate.of(2026, 11, 1),
+                null,
                 null);
 
         DailyAverageBalance average =

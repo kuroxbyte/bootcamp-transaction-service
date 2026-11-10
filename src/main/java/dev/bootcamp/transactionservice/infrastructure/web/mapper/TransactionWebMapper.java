@@ -29,7 +29,8 @@ public final class TransactionWebMapper {
                 movement.accountId(),
                 MovementTypeDto.valueOf(movement.type().name()),
                 movement.amount(),
-                movement.date());
+                movement.date(),
+                movement.commission());
     }
 
     /**
@@ -57,7 +58,8 @@ public final class TransactionWebMapper {
         return new ProductMovementResponseDto(
                 ProductMovementTypeDto.valueOf(movement.type().name()),
                 movement.amount(),
-                movement.date());
+                movement.date())
+                .commission(movement.commission());
     }
 
     /**

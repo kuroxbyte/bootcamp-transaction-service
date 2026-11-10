@@ -21,12 +21,19 @@ class ProductMovementTest {
         assertThat(
                         ProductMovement.from(
                                 new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DATE)))
-                .isEqualTo(new ProductMovement(ProductMovementType.DEPOSIT, BigDecimal.TEN, DATE));
+                .isEqualTo(new ProductMovement(
+                        ProductMovementType.DEPOSIT,
+                        BigDecimal.TEN,
+                        DATE,
+                        BigDecimal.ZERO));
         assertThat(
                         ProductMovement.from(
                                 new Movement("1", MovementType.WITHDRAWAL, BigDecimal.ONE, DATE)))
-                .isEqualTo(
-                        new ProductMovement(ProductMovementType.WITHDRAWAL, BigDecimal.ONE, DATE));
+                .isEqualTo(new ProductMovement(
+                        ProductMovementType.WITHDRAWAL,
+                        BigDecimal.ONE,
+                        DATE,
+                        BigDecimal.ZERO));
     }
 
     @Test

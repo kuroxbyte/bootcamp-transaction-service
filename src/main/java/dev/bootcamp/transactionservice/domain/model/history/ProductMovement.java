@@ -11,8 +11,21 @@ import java.time.LocalDate;
 /**
  * Movimiento de un producto bancario, en un formato común para consultar el historial de cuentas
  * bancarias, créditos y tarjetas de crédito.
+ *
+ * @param commission comisión cobrada; solo en depósitos y retiros, en los demás es null
  */
-public record ProductMovement(ProductMovementType type, BigDecimal amount, LocalDate date) {
+public record ProductMovement(
+        ProductMovementType type,
+        BigDecimal amount,
+        LocalDate date,
+        BigDecimal commission) {
+
+    /**
+     * Crea un movimiento sin comisión (pago o consumo).
+     */
+    public ProductMovement(ProductMovementType type, BigDecimal amount, LocalDate date) {
+        this(type, amount, date, null);
+    }
 
     /**
      * Convierte un depósito o retiro al formato común.
@@ -22,7 +35,7 @@ public record ProductMovement(ProductMovementType type, BigDecimal amount, Local
                 movement.type() == MovementType.DEPOSIT
                         ? ProductMovementType.DEPOSIT
                         : ProductMovementType.WITHDRAWAL;
-        return new ProductMovement(type, movement.amount(), movement.date());
+        return new ProductMovement(type, movement.amount(), movement.date(), movement.commission());
     }
 
     /**

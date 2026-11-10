@@ -38,7 +38,8 @@ class GetDailyAverageBalanceUseCaseImplTest {
             new SavingsMovementPolicy(5),
             new BigDecimal("400"),
             LocalDate.of(2026, 11, 11),
-            new BigDecimal("500"));
+            new BigDecimal("500"),
+            null);
 
     @Mock private AccountClient accountClient;
 

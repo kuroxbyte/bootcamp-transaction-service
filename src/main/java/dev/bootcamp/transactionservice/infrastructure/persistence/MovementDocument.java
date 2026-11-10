@@ -31,4 +31,10 @@ public class MovementDocument {
     private final BigDecimal amount;
 
     private final LocalDate date;
+
+    /**
+     * Comisión cobrada por la transacción (0 si no pagó comisión).
+     */
+    @Field(targetType = FieldType.DECIMAL128)
+    private final BigDecimal commission;
 }

@@ -138,7 +138,9 @@ class AccountTransactionControllerTest {
                 .jsonPath("$.type")
                 .isEqualTo("DEPOSIT")
                 .jsonPath("$.date")
-                .isEqualTo("2026-11-15");
+                .isEqualTo("2026-11-15")
+                .jsonPath("$.commission")
+                .isEqualTo(0);
     }
 
     @Test

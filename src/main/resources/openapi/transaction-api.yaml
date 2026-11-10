@@ -22,7 +22,10 @@ paths:
       tags: [AccountTransactions]
       operationId: deposit
       summary: Depositar en una cuenta del cliente
-      description: Ahorro respeta el límite mensual de movimientos; plazo fijo solo el día configurado y uno por mes.
+      description: |
+        Ahorro respeta el límite mensual de movimientos; plazo fijo solo el día configurado y uno por mes.
+        Superadas las transacciones sin comisión del mes, el depósito paga la comisión fija de la cuenta,
+        que se descuenta del saldo.
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
         - $ref: '#/components/parameters/AccountId'
@@ -44,7 +47,9 @@ paths:
       tags: [AccountTransactions]
       operationId: withdraw
       summary: Retirar de una cuenta del cliente
-      description: Además de las reglas del tipo de cuenta, el monto no puede superar el saldo.
+      description: |
+        Además de las reglas del tipo de cuenta, el saldo debe cubrir el monto más la comisión.
+        Superadas las transacciones sin comisión del mes, el retiro paga la comisión fija de la cuenta.
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
         - $ref: '#/components/parameters/AccountId'
@@ -307,7 +312,7 @@ components:
       enum: [DEPOSIT, WITHDRAWAL]
     MovementResponse:
       type: object
-      required: [accountId, type, amount, date]
+      required: [accountId, type, amount, date, commission]
       properties:
         accountId:
           type: string
@@ -319,6 +324,10 @@ components:
         date:
           type: string
           format: date
+        commission:
+          type: number
+          description: Comisión cobrada (0 si está dentro de las transacciones sin comisión del mes); se descuenta del saldo
+          example: 0
     PaymentTarget:
       type: string
       description: Producto de crédito al que se aplica el pago
@@ -409,6 +418,10 @@ components:
         date:
           type: string
           format: date
+        commission:
+          type: number
+          description: Solo DEPOSIT y WITHDRAWAL; comisión cobrada por la transacción
+          example: 0
     Problem:
       type: object
       description: Detalle de error (RFC 7807)
