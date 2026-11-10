@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.Duration;
-
 /**
  * Implementa el puerto {@link CreditClient} consultando credit-service con WebClient.
  */
@@ -20,29 +18,28 @@ public class CreditWebClientAdapter implements CreditClient {
     private static final String SERVICE_NAME = "credit-service";
 
     private final WebClient webClient;
-    private final Duration timeout;
+    private final RemoteLookup remoteLookup;
 
     /**
-     * Crea el cliente con la URL base y el tiempo de espera configurados.
+     * Crea el cliente con la URL base configurada; las consultas pasan por un circuit breaker.
      */
     public CreditWebClientAdapter(
             WebClient.Builder webClientBuilder,
             @Value("${clients.credit-service.base-url}") String baseUrl,
-            @Value("${clients.credit-service.timeout}") Duration timeout) {
+            RemoteLookup remoteLookup) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
-        this.timeout = timeout;
+        this.remoteLookup = remoteLookup;
     }
 
     @Override
     public Maybe<Credit> findById(String creditId) {
-        return RemoteLookup.findById(
+        return remoteLookup.findById(
                 webClient
                         .get()
                         .uri("/api/v1/credits/{creditId}", creditId)
                         .retrieve()
                         .bodyToMono(CreditResponseDto.class)
                         .map(response -> new Credit(response.getId(), response.getCustomerId())),
-                timeout,
                 SERVICE_NAME,
                 creditId);
     }

@@ -1,5 +1,8 @@
 # Configuración de las pruebas: no se consulta config-server.
 spring:
+  config:
+    # Toma la configuración común (circuit breaker y timeout) de config-repo.
+    import: optional:file:../config-repo/application.yaml
   application:
     name: transaction-service
   cloud:
