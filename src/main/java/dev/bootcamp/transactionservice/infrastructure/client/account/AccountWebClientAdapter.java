@@ -13,8 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.math.BigDecimal;
-
 /**
  * Implementa el puerto {@link AccountClient} consultando account-service con WebClient.
  */
@@ -61,14 +59,10 @@ public class AccountWebClientAdapter implements AccountClient {
                     case FIXED_TERM ->
                             new FixedTermMovementPolicy(response.getMovementDayOfMonth());
                 };
-        // Cuentas abiertas antes de existir el monto de apertura no lo informan: saldo inicial 0.
-        BigDecimal openingAmount = response.getOpeningAmount() == null
-                ? BigDecimal.ZERO
-                : response.getOpeningAmount();
         return new Account(
                 response.getId(),
                 response.getCustomerId(),
                 movementPolicy,
-                openingAmount);
+                response.getOpeningAmount());
     }
 }

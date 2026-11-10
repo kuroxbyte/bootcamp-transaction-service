@@ -31,7 +31,7 @@ class AccountWebClientAdapterTest {
         Account account =
                 fetch(
                         "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"SAVINGS\","
-                                + "\"maxMonthlyMovements\":5}");
+                                + "\"maxMonthlyMovements\":5,\"openingAmount\":0}");
 
         assertThat(account).isEqualTo(
                 new Account("10", "1", new SavingsMovementPolicy(5), BigDecimal.ZERO));
@@ -43,7 +43,8 @@ class AccountWebClientAdapterTest {
                 fetch(
                         "{\"id\":\"10\",\"customerId\":\"2\",\"type\":\"CHECKING\","
                                 + "\"maintenanceFee\":15.0,"
-                                + "\"holderIds\":[\"h1\"],\"authorizedSignerIds\":[]}");
+                                + "\"holderIds\":[\"h1\"],\"authorizedSignerIds\":[],"
+                                + "\"openingAmount\":0}");
 
         assertThat(account).isEqualTo(
                 new Account("10", "2", new CheckingMovementPolicy(), BigDecimal.ZERO));
@@ -54,7 +55,7 @@ class AccountWebClientAdapterTest {
         Account account =
                 fetch(
                         "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"FIXED_TERM\","
-                                + "\"movementDayOfMonth\":15}");
+                                + "\"movementDayOfMonth\":15,\"openingAmount\":0}");
 
         assertThat(account).isEqualTo(
                 new Account("10", "1", new FixedTermMovementPolicy(15), BigDecimal.ZERO));
@@ -105,13 +106,11 @@ class AccountWebClientAdapterTest {
     }
 
     @Test
-    void mapsOpeningAmountAndTreatsMissingOneAsZero() {
-        Account withOpening = fetch(
+    void mapsOpeningAmount() {
+        Account account = fetch(
                 "{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\","
                         + "\"minimumOpeningAmount\":0,\"openingAmount\":250.5}");
-        Account legacy = fetch("{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\"}");
 
-        assertThat(withOpening.openingAmount()).isEqualByComparingTo("250.5");
-        assertThat(legacy.openingAmount()).isEqualByComparingTo("0");
+        assertThat(account.openingAmount()).isEqualByComparingTo("250.5");
     }
 }
