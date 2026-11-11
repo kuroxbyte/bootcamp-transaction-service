@@ -1,6 +1,7 @@
 package dev.bootcamp.transactionservice.infrastructure.config;
 
 import dev.bootcamp.transactionservice.application.port.AccountClient;
+import dev.bootcamp.transactionservice.application.port.BankProductClient;
 import dev.bootcamp.transactionservice.application.port.ChargeRepository;
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.CreditClient;
@@ -8,6 +9,8 @@ import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCase;
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCaseImpl;
+import dev.bootcamp.transactionservice.application.usecase.GenerateProductReportUseCase;
+import dev.bootcamp.transactionservice.application.usecase.GenerateProductReportUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.GetDailyAverageBalanceUseCase;
@@ -134,5 +137,21 @@ public class UseCaseConfig {
             AccountClient accountClient,
             MovementRepository movementRepository) {
         return new TransferUseCaseImpl(accountClient, movementRepository);
+    }
+
+    /**
+     * Registra el caso de uso {@link GenerateProductReportUseCase}.
+     */
+    @Bean
+    public GenerateProductReportUseCase generateProductReportUseCase(
+            BankProductClient bankProductClient,
+            MovementRepository movementRepository,
+            PaymentRepository paymentRepository,
+            ChargeRepository chargeRepository) {
+        return new GenerateProductReportUseCaseImpl(
+                bankProductClient,
+                movementRepository,
+                paymentRepository,
+                chargeRepository);
     }
 }

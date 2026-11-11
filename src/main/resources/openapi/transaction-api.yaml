@@ -16,6 +16,8 @@ tags:
     description: Pagos y movimientos de créditos personales y empresariales
   - name: CreditCardTransactions
     description: Consumos, pagos, crédito disponible y movimientos de tarjetas de crédito
+  - name: Reports
+    description: Reportes del banco
 paths:
   /api/v1/accounts/{accountId}/deposits:
     post:
@@ -309,6 +311,66 @@ paths:
           $ref: '#/components/responses/ProductNotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/reports/products:
+    get:
+      tags: [Reports]
+      operationId: getProductReport
+      summary: Reporte general del banco por tipo de producto en un intervalo de fechas
+      description: |
+        Uso administrativo: no se filtra por cliente. Por cada tipo de producto informa los productos
+        abiertos u otorgados en el intervalo, la cantidad y el monto de cada tipo de movimiento, el
+        total de transacciones y las comisiones por transacción cobradas. Ambas fechas se incluyen.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: Primer día del intervalo (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: '2026-11-01'
+        - name: to
+          in: query
+          required: true
+          description: Último día del intervalo (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: '2026-11-30'
+      responses:
+        '200':
+          description: Reporte por tipo de producto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductReportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/reports/credit-cards/{creditCardId}/last-movements:
+    get:
+      tags: [Reports]
+      operationId: getCreditCardLastMovements
+      summary: Últimos 10 movimientos de una tarjeta de crédito del cliente
+      description: |
+        Consumos y pagos de la tarjeta, del más reciente al más antiguo (máximo 10). Los movimientos
+        tienen fecha sin hora: entre los del mismo día no se garantiza el orden.
+        Pendiente: incluir la tarjeta de débito cuando exista el producto.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditCardId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProductMovements'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   parameters:
     XCustomerId:
@@ -503,6 +565,64 @@ components:
       type: string
       description: Tipo de movimiento de un producto bancario
       enum: [DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT, CHARGE, PAYMENT]
+    ProductType:
+      type: string
+      description: Tipo de producto del banco
+      enum: [SAVINGS, CHECKING, FIXED_TERM, PERSONAL_CREDIT, BUSINESS_CREDIT, CREDIT_CARD]
+    MovementTotalResponse:
+      type: object
+      required: [type, count, amount]
+      properties:
+        type:
+          $ref: '#/components/schemas/ProductMovementType'
+        count:
+          type: integer
+          format: int64
+          example: 12
+        amount:
+          type: number
+          description: Suma de los montos, sin comisiones
+          example: 1500.00
+    ProductTypeReportResponse:
+      type: object
+      required: [productType, openedProducts, transactions, commissions, movements]
+      properties:
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        openedProducts:
+          type: integer
+          format: int64
+          description: Productos abiertos u otorgados en el intervalo
+          example: 3
+        transactions:
+          type: integer
+          format: int64
+          description: Total de movimientos del intervalo
+          example: 12
+        commissions:
+          type: number
+          description: Comisiones por transacción cobradas en el intervalo
+          example: 4.00
+        movements:
+          type: array
+          description: Cantidad y monto por tipo de movimiento; solo los tipos que tuvieron movimientos
+          items:
+            $ref: '#/components/schemas/MovementTotalResponse'
+    ProductReportResponse:
+      type: object
+      required: [from, to, products]
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        products:
+          type: array
+          description: Un resumen por cada tipo de producto
+          items:
+            $ref: '#/components/schemas/ProductTypeReportResponse'
     ProductMovementResponse:
       type: object
       required: [type, amount, date]

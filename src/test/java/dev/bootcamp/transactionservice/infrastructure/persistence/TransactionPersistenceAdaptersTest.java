@@ -197,4 +197,28 @@ class TransactionPersistenceAdaptersTest {
         movementAdapter.getBalance("a2").test().awaitDone(5, TimeUnit.SECONDS)
                 .assertValue(balance -> balance.compareTo(new BigDecimal("40")) == 0);
     }
+
+    @Test
+    void findsTransactionsOfTheWholeBankInsideTheInterval() {
+        LocalDate from = LocalDate.of(2026, 11, 1);
+        LocalDate to = LocalDate.of(2026, 11, 30);
+        saveMovement("a1", MovementType.DEPOSIT, "10", LocalDate.of(2026, 10, 31));
+        saveMovement("a1", MovementType.DEPOSIT, "10", from);
+        saveMovement("a2", MovementType.WITHDRAWAL, "5", to);
+        paymentAdapter.save(new Payment(PaymentTarget.CREDIT, "k1", BigDecimal.ONE, to))
+                .blockingGet();
+        paymentAdapter.save(new Payment(
+                PaymentTarget.CREDIT,
+                "k1",
+                BigDecimal.ONE,
+                LocalDate.of(2026, 12, 1))).blockingGet();
+        chargeAdapter.save(new Charge("t1", BigDecimal.TEN, from)).blockingGet();
+
+        movementAdapter.findByDateBetween(from, to).test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValueCount(2);
+        paymentAdapter.findByDateBetween(from, to).test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValueCount(1);
+        chargeAdapter.findByDateBetween(from, to).test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValueCount(1);
+    }
 }

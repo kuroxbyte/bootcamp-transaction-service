@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -44,6 +45,21 @@ public final class StubWebClient {
                                                 HttpHeaders.CONTENT_TYPE,
                                                 MediaType.APPLICATION_JSON_VALUE)
                                         .body(json)
+                                        .build()));
+    }
+
+    /**
+     * Crea un stub que responde 200 con el JSON que corresponde a la ruta de cada petición.
+     */
+    public static StubWebClient respondingByPath(Map<String, String> jsonByPath) {
+        return new StubWebClient(
+                request ->
+                        Mono.just(
+                                ClientResponse.create(HttpStatus.OK)
+                                        .header(
+                                                HttpHeaders.CONTENT_TYPE,
+                                                MediaType.APPLICATION_JSON_VALUE)
+                                        .body(jsonByPath.get(request.url().getPath()))
                                         .build()));
     }
 

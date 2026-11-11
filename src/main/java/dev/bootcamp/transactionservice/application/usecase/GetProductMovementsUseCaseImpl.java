@@ -12,7 +12,10 @@ import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * Implementación de {@link GetProductMovementsUseCase}.
@@ -107,5 +110,18 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
                                                 .sorted(BY_DATE)
                                         : Flowable.error(
                                                 new NotFoundException(CREDIT_CARD_NOT_OWNED)));
+    }
+
+    @Override
+    public Flowable<ProductMovement> getCreditCardLastMovements(
+            String customerId,
+            String creditCardId) {
+        return getCreditCardMovements(customerId, creditCardId)
+                .toList()
+                .flatMapPublisher(movements -> {
+                    List<ProductMovement> newestFirst = new ArrayList<>(movements);
+                    Collections.reverse(newestFirst);
+                    return Flowable.fromIterable(newestFirst).take(LAST_MOVEMENTS);
+                });
     }
 }

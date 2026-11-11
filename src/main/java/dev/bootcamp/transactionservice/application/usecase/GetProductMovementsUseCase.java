@@ -24,6 +24,11 @@ import io.reactivex.rxjava3.core.Flowable;
 public interface GetProductMovementsUseCase {
 
     /**
+     * Cantidad de movimientos del reporte de últimos movimientos de una tarjeta.
+     */
+    int LAST_MOVEMENTS = 10;
+
+    /**
      * Consulta los depósitos y retiros de una cuenta bancaria del cliente.
      *
      * @param customerId id del cliente que consulta
@@ -52,4 +57,20 @@ public interface GetProductMovementsUseCase {
      *     tarjeta no existe o no pertenece al cliente
      */
     Flowable<ProductMovement> getCreditCardMovements(String customerId, String creditCardId);
+
+    /**
+     * Reporte con los últimos {@value #LAST_MOVEMENTS} movimientos (consumos y pagos) de una
+     * tarjeta de crédito del cliente, del más reciente al más antiguo.
+     *
+     * <p>Los movimientos tienen fecha sin hora: entre movimientos del mismo día no se garantiza el
+     * orden.
+     *
+     * <p>TODO: incluir la tarjeta de débito en este reporte cuando exista el producto.
+     *
+     * @param customerId   id del cliente que consulta
+     * @param creditCardId id de la tarjeta en credit-service
+     * @return hasta {@value #LAST_MOVEMENTS} movimientos; error {@link NotFoundException} si la
+     *     tarjeta no existe o no pertenece al cliente
+     */
+    Flowable<ProductMovement> getCreditCardLastMovements(String customerId, String creditCardId);
 }

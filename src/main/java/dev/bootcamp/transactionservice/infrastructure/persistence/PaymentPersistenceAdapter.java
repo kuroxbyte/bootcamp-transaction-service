@@ -7,7 +7,10 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Range;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
 
 /**
  * Implementa el puerto {@link PaymentRepository} con MongoDB reactivo.
@@ -37,6 +40,12 @@ public class PaymentPersistenceAdapter implements PaymentRepository {
                                         saved.getId(),
                                         saved.getTarget(),
                                         saved.getProductId()))
+                .map(TransactionPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public Flowable<Payment> findByDateBetween(LocalDate from, LocalDate to) {
+        return Flowable.fromPublisher(mongoRepository.findByDateBetween(Range.closed(from, to)))
                 .map(TransactionPersistenceMapper::toDomain);
     }
 }

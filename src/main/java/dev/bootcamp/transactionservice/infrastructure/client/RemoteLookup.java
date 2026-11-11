@@ -1,11 +1,13 @@
 package dev.bootcamp.transactionservice.infrastructure.client;
 
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -47,5 +49,25 @@ public class RemoteLookup {
                             serviceName + " no está disponible", error));
                 });
         return Maybe.fromPublisher(protectedCall);
+    }
+
+    /**
+     * Consulta una lista de recursos en otro microservicio, protegida con el mismo circuit breaker.
+     *
+     * @param request     llamada HTTP que obtiene la lista
+     * @param serviceName nombre del microservicio consultado; también nombra su circuit breaker
+     * @return los recursos, o error {@link ServiceUnavailableException} si la llamada falla, se
+     *     agota el tiempo de espera o el circuito está abierto
+     */
+    public <T> Flowable<T> findAll(Flux<T> request, String serviceName) {
+        Flux<T> call = request.doOnSubscribe(
+                subscription -> log.debug("Listing resources from {}", serviceName));
+        Flux<T> protectedCall = circuitBreakerFactory.create(serviceName)
+                .run(call, error -> {
+                    log.error("{} list call failed", serviceName, error);
+                    return Flux.error(new ServiceUnavailableException(
+                            serviceName + " no está disponible", error));
+                });
+        return Flowable.fromPublisher(protectedCall);
     }
 }

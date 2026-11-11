@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * Puerto de persistencia de los consumos de tarjetas de crédito.
@@ -27,4 +28,10 @@ public interface ChargeRepository {
      * Guarda el consumo.
      */
     Single<Charge> save(Charge charge);
+
+    /**
+     * Consumos de tarjetas de todo el banco con fecha entre {@code from} y {@code to},
+     * ambos incluidos.
+     */
+    Flowable<Charge> findByDateBetween(LocalDate from, LocalDate to);
 }
