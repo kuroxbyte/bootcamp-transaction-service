@@ -7,9 +7,11 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Range;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * Implementa el puerto {@link ChargeRepository} con MongoDB reactivo.
@@ -56,6 +58,13 @@ public class ChargePersistenceAdapter implements ChargeRepository {
                                         "Charge saved chargeId={} creditCardId={}",
                                         saved.getId(),
                                         saved.getCreditCardId()))
+                .map(TransactionPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public Flowable<Charge> findByDateBetween(LocalDate from, LocalDate to) {
+        return Flowable.fromPublisher(
+                        chargeMongoRepository.findByDateBetween(Range.closed(from, to)))
                 .map(TransactionPersistenceMapper::toDomain);
     }
 }

@@ -72,4 +72,25 @@ class RemoteLookupTest {
 
         assertThat(stub.requestCount()).isEqualTo(3);
     }
+
+    @Test
+    void listsResourcesAndFailsAsUnavailableOnError() {
+        WebClient ok = StubWebClient.respondingWith(HttpStatus.OK, "[1,2]")
+                .builder().baseUrl("http://remote").build();
+        WebClient failing = StubWebClient.respondingWith(HttpStatus.INTERNAL_SERVER_ERROR, "{}")
+                .builder().baseUrl("http://remote").build();
+
+        remoteLookup.findAll(
+                        ok.get().uri("/resources").retrieve().bodyToFlux(Integer.class),
+                        "remote-service")
+                .test()
+                .awaitDone(2, TimeUnit.SECONDS)
+                .assertValues(1, 2);
+        remoteLookup.findAll(
+                        failing.get().uri("/resources").retrieve().bodyToFlux(String.class),
+                        "failing-service")
+                .test()
+                .awaitDone(2, TimeUnit.SECONDS)
+                .assertError(ServiceUnavailableException.class);
+    }
 }

@@ -21,4 +21,10 @@ public interface MovementMongoRepository extends ReactiveMongoRepository<Movemen
      * excluidos los define el {@link Range} recibido.
      */
     Mono<Long> countByAccountIdAndDateBetween(String accountId, Range<LocalDate> dateRange);
+
+    /**
+     * Documentos de todo el banco con fecha dentro del rango; los límites incluidos o excluidos
+     * los define el {@link Range} recibido.
+     */
+    Flux<MovementDocument> findByDateBetween(Range<LocalDate> dateRange);
 }

@@ -61,6 +61,21 @@ paths:
           $ref: '#/components/responses/BusinessRuleViolation'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/internal/credits:
+    get:
+      tags: [Credits]
+      operationId: listAllCredits
+      summary: Listar todos los créditos del banco
+      description: Uso interno; transaction-service lo usa para el reporte general por producto. El API Gateway no lo expone.
+      responses:
+        '200':
+          description: Todos los créditos (vacío si no hay)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditResponse'
   /api/v1/credits/{creditId}:
     get:
       tags: [Credits]
@@ -124,6 +139,21 @@ paths:
           $ref: '#/components/responses/CustomerNotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/internal/credit-cards:
+    get:
+      tags: [CreditCards]
+      operationId: listAllCreditCards
+      summary: Listar todas las tarjetas de crédito del banco
+      description: Uso interno; transaction-service lo usa para el reporte general por producto. El API Gateway no lo expone.
+      responses:
+        '200':
+          description: Todas las tarjetas (vacío si no hay)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditCardResponse'
   /api/v1/credit-cards/{creditCardId}:
     get:
       tags: [CreditCards]
@@ -177,7 +207,7 @@ components:
           $ref: '#/components/schemas/CreditType'
     CreditResponse:
       type: object
-      required: [id, customerId, type]
+      required: [id, customerId, type, grantedAt]
       properties:
         id:
           type: string
@@ -187,6 +217,11 @@ components:
           example: 6650f1c2a4b5c6d7e8f90123
         type:
           $ref: '#/components/schemas/CreditType'
+        grantedAt:
+          type: string
+          format: date
+          description: Fecha de otorgamiento
+          example: '2026-11-15'
     CreditCardRequest:
       type: object
       required: [creditLimit]
@@ -199,7 +234,7 @@ components:
           example: 5000.00
     CreditCardResponse:
       type: object
-      required: [id, customerId, creditLimit]
+      required: [id, customerId, creditLimit, grantedAt]
       properties:
         id:
           type: string
@@ -210,6 +245,11 @@ components:
         creditLimit:
           type: number
           example: 5000.00
+        grantedAt:
+          type: string
+          format: date
+          description: Fecha de otorgamiento
+          example: '2026-11-15'
     Problem:
       type: object
       description: Detalle de error (RFC 7807)

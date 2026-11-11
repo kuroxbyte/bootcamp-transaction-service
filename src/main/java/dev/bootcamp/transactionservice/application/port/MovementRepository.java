@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -38,4 +39,10 @@ public interface MovementRepository {
      * Guarda varios movimientos en una sola operación (los dos de una transferencia).
      */
     Flowable<Movement> saveAll(List<Movement> movements);
+
+    /**
+     * Depósitos, retiros y transferencias de todo el banco con fecha entre {@code from} y
+     * {@code to}, ambos incluidos.
+     */
+    Flowable<Movement> findByDateBetween(LocalDate from, LocalDate to);
 }

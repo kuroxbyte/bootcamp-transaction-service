@@ -123,6 +123,21 @@ paths:
           $ref: '#/components/responses/BusinessRuleViolation'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/internal/accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAllAccounts
+      summary: Listar todas las cuentas del banco
+      description: Uso interno; transaction-service lo usa para el reporte general por producto. El API Gateway no lo expone.
+      responses:
+        '200':
+          description: Todas las cuentas (vacío si no hay)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountResponse'
   /api/v1/accounts/{accountId}:
     get:
       tags: [Accounts]

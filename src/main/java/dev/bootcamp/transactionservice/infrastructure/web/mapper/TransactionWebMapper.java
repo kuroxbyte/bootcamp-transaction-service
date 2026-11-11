@@ -5,15 +5,21 @@ import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
+import dev.bootcamp.transactionservice.domain.model.report.ProductReport;
+import dev.bootcamp.transactionservice.domain.model.report.ProductTypeReport;
 import dev.bootcamp.transactionservice.domain.model.transfer.Transfer;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ChargeResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.DailyAverageBalanceResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.MovementResponseDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.MovementTotalResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.MovementTypeDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.PaymentResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.PaymentTargetDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductMovementResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductMovementTypeDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductReportResponseDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductTypeDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductTypeReportResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.TransferResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.TransferTypeDto;
 
@@ -93,5 +99,29 @@ public final class TransactionWebMapper {
                 average.average())
                 .minimumDailyAverage(average.minimumDailyAverage())
                 .meetsMinimum(average.meetsMinimum());
+    }
+
+    /**
+     * Convierte {@link ProductReport} en su DTO de respuesta.
+     */
+    public static ProductReportResponseDto toResponse(ProductReport report) {
+        return new ProductReportResponseDto(
+                report.from(),
+                report.to(),
+                report.products().stream().map(TransactionWebMapper::toResponse).toList());
+    }
+
+    private static ProductTypeReportResponseDto toResponse(ProductTypeReport product) {
+        return new ProductTypeReportResponseDto(
+                ProductTypeDto.valueOf(product.type().name()),
+                product.openedProducts(),
+                product.transactions(),
+                product.commissions(),
+                product.movements().stream()
+                        .map(total -> new MovementTotalResponseDto(
+                                ProductMovementTypeDto.valueOf(total.type().name()),
+                                total.count(),
+                                total.amount()))
+                        .toList());
     }
 }

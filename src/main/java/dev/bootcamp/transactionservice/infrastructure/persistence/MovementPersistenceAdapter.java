@@ -68,4 +68,10 @@ public class MovementPersistenceAdapter implements MovementRepository {
                         movements.stream().map(TransactionPersistenceMapper::toDocument).toList()))
                 .map(TransactionPersistenceMapper::toDomain);
     }
+
+    @Override
+    public Flowable<Movement> findByDateBetween(LocalDate from, LocalDate to) {
+        return Flowable.fromPublisher(mongoRepository.findByDateBetween(Range.closed(from, to)))
+                .map(TransactionPersistenceMapper::toDomain);
+    }
 }

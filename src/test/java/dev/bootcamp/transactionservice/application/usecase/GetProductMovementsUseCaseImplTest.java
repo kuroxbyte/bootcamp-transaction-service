@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -205,5 +206,34 @@ class GetProductMovementsUseCaseImplTest {
         useCase.getCreditCardMovements("999", "3").test().assertError(NotFoundException.class);
         verify(chargeRepository, never()).findByCreditCardId(any());
         verify(paymentRepository, never()).findByTargetAndProductId(any(), any());
+    }
+
+    @Test
+    void returnsLastTenCardMovementsNewestFirst() {
+        when(creditCardClient.findById("3"))
+                .thenReturn(Maybe.just(new CreditCard("3", CUSTOMER_ID, new BigDecimal("1000"))));
+        List<Charge> charges = new ArrayList<>();
+        for (int day = 1; day <= 12; day++) {
+            charges.add(new Charge("3", BigDecimal.valueOf(day), LocalDate.of(2026, 11, day)));
+        }
+        when(chargeRepository.findByCreditCardId("3")).thenReturn(Flowable.fromIterable(charges));
+        when(paymentRepository.findByTargetAndProductId(PaymentTarget.CREDIT_CARD, "3"))
+                .thenReturn(Flowable.empty());
+
+        List<ProductMovement> last =
+                useCase.getCreditCardLastMovements(CUSTOMER_ID, "3").toList().blockingGet();
+
+        assertThat(last).hasSize(10);
+        assertThat(last.get(0).date()).isEqualTo(LocalDate.of(2026, 11, 12));
+        assertThat(last.get(9).date()).isEqualTo(LocalDate.of(2026, 11, 3));
+    }
+
+    @Test
+    void rejectsLastMovementsOfCardOfAnotherCustomer() {
+        when(creditCardClient.findById("3"))
+                .thenReturn(Maybe.just(new CreditCard("3", "other", new BigDecimal("1000"))));
+
+        useCase.getCreditCardLastMovements(CUSTOMER_ID, "3").test()
+                .assertError(NotFoundException.class);
     }
 }

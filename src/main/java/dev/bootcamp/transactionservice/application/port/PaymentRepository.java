@@ -5,6 +5,8 @@ import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
+import java.time.LocalDate;
+
 /**
  * Puerto de persistencia de los pagos a productos de crédito.
  */
@@ -19,4 +21,10 @@ public interface PaymentRepository {
      * Guarda el pago.
      */
     Single<Payment> save(Payment payment);
+
+    /**
+     * Pagos a créditos y tarjetas de todo el banco con fecha entre {@code from} y {@code to},
+     * ambos incluidos.
+     */
+    Flowable<Payment> findByDateBetween(LocalDate from, LocalDate to);
 }
