@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Depósito o retiro registrado en una cuenta bancaria, con la comisión que pagó.
+ * Depósito, retiro o transferencia registrado en una cuenta bancaria, con la comisión que pagó.
  *
  * @param commission comisión cobrada por la transacción (0 si no pagó comisión); se descuenta del
  *     saldo de la cuenta
@@ -45,11 +45,12 @@ public record Movement(
     }
 
     /**
-     * Cuánto cambia el saldo de la cuenta por este movimiento: un depósito suma su monto menos la
-     * comisión; un retiro resta su monto más la comisión.
+     * Cuánto cambia el saldo de la cuenta por este movimiento: un depósito o transferencia
+     * recibida suma su monto menos la comisión; un retiro o transferencia enviada resta su monto
+     * más la comisión.
      */
     public BigDecimal balanceEffect() {
-        return type == MovementType.DEPOSIT
+        return type.addsToBalance()
                 ? amount.subtract(commission)
                 : amount.add(commission).negate();
     }

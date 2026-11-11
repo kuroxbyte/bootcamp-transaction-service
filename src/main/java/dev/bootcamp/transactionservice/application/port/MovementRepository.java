@@ -6,6 +6,7 @@ import io.reactivex.rxjava3.core.Single;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import java.util.List;
 
 /**
  * Puerto de persistencia de los depósitos y retiros de cuentas bancarias.
@@ -24,7 +25,7 @@ public interface MovementRepository {
     Single<BigDecimal> getBalance(String accountId);
 
     /**
-     * Depósitos y retiros de la cuenta.
+     * Depósitos, retiros y transferencias de la cuenta.
      */
     Flowable<Movement> findByAccountId(String accountId);
 
@@ -32,4 +33,9 @@ public interface MovementRepository {
      * Guarda el depósito o retiro.
      */
     Single<Movement> save(Movement movement);
+
+    /**
+     * Guarda varios movimientos en una sola operación (los dos de una transferencia).
+     */
+    Flowable<Movement> saveAll(List<Movement> movements);
 }

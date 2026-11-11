@@ -18,6 +18,7 @@ import org.testcontainers.mongodb.MongoDBContainer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Testcontainers
@@ -170,5 +171,30 @@ class TransactionPersistenceAdaptersTest {
                 .test()
                 .awaitDone(5, TimeUnit.SECONDS)
                 .assertValue(balance -> balance.compareTo(new BigDecimal("66")) == 0);
+    }
+
+    @Test
+    void savesBothMovementsOfTransfer() {
+        LocalDate date = LocalDate.of(2026, 11, 1);
+        Movement outgoing = new Movement(
+                "a1",
+                MovementType.TRANSFER_OUT,
+                new BigDecimal("40"),
+                date,
+                new BigDecimal("2"));
+        Movement incoming = new Movement(
+                "a2",
+                MovementType.TRANSFER_IN,
+                new BigDecimal("40"),
+                date);
+
+        movementAdapter.saveAll(List.of(outgoing, incoming))
+                .test()
+                .awaitDone(5, TimeUnit.SECONDS)
+                .assertValues(outgoing, incoming);
+        movementAdapter.getBalance("a1").test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValue(balance -> balance.compareTo(new BigDecimal("-42")) == 0);
+        movementAdapter.getBalance("a2").test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValue(balance -> balance.compareTo(new BigDecimal("40")) == 0);
     }
 }

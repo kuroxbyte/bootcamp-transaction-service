@@ -4,6 +4,7 @@ import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUs
 import dev.bootcamp.transactionservice.application.usecase.GetDailyAverageBalanceUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetProductMovementsUseCase;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCase;
+import dev.bootcamp.transactionservice.application.usecase.TransferUseCase;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.account.DailyAverageBalance;
@@ -11,6 +12,8 @@ import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovementType;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
+import dev.bootcamp.transactionservice.domain.model.transfer.Transfer;
+import dev.bootcamp.transactionservice.domain.model.transfer.TransferType;
 import dev.bootcamp.transactionservice.infrastructure.client.ServiceUnavailableException;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
@@ -58,6 +61,96 @@ class AccountTransactionControllerTest {
     @MockitoBean private GetProductMovementsUseCase getProductMovementsUseCase;
 
     @MockitoBean private GetDailyAverageBalanceUseCase getDailyAverageBalanceUseCase;
+
+    @MockitoBean private TransferUseCase transferUseCase;
+
+    @Test
+    void transfersToOwnAccountWithServerDate() {
+        when(transferUseCase.transferToOwnAccount("1", "10", "11", AMOUNT, TODAY))
+                .thenReturn(Single.just(new Transfer(
+                        TransferType.OWN,
+                        new Movement("10", MovementType.TRANSFER_OUT, AMOUNT, TODAY),
+                        new Movement("11", MovementType.TRANSFER_IN, AMOUNT, TODAY)
+                                .withCommission(new BigDecimal("2")))));
+
+        webTestClient
+                .post()
+                .uri("/api/v1/accounts/10/transfers/own")
+                .header("X-Customer-Id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"targetAccountId\":\"11\",\"amount\":100.0}")
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody()
+                .jsonPath("$.type")
+                .isEqualTo("OWN")
+                .jsonPath("$.sourceAccountId")
+                .isEqualTo("10")
+                .jsonPath("$.targetAccountId")
+                .isEqualTo("11")
+                .jsonPath("$.date")
+                .isEqualTo("2026-11-15")
+                .jsonPath("$.sourceCommission")
+                .isEqualTo(0)
+                .jsonPath("$.targetCommission")
+                .isEqualTo(2);
+    }
+
+    @Test
+    void transfersToThirdParty() {
+        when(transferUseCase.transferToThirdParty("1", "10", "20", AMOUNT, TODAY))
+                .thenReturn(Single.just(new Transfer(
+                        TransferType.THIRD_PARTY,
+                        new Movement("10", MovementType.TRANSFER_OUT, AMOUNT, TODAY),
+                        new Movement("20", MovementType.TRANSFER_IN, AMOUNT, TODAY))));
+
+        webTestClient
+                .post()
+                .uri("/api/v1/accounts/10/transfers/third-party")
+                .header("X-Customer-Id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"targetAccountId\":\"20\",\"amount\":100.0}")
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody()
+                .jsonPath("$.type")
+                .isEqualTo("THIRD_PARTY");
+    }
+
+    @Test
+    void rejectsTransferWithoutTargetAccount() {
+        webTestClient
+                .post()
+                .uri("/api/v1/accounts/10/transfers/own")
+                .header("X-Customer-Id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"amount\":100.0}")
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+
+        verify(transferUseCase, never()).transferToOwnAccount(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void returnsUnprocessableWhenTransferBreaksRule() {
+        when(transferUseCase.transferToThirdParty("1", "10", "11", AMOUNT, TODAY))
+                .thenReturn(Single.error(new BusinessRuleException(
+                        "La cuenta destino es del cliente; use la transferencia entre cuentas"
+                                + " propias")));
+
+        webTestClient
+                .post()
+                .uri("/api/v1/accounts/10/transfers/third-party")
+                .header("X-Customer-Id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"targetAccountId\":\"11\",\"amount\":100.0}")
+                .exchange()
+                .expectStatus()
+                .isEqualTo(422);
+    }
 
     @Test
     void returnsDailyAverageOfTheMonth() {

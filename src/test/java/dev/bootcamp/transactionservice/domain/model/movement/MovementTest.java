@@ -53,4 +53,12 @@ class MovementTest {
         assertThat(new Movement("1", MovementType.WITHDRAWAL, BigDecimal.TEN, DATE)
                 .withCommission(commission).balanceEffect()).isEqualByComparingTo("-12");
     }
+
+    @Test
+    void transfersAffectBalanceLikeDepositsAndWithdrawals() {
+        assertThat(new Movement("1", MovementType.TRANSFER_IN, BigDecimal.TEN, DATE)
+                .withCommission(BigDecimal.ONE).balanceEffect()).isEqualByComparingTo("9");
+        assertThat(new Movement("1", MovementType.TRANSFER_OUT, BigDecimal.TEN, DATE)
+                .withCommission(BigDecimal.ONE).balanceEffect()).isEqualByComparingTo("-11");
+    }
 }

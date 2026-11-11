@@ -20,6 +20,8 @@ import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCase;
 import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCase;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCaseImpl;
+import dev.bootcamp.transactionservice.application.usecase.TransferUseCase;
+import dev.bootcamp.transactionservice.application.usecase.TransferUseCaseImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -122,5 +124,15 @@ public class UseCaseConfig {
             MovementRepository movementRepository,
             Clock clock) {
         return new GetDailyAverageBalanceUseCaseImpl(accountClient, movementRepository, clock);
+    }
+
+    /**
+     * Registra el caso de uso {@link TransferUseCase}.
+     */
+    @Bean
+    public TransferUseCase transferUseCase(
+            AccountClient accountClient,
+            MovementRepository movementRepository) {
+        return new TransferUseCaseImpl(accountClient, movementRepository);
     }
 }

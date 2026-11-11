@@ -13,6 +13,14 @@ public enum ProductMovementType {
      */
     WITHDRAWAL,
     /**
+     * Transferencia recibida en una cuenta bancaria.
+     */
+    TRANSFER_IN,
+    /**
+     * Transferencia enviada desde una cuenta bancaria.
+     */
+    TRANSFER_OUT,
+    /**
      * Consumo cargado a una tarjeta de crédito.
      */
     CHARGE,

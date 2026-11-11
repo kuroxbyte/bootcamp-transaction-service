@@ -2,7 +2,6 @@ package dev.bootcamp.transactionservice.domain.model.history;
 
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
-import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 
 import java.math.BigDecimal;
@@ -28,13 +27,10 @@ public record ProductMovement(
     }
 
     /**
-     * Convierte un depósito o retiro al formato común.
+     * Convierte un depósito, retiro o transferencia al formato común.
      */
     public static ProductMovement from(Movement movement) {
-        ProductMovementType type =
-                movement.type() == MovementType.DEPOSIT
-                        ? ProductMovementType.DEPOSIT
-                        : ProductMovementType.WITHDRAWAL;
+        ProductMovementType type = ProductMovementType.valueOf(movement.type().name());
         return new ProductMovement(type, movement.amount(), movement.date(), movement.commission());
     }
 

@@ -2,7 +2,6 @@ package dev.bootcamp.transactionservice.domain.model.account;
 
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
-import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -49,7 +48,8 @@ public record Account(
     }
 
     /**
-     * Valida un nuevo movimiento (depósito o retiro) y le asigna la comisión que le corresponde.
+     * Valida un nuevo movimiento (depósito, retiro o transferencia) y le asigna la comisión que le
+     * corresponde.
      *
      * <p>No guarda nada: si el movimiento es válido devuelve una copia con su comisión, que quien
      * lo invoca debe guardar; si no, lanza una excepción y el movimiento no debe guardarse.
@@ -137,8 +137,10 @@ public record Account(
             return;
         }
         throw new BusinessRuleException(
-                movement.type() == MovementType.WITHDRAWAL
-                        ? "Saldo insuficiente para el retiro y su comisión"
-                        : "Saldo insuficiente para la comisión del depósito");
+                switch (movement.type()) {
+                    case WITHDRAWAL -> "Saldo insuficiente para el retiro y su comisión";
+                    case TRANSFER_OUT -> "Saldo insuficiente para la transferencia y su comisión";
+                    case DEPOSIT, TRANSFER_IN -> "Saldo insuficiente para la comisión del depósito";
+                });
     }
 }
