@@ -4,13 +4,18 @@ import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUs
 import dev.bootcamp.transactionservice.application.usecase.GetDailyAverageBalanceUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GetProductMovementsUseCase;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCase;
+import dev.bootcamp.transactionservice.application.usecase.TransferUseCase;
+import dev.bootcamp.transactionservice.domain.model.transfer.Transfer;
 import dev.bootcamp.transactionservice.infrastructure.web.api.AccountTransactionsApi;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.AccountBalanceResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.AmountRequestDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.DailyAverageBalanceResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.MovementResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductMovementResponseDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.TransferRequestDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.TransferResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.mapper.TransactionWebMapper;
+import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,7 +30,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 
 /**
- * Endpoints de depósitos, retiros, saldo y movimientos de cuentas bancarias.
+ * Endpoints de depósitos, retiros, transferencias, saldo y movimientos de cuentas bancarias.
  */
 @Slf4j
 @RestController
@@ -36,6 +41,7 @@ public class AccountTransactionController implements AccountTransactionsApi {
     private final GetAvailableBalanceUseCase getAvailableBalanceUseCase;
     private final GetProductMovementsUseCase getProductMovementsUseCase;
     private final GetDailyAverageBalanceUseCase getDailyAverageBalanceUseCase;
+    private final TransferUseCase transferUseCase;
     private final Clock clock;
 
     @Override
@@ -97,6 +103,47 @@ public class AccountTransactionController implements AccountTransactionsApi {
                         movement ->
                                 ResponseEntity.status(HttpStatus.CREATED)
                                         .body(TransactionWebMapper.toResponse(movement)));
+    }
+
+    @Override
+    public Mono<ResponseEntity<TransferResponseDto>> transferToOwnAccount(
+            String customerId,
+            String accountId,
+            Mono<TransferRequestDto> transferRequestDto,
+            ServerWebExchange exchange) {
+        return transferRequestDto.flatMap(request -> created(transferUseCase.transferToOwnAccount(
+                customerId,
+                accountId,
+                request.getTargetAccountId(),
+                request.getAmount(),
+                LocalDate.now(clock))));
+    }
+
+    @Override
+    public Mono<ResponseEntity<TransferResponseDto>> transferToThirdParty(
+            String customerId,
+            String accountId,
+            Mono<TransferRequestDto> transferRequestDto,
+            ServerWebExchange exchange) {
+        return transferRequestDto.flatMap(request -> created(transferUseCase.transferToThirdParty(
+                customerId,
+                accountId,
+                request.getTargetAccountId(),
+                request.getAmount(),
+                LocalDate.now(clock))));
+    }
+
+    private static Mono<ResponseEntity<TransferResponseDto>> created(Single<Transfer> transfer) {
+        return Mono.from(transfer.toFlowable())
+                .doOnNext(saved -> log.info(
+                        "Transfer registered type={} sourceAccountId={} targetAccountId={}"
+                                + " amount={}",
+                        saved.type(),
+                        saved.outgoing().accountId(),
+                        saved.incoming().accountId(),
+                        saved.outgoing().amount()))
+                .map(saved -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body(TransactionWebMapper.toResponse(saved)));
     }
 
     @Override

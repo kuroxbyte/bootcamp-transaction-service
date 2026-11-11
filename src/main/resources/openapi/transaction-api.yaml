@@ -66,6 +66,56 @@ paths:
           $ref: '#/components/responses/BusinessRuleViolation'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/{accountId}/transfers/own:
+    post:
+      tags: [AccountTransactions]
+      operationId: transferToOwnAccount
+      summary: Transferir a otra cuenta del mismo cliente
+      description: |
+        La cuenta origen ({accountId}) y la destino deben ser del cliente y distintas.
+        En el origen se trata como un retiro y en el destino como un depósito: aplican las reglas de
+        cada tipo de cuenta y cuenta para sus transacciones sin comisión del mes; cada cuenta paga su
+        propia comisión. El saldo del origen debe cubrir el monto más su comisión.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        $ref: '#/components/requestBodies/Transfer'
+      responses:
+        '201':
+          $ref: '#/components/responses/TransferCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/accounts/{accountId}/transfers/third-party:
+    post:
+      tags: [AccountTransactions]
+      operationId: transferToThirdParty
+      summary: Transferir a una cuenta de otro cliente del mismo banco
+      description: |
+        La cuenta origen ({accountId}) debe ser del cliente y la destino de otro cliente del banco.
+        Mismas reglas que la transferencia entre cuentas propias.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        $ref: '#/components/requestBodies/Transfer'
+      responses:
+        '201':
+          $ref: '#/components/responses/TransferCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/accounts/{accountId}/balance:
     get:
       tags: [AccountTransactions]
@@ -290,6 +340,12 @@ components:
       schema:
         type: string
   requestBodies:
+    Transfer:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransferRequest'
     Amount:
       required: true
       content:
@@ -297,6 +353,47 @@ components:
           schema:
             $ref: '#/components/schemas/AmountRequest'
   schemas:
+    TransferRequest:
+      type: object
+      required: [targetAccountId, amount]
+      properties:
+        targetAccountId:
+          type: string
+          description: Cuenta destino del mismo banco
+          example: 6650f1c2a4b5c6d7e8f90456
+        amount:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          example: 100.00
+    TransferType:
+      type: string
+      description: Transferencia entre cuentas propias o a un tercero del mismo banco
+      enum: [OWN, THIRD_PARTY]
+    TransferResponse:
+      type: object
+      required: [type, sourceAccountId, targetAccountId, amount, date, sourceCommission, targetCommission]
+      properties:
+        type:
+          $ref: '#/components/schemas/TransferType'
+        sourceAccountId:
+          type: string
+        targetAccountId:
+          type: string
+        amount:
+          type: number
+          example: 100.00
+        date:
+          type: string
+          format: date
+        sourceCommission:
+          type: number
+          description: Comisión que pagó la cuenta origen
+          example: 0
+        targetCommission:
+          type: number
+          description: Comisión que pagó la cuenta destino
+          example: 0
     AmountRequest:
       type: object
       required: [amount]
@@ -405,7 +502,7 @@ components:
     ProductMovementType:
       type: string
       description: Tipo de movimiento de un producto bancario
-      enum: [DEPOSIT, WITHDRAWAL, CHARGE, PAYMENT]
+      enum: [DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT, CHARGE, PAYMENT]
     ProductMovementResponse:
       type: object
       required: [type, amount, date]
@@ -420,7 +517,7 @@ components:
           format: date
         commission:
           type: number
-          description: Solo DEPOSIT y WITHDRAWAL; comisión cobrada por la transacción
+          description: Solo movimientos de cuentas (DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT); comisión cobrada
           example: 0
     Problem:
       type: object
@@ -440,6 +537,12 @@ components:
           type: string
           format: uri
   responses:
+    TransferCreated:
+      description: Transferencia realizada
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransferResponse'
     MovementCreated:
       description: Movimiento registrado
       content:

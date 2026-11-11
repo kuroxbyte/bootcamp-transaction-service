@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
 
 /**
  * Implementa el puerto {@link MovementRepository} con MongoDB reactivo.
@@ -58,6 +59,13 @@ public class MovementPersistenceAdapter implements MovementRepository {
                                         "Movement saved movementId={} accountId={}",
                                         saved.getId(),
                                         saved.getAccountId()))
+                .map(TransactionPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public Flowable<Movement> saveAll(List<Movement> movements) {
+        return Flowable.fromPublisher(mongoRepository.saveAll(
+                        movements.stream().map(TransactionPersistenceMapper::toDocument).toList()))
                 .map(TransactionPersistenceMapper::toDomain);
     }
 }

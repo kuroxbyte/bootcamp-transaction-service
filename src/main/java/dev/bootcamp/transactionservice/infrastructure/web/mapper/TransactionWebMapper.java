@@ -5,6 +5,7 @@ import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
+import dev.bootcamp.transactionservice.domain.model.transfer.Transfer;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ChargeResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.DailyAverageBalanceResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.MovementResponseDto;
@@ -13,6 +14,8 @@ import dev.bootcamp.transactionservice.infrastructure.web.dto.PaymentResponseDto
 import dev.bootcamp.transactionservice.infrastructure.web.dto.PaymentTargetDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductMovementResponseDto;
 import dev.bootcamp.transactionservice.infrastructure.web.dto.ProductMovementTypeDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.TransferResponseDto;
+import dev.bootcamp.transactionservice.infrastructure.web.dto.TransferTypeDto;
 
 /**
  * Conversión entre el dominio y los DTOs del contrato OpenAPI.
@@ -31,6 +34,20 @@ public final class TransactionWebMapper {
                 movement.amount(),
                 movement.date(),
                 movement.commission());
+    }
+
+    /**
+     * Convierte {@link Transfer} en su DTO de respuesta, con la comisión de cada cuenta.
+     */
+    public static TransferResponseDto toResponse(Transfer transfer) {
+        return new TransferResponseDto(
+                TransferTypeDto.valueOf(transfer.type().name()),
+                transfer.outgoing().accountId(),
+                transfer.incoming().accountId(),
+                transfer.outgoing().amount(),
+                transfer.outgoing().date(),
+                transfer.outgoing().commission(),
+                transfer.incoming().commission());
     }
 
     /**

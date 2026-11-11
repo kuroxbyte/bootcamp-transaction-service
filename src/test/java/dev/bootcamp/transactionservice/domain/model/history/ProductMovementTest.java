@@ -49,4 +49,14 @@ class ProductMovementTest {
         assertThat(ProductMovement.from(new Charge("1", BigDecimal.TEN, DATE)))
                 .isEqualTo(new ProductMovement(ProductMovementType.CHARGE, BigDecimal.TEN, DATE));
     }
+
+    @Test
+    void mapsTransfers() {
+        assertThat(ProductMovement.from(
+                        new Movement("1", MovementType.TRANSFER_IN, BigDecimal.TEN, DATE)).type())
+                .isEqualTo(ProductMovementType.TRANSFER_IN);
+        assertThat(ProductMovement.from(
+                        new Movement("1", MovementType.TRANSFER_OUT, BigDecimal.TEN, DATE)).type())
+                .isEqualTo(ProductMovementType.TRANSFER_OUT);
+    }
 }
