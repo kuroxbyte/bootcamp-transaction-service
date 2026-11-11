@@ -63,13 +63,11 @@ public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
                                                 movement.accountId(),
                                                 YearMonth.from(movement.date())),
                                         movementRepository.getBalance(movement.accountId()),
-                                        (movementsInMonth, movementsBalance) -> {
-                                            account.validateMovement(
-                                                    movement,
-                                                    movementsInMonth,
-                                                    account.balance(movementsBalance));
-                                            return movement;
-                                        }))
+                                        (movementsInMonth, movementsBalance) ->
+                                                account.prepareMovement(
+                                                        movement,
+                                                        movementsInMonth,
+                                                        account.balance(movementsBalance))))
                 .flatMap(movementRepository::save);
     }
 

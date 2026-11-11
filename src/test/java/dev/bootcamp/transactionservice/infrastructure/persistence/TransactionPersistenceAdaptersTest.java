@@ -148,4 +148,27 @@ class TransactionPersistenceAdaptersTest {
                 .awaitDone(5, TimeUnit.SECONDS)
                 .assertValueCount(2);
     }
+
+    @Test
+    void balanceDiscountsCommissions() {
+        LocalDate date = LocalDate.of(2026, 11, 1);
+        movementAdapter.save(new Movement(
+                "a1",
+                MovementType.DEPOSIT,
+                new BigDecimal("100"),
+                date,
+                new BigDecimal("2"))).blockingGet();
+        movementAdapter.save(new Movement(
+                "a1",
+                MovementType.WITHDRAWAL,
+                new BigDecimal("30"),
+                date,
+                new BigDecimal("2"))).blockingGet();
+
+        movementAdapter
+                .getBalance("a1")
+                .test()
+                .awaitDone(5, TimeUnit.SECONDS)
+                .assertValue(balance -> balance.compareTo(new BigDecimal("66")) == 0);
+    }
 }

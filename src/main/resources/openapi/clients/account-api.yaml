@@ -35,6 +35,8 @@ paths:
       summary: Abrir una cuenta de ahorro
       description: |
         Sin comisión de mantenimiento y con límite máximo de movimientos mensuales.
+        Cada mes, los depósitos y retiros que superan las transacciones sin comisión del tipo de
+        cuenta pagan una comisión fija (ambos valores se configuran por tipo).
         Un cliente personal solo puede tener una; un cliente empresarial no puede tener ninguna.
         Si el cliente es VIP, la cuenta es de ahorro VIP: exige un monto mínimo de promedio diario
         cada mes y el cliente debe tener una tarjeta de crédito con el banco al abrirla.
@@ -65,6 +67,8 @@ paths:
       summary: Abrir una cuenta corriente
       description: |
         Con comisión de mantenimiento y sin límite de movimientos mensuales.
+        Cada mes, los depósitos y retiros que superan las transacciones sin comisión del tipo de
+        cuenta pagan una comisión fija (ambos valores se configuran por tipo).
         Un cliente personal solo puede tener una; un cliente empresarial puede tener varias
         y debe indicar al menos un titular (los firmantes autorizados son opcionales).
         Si el cliente es PYME, la cuenta no tiene comisión de mantenimiento (se omite o se envía 0)
@@ -96,6 +100,8 @@ paths:
       summary: Abrir una cuenta a plazo fijo
       description: |
         Sin comisión de mantenimiento; permite un solo depósito o retiro al mes, en el día indicado.
+        Cada mes, los depósitos y retiros que superan las transacciones sin comisión del tipo de
+        cuenta pagan una comisión fija (ambos valores se configuran por tipo).
         Un cliente personal puede tener varias; un cliente empresarial no puede tener ninguna.
         El monto de apertura debe ser al menos el mínimo configurado para el tipo (puede ser 0).
       parameters:
@@ -213,7 +219,7 @@ components:
     AccountResponse:
       type: object
       description: Cuenta bancaria; los campos propios de cada tipo solo vienen en ese tipo.
-      required: [id, customerId, type, minimumOpeningAmount, openingAmount, openedAt]
+      required: [id, customerId, type, minimumOpeningAmount, openingAmount, openedAt, freeMonthlyTransactions, transactionFee]
       properties:
         id:
           type: string
@@ -261,6 +267,15 @@ components:
           format: date
           description: Fecha de apertura de la cuenta
           example: '2026-11-15'
+        freeMonthlyTransactions:
+          type: integer
+          format: int32
+          description: Depósitos y retiros al mes sin comisión, según el tipo de cuenta al abrirla
+          example: 3
+        transactionFee:
+          type: number
+          description: Comisión fija por cada depósito o retiro que supera las transacciones sin comisión del mes
+          example: 2.00
     Problem:
       type: object
       description: Detalle de error (RFC 7807)

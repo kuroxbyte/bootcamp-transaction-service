@@ -6,6 +6,7 @@ import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPoli
 import dev.bootcamp.transactionservice.domain.model.account.FixedTermMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.MovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolicy;
+import dev.bootcamp.transactionservice.domain.model.account.TransactionFee;
 import dev.bootcamp.transactionservice.infrastructure.client.RemoteLookup;
 import dev.bootcamp.transactionservice.infrastructure.client.account.dto.AccountResponseDto;
 import io.reactivex.rxjava3.core.Maybe;
@@ -65,6 +66,9 @@ public class AccountWebClientAdapter implements AccountClient {
                 movementPolicy,
                 response.getOpeningAmount(),
                 response.getOpenedAt(),
-                response.getMinimumDailyAverage());
+                response.getMinimumDailyAverage(),
+                new TransactionFee(
+                        response.getFreeMonthlyTransactions(),
+                        response.getTransactionFee()));
     }
 }

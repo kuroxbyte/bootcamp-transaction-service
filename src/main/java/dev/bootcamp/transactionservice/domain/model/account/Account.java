@@ -18,6 +18,8 @@ import java.util.List;
  * @param openedAt            fecha de apertura de la cuenta
  * @param minimumDailyAverage monto mínimo de promedio diario que exige cada mes; solo la cuenta
  *     de ahorro VIP lo tiene, en las demás es null
+ * @param transactionFee      transacciones al mes sin comisión y comisión por cada transacción
+ *     adicional
  */
 public record Account(
         String id,
@@ -25,12 +27,14 @@ public record Account(
         MovementPolicy movementPolicy,
         BigDecimal openingAmount,
         LocalDate openedAt,
-        BigDecimal minimumDailyAverage) {
+        BigDecimal minimumDailyAverage,
+        TransactionFee transactionFee) {
 
     /**
-     * Saldo de la cuenta: monto de apertura más depósitos menos retiros.
+     * Saldo de la cuenta: monto de apertura más depósitos menos retiros, descontadas las
+     * comisiones.
      *
-     * @param movementsBalance suma de depósitos menos suma de retiros
+     * @param movementsBalance suma de depósitos menos suma de retiros y de comisiones
      * @return saldo actual
      */
     public BigDecimal balance(BigDecimal movementsBalance) {
@@ -45,31 +49,38 @@ public record Account(
     }
 
     /**
-     * Valida si un nuevo movimiento (depósito o retiro) está permitido en esta cuenta.
+     * Valida un nuevo movimiento (depósito o retiro) y le asigna la comisión que le corresponde.
      *
-     * <p>No modifica nada: si el movimiento es válido el método termina sin efecto y quien lo
-     * invoca debe guardarlo; si no, lanza una excepción y el movimiento no debe guardarse.
+     * <p>No guarda nada: si el movimiento es válido devuelve una copia con su comisión, que quien
+     * lo invoca debe guardar; si no, lanza una excepción y el movimiento no debe guardarse.
      *
-     * <p>Aplica dos validaciones en este orden:
+     * <p>Aplica en este orden:
      *
      * <ol>
      *   <li>La regla del tipo de cuenta, delegada en {@link #movementPolicy()} (límite mensual del
      *       ahorro, día único del plazo fijo; la corriente no tiene límite).
-     *   <li>Fondos suficientes: un retiro se rechaza si su monto es mayor que {@code balance}. Un
-     *       retiro por el saldo exacto sí se permite y deja la cuenta en 0. Los depósitos no
-     *       dependen del saldo.
+     *   <li>La comisión por transacción ({@link #transactionFee()}): 0 mientras el movimiento esté
+     *       dentro de las transacciones sin comisión del mes; si no, el monto fijo de la comisión.
+     *   <li>Fondos suficientes: el saldo después del movimiento y su comisión no puede quedar
+     *       negativo. Un retiro debe cubrir monto más comisión (puede dejar la cuenta en 0); un
+     *       depósito con comisión requiere que el saldo cubra la parte de la comisión que el
+     *       depósito no alcanza a pagar.
      * </ol>
      *
-     * @param movement movimiento a validar
+     * @param movement         movimiento a validar, todavía sin comisión
      * @param movementsInMonth cantidad de movimientos ya guardados en esta cuenta durante el mes
      *     calendario de {@code movement.date()}, sin contar el nuevo
-     * @param balance saldo actual de la cuenta antes del movimiento (ver {@link #balance})
-     * @throws BusinessRuleException si la regla del tipo de cuenta no lo permite o si un retiro
-     *     supera el saldo disponible
+     * @param balance          saldo actual de la cuenta antes del movimiento (ver {@link #balance})
+     * @return el movimiento con su comisión
+     * @throws BusinessRuleException si la regla del tipo de cuenta no lo permite o si el saldo no
+     *     alcanza para el movimiento y su comisión
      */
-    public void validateMovement(Movement movement, long movementsInMonth, BigDecimal balance) {
+    public Movement prepareMovement(Movement movement, long movementsInMonth, BigDecimal balance) {
         movementPolicy.validate(movement, movementsInMonth);
-        validateSufficientFunds(movement, balance);
+        Movement charged =
+                movement.withCommission(transactionFee.commissionFor(movementsInMonth));
+        validateSufficientFunds(charged, balance);
+        return charged;
     }
 
     /**
@@ -109,9 +120,7 @@ public record Account(
     private static BigDecimal movementsBalanceUntil(LocalDate day, List<Movement> movements) {
         return movements.stream()
                 .filter(movement -> !movement.date().isAfter(day))
-                .map(movement -> movement.type() == MovementType.DEPOSIT
-                        ? movement.amount()
-                        : movement.amount().negate())
+                .map(Movement::balanceEffect)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -123,10 +132,13 @@ public record Account(
         return first.isBefore(second) ? first : second;
     }
 
-    private void validateSufficientFunds(Movement movement, BigDecimal balance) {
-        if (movement.type() == MovementType.WITHDRAWAL
-                && movement.amount().compareTo(balance) > 0) {
-            throw new BusinessRuleException("Saldo insuficiente para el retiro");
+    private static void validateSufficientFunds(Movement movement, BigDecimal balance) {
+        if (balance.add(movement.balanceEffect()).signum() >= 0) {
+            return;
         }
+        throw new BusinessRuleException(
+                movement.type() == MovementType.WITHDRAWAL
+                        ? "Saldo insuficiente para el retiro y su comisión"
+                        : "Saldo insuficiente para la comisión del depósito");
     }
 }

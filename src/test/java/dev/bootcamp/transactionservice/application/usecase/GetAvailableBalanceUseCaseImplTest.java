@@ -35,6 +35,7 @@ class GetAvailableBalanceUseCaseImplTest {
                     new CheckingMovementPolicy(),
                     BigDecimal.ZERO,
                     null,
+                    null,
                     null);
     private static final CreditCard CARD = new CreditCard("2", CUSTOMER_ID, new BigDecimal("1000"));
 
@@ -116,6 +117,7 @@ class GetAvailableBalanceUseCaseImplTest {
                 CUSTOMER_ID,
                 new CheckingMovementPolicy(),
                 new BigDecimal("200"),
+                null,
                 null,
                 null);
         when(accountClient.findById("1")).thenReturn(Maybe.just(opened));

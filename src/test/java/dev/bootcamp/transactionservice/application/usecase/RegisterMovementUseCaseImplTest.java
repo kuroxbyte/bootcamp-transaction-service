@@ -9,6 +9,7 @@ import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPoli
 import dev.bootcamp.transactionservice.domain.model.account.FixedTermMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.MovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolicy;
+import dev.bootcamp.transactionservice.domain.model.account.TransactionFee;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Maybe;
@@ -31,6 +32,12 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RegisterMovementUseCaseImplTest {
 
+    /**
+     * Sin comisión: todas las transacciones del mes son gratuitas.
+     */
+    private static final TransactionFee FREE =
+            new TransactionFee(Integer.MAX_VALUE, BigDecimal.ZERO);
+
     private static final String CUSTOMER_ID = "100";
     private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
     private static final BigDecimal AMOUNT = BigDecimal.TEN;
@@ -51,7 +58,8 @@ class RegisterMovementUseCaseImplTest {
                                         movementPolicy,
                                         BigDecimal.ZERO,
                                         null,
-                                        null)));
+                                        null,
+                                        FREE)));
     }
 
     /**
@@ -177,12 +185,34 @@ class RegisterMovementUseCaseImplTest {
                 new CheckingMovementPolicy(),
                 new BigDecimal("150"),
                 null,
-                null)));
+                null,
+                FREE)));
         when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE)))
                 .thenReturn(Single.just(0L));
         when(movementRepository.getBalance("1")).thenReturn(Single.just(BigDecimal.ZERO));
         givenSaveReturnsMovement();
 
         useCase.withdraw(CUSTOMER_ID, "1", new BigDecimal("150"), DATE).test().assertComplete();
+    }
+
+    @Test
+    void savesMovementWithCommissionAfterFreeTransactionsOfTheMonth() {
+        when(accountClient.findById("1")).thenReturn(Maybe.just(new Account(
+                "1",
+                CUSTOMER_ID,
+                new CheckingMovementPolicy(),
+                BigDecimal.ZERO,
+                null,
+                null,
+                new TransactionFee(3, new BigDecimal("2.00")))));
+        when(movementRepository.countByAccountIdAndMonth("1", YearMonth.from(DATE)))
+                .thenReturn(Single.just(3L));
+        when(movementRepository.getBalance("1")).thenReturn(Single.just(BigDecimal.ZERO));
+        givenSaveReturnsMovement();
+
+        useCase.deposit(CUSTOMER_ID, "1", AMOUNT, DATE).test().assertComplete();
+
+        verify(movementRepository).save(
+                new Movement("1", MovementType.DEPOSIT, AMOUNT, DATE, new BigDecimal("2.00")));
     }
 }

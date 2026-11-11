@@ -18,7 +18,8 @@ final class TransactionPersistenceMapper {
                 movement.accountId(),
                 movement.type().name(),
                 movement.amount(),
-                movement.date());
+                movement.date(),
+                movement.commission());
     }
 
     static PaymentDocument toDocument(Payment payment) {
@@ -39,7 +40,8 @@ final class TransactionPersistenceMapper {
                 document.getAccountId(),
                 MovementType.valueOf(document.getType()),
                 document.getAmount(),
-                document.getDate());
+                document.getDate(),
+                document.getCommission());
     }
 
     static Payment toDomain(PaymentDocument document) {

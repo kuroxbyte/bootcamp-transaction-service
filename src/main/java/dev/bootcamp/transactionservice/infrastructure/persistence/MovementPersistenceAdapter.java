@@ -2,7 +2,6 @@ package dev.bootcamp.transactionservice.infrastructure.persistence;
 
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
-import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
@@ -33,17 +32,14 @@ public class MovementPersistenceAdapter implements MovementRepository {
     }
 
     /**
-     * Suma los depósitos y resta los retiros de la cuenta.
+     * Suma los depósitos y resta los retiros y las comisiones de la cuenta.
      */
     @Override
     public Single<BigDecimal> getBalance(String accountId) {
         return findByAccountId(accountId)
                 .reduce(
                         BigDecimal.ZERO,
-                        (balance, movement) ->
-                                movement.type() == MovementType.DEPOSIT
-                                        ? balance.add(movement.amount())
-                                        : balance.subtract(movement.amount()));
+                        (balance, movement) -> balance.add(movement.balanceEffect()));
     }
 
     @Override

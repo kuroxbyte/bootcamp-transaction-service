@@ -64,6 +64,7 @@ class GetProductMovementsUseCaseImplTest {
                                         new CheckingMovementPolicy(),
                                         BigDecimal.ZERO,
                                         null,
+                                        null,
                                         null)));
         when(movementRepository.findByAccountId("1"))
                 .thenReturn(
@@ -85,8 +86,16 @@ class GetProductMovementsUseCaseImplTest {
 
         assertThat(movements)
                 .containsExactly(
-                        new ProductMovement(ProductMovementType.DEPOSIT, BigDecimal.TEN, DAY_1),
-                        new ProductMovement(ProductMovementType.WITHDRAWAL, BigDecimal.ONE, DAY_2));
+                        new ProductMovement(
+                                ProductMovementType.DEPOSIT,
+                                BigDecimal.TEN,
+                                DAY_1,
+                                BigDecimal.ZERO),
+                        new ProductMovement(
+                                ProductMovementType.WITHDRAWAL,
+                                BigDecimal.ONE,
+                                DAY_2,
+                                BigDecimal.ZERO));
     }
 
     @Test
@@ -99,6 +108,7 @@ class GetProductMovementsUseCaseImplTest {
                                         CUSTOMER_ID,
                                         new CheckingMovementPolicy(),
                                         BigDecimal.ZERO,
+                                        null,
                                         null,
                                         null)));
         when(movementRepository.findByAccountId("1")).thenReturn(Flowable.fromIterable(List.of()));
@@ -116,6 +126,7 @@ class GetProductMovementsUseCaseImplTest {
                                         CUSTOMER_ID,
                                         new CheckingMovementPolicy(),
                                         BigDecimal.ZERO,
+                                        null,
                                         null,
                                         null)));
 

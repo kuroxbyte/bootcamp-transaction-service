@@ -14,6 +14,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AccountTest {
 
+    /**
+     * Sin comisión: todas las transacciones del mes son gratuitas.
+     */
+    private static final TransactionFee FREE =
+            new TransactionFee(Integer.MAX_VALUE, BigDecimal.ZERO);
+
     private static final LocalDate DATE = LocalDate.of(2026, 11, 15);
 
     private static Movement withdrawal(String amount) {
@@ -21,7 +27,14 @@ class AccountTest {
     }
 
     private static Account checking() {
-        return new Account("1", "100", new CheckingMovementPolicy(), BigDecimal.ZERO, null, null);
+        return new Account(
+                "1",
+                "100",
+                new CheckingMovementPolicy(),
+                BigDecimal.ZERO,
+                null,
+                null,
+                FREE);
     }
 
     @Test
@@ -38,10 +51,11 @@ class AccountTest {
                 new SavingsMovementPolicy(2),
                 BigDecimal.ZERO,
                 null,
-                null);
+                null,
+                FREE);
         Movement deposit = new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DATE);
 
-        assertThatThrownBy(() -> savings.validateMovement(deposit, 2, BigDecimal.ZERO))
+        assertThatThrownBy(() -> savings.prepareMovement(deposit, 2, BigDecimal.ZERO))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
@@ -50,13 +64,13 @@ class AccountTest {
         assertThatCode(
                         () ->
                                 checking()
-                                        .validateMovement(
+                                        .prepareMovement(
                                                 withdrawal("50"), 0, new BigDecimal("100")))
                 .doesNotThrowAnyException();
         assertThatCode(
                         () ->
                                 checking()
-                                        .validateMovement(
+                                        .prepareMovement(
                                                 withdrawal("100"), 0, new BigDecimal("100")))
                 .doesNotThrowAnyException();
     }
@@ -64,18 +78,32 @@ class AccountTest {
     @Test
     void rejectsWithdrawalOverBalanceInEveryAccountType() {
         Account[] accounts = {
-            new Account("1", "100", new SavingsMovementPolicy(5), BigDecimal.ZERO, null, null),
+            new Account(
+                    "1",
+                    "100",
+                    new SavingsMovementPolicy(5),
+                    BigDecimal.ZERO,
+                    null,
+                    null,
+                    FREE),
             checking(),
-            new Account("1", "100", new FixedTermMovementPolicy(15), BigDecimal.ZERO, null, null)
+            new Account(
+                    "1",
+                    "100",
+                    new FixedTermMovementPolicy(15),
+                    BigDecimal.ZERO,
+                    null,
+                    null,
+                    FREE)
         };
 
         for (Account account : accounts) {
             assertThatThrownBy(
                             () ->
-                                    account.validateMovement(
+                                    account.prepareMovement(
                                             withdrawal("100.01"), 0, new BigDecimal("100")))
                     .isInstanceOf(BusinessRuleException.class)
-                    .hasMessage("Saldo insuficiente para el retiro");
+                    .hasMessage("Saldo insuficiente para el retiro y su comisión");
         }
     }
 
@@ -83,7 +111,7 @@ class AccountTest {
     void depositDoesNotDependOnBalance() {
         Movement deposit = new Movement("1", MovementType.DEPOSIT, BigDecimal.TEN, DATE);
 
-        assertThatCode(() -> checking().validateMovement(deposit, 0, BigDecimal.ZERO))
+        assertThatCode(() -> checking().prepareMovement(deposit, 0, BigDecimal.ZERO))
                 .doesNotThrowAnyException();
     }
 
@@ -95,8 +123,69 @@ class AccountTest {
                 new CheckingMovementPolicy(),
                 new BigDecimal("200"),
                 null,
-                null);
+                null,
+                FREE);
 
         assertThat(account.balance(new BigDecimal("-50.25"))).isEqualByComparingTo("149.75");
+    }
+
+    @Test
+    void chargesCommissionOnlyAfterFreeTransactionsOfTheMonth() {
+        Account account = new Account(
+                "1",
+                "100",
+                new CheckingMovementPolicy(),
+                BigDecimal.ZERO,
+                null,
+                null,
+                new TransactionFee(3, new BigDecimal("2.00")));
+        Movement deposit = new Movement("1", MovementType.DEPOSIT, new BigDecimal("100"), DATE);
+
+        assertThat(account.prepareMovement(deposit, 2, BigDecimal.ZERO).commission())
+                .isEqualByComparingTo("0");
+        assertThat(account.prepareMovement(deposit, 3, BigDecimal.ZERO).commission())
+                .isEqualByComparingTo("2.00");
+        assertThat(account.prepareMovement(deposit, 7, BigDecimal.ZERO).commission())
+                .isEqualByComparingTo("2.00");
+    }
+
+    @Test
+    void withdrawalWithCommissionMustBeCoveredByBalance() {
+        Account account = new Account(
+                "1",
+                "100",
+                new CheckingMovementPolicy(),
+                BigDecimal.ZERO,
+                null,
+                null,
+                new TransactionFee(0, new BigDecimal("2")));
+
+        BigDecimal balance = new BigDecimal("100");
+
+        assertThatThrownBy(() -> account.prepareMovement(withdrawal("99"), 0, balance))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Saldo insuficiente para el retiro y su comisión");
+        Movement allowed = account.prepareMovement(withdrawal("98"), 0, balance);
+
+        assertThat(allowed.balanceEffect()).isEqualByComparingTo("-100");
+    }
+
+    @Test
+    void depositSmallerThanCommissionNeedsBalanceForTheRest() {
+        Account account = new Account(
+                "1",
+                "100",
+                new CheckingMovementPolicy(),
+                BigDecimal.ZERO,
+                null,
+                null,
+                new TransactionFee(0, new BigDecimal("2")));
+        Movement deposit = new Movement("1", MovementType.DEPOSIT, BigDecimal.ONE, DATE);
+
+        assertThatThrownBy(() -> account.prepareMovement(deposit, 0, BigDecimal.ZERO))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Saldo insuficiente para la comisión del depósito");
+        assertThatCode(() -> account.prepareMovement(deposit, 0, BigDecimal.ONE))
+                .doesNotThrowAnyException();
     }
 }
