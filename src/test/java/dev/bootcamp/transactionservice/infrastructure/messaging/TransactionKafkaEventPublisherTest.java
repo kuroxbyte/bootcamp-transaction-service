@@ -77,6 +77,7 @@ class TransactionKafkaEventPublisherTest {
         assertThat(event.get("amount").decimalValue()).isEqualByComparingTo("50");
         assertThat(event.get("date").asString()).isEqualTo("2026-11-15");
         assertThat(event.get("occurredAt").asString()).isEqualTo("2026-11-15T10:00:00Z");
+        assertThat(event.get("eventId").asString()).hasSize(36);
     }
 
     @Test

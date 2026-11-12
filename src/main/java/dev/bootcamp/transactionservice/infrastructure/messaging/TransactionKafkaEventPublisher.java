@@ -16,6 +16,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Implementa el puerto {@link TransactionEventPublisher} publicando en el tópico
@@ -78,6 +79,8 @@ public class TransactionKafkaEventPublisher implements TransactionEventPublisher
 
     private Completable publish(String customerId, Map<String, Object> event) {
         return Completable.defer(() -> {
+            // Id único: debt-service lo usa para no procesar dos veces el mismo evento.
+            event.put("eventId", UUID.randomUUID().toString());
             event.put("occurredAt", Instant.now(clock).toString());
             return Completable.fromCompletionStage(kafkaTemplate.send(
                     topic,
