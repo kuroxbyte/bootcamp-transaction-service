@@ -3,6 +3,7 @@ package dev.bootcamp.transactionservice.application.usecase;
 import dev.bootcamp.transactionservice.application.port.CreditClient;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.application.port.TransactionEventPublisher;
+import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
@@ -38,26 +39,44 @@ public class PayCreditUseCaseImpl implements PayCreditUseCase {
             String creditId,
             BigDecimal amount,
             LocalDate date) {
-        return Single.fromCallable(() -> new Payment(PaymentTarget.CREDIT, creditId, amount, date))
-                .flatMap(
-                        payment ->
-                                creditClient
-                                        .findById(creditId)
-                                        .switchIfEmpty(
-                                                Single.error(
-                                                        () ->
-                                                                new NotFoundException(
-                                                                        "El crédito no existe")))
-                                        .map(credit -> ensureBelongsTo(credit, customerId))
-                                        .flatMap(credit -> paymentRepository.save(payment)))
-                .flatMap(saved -> transactionEventPublisher
-                        .publishPaymentRegistered(customerId, saved)
-                        .andThen(Single.just(saved)));
+        return register(customerId, creditId, amount, date, true);
     }
 
-    private static Credit ensureBelongsTo(Credit credit, String customerId) {
-        if (!credit.belongsTo(customerId)) {
+    @Override
+    public Single<Payment> payThirdParty(
+            String customerId,
+            String creditId,
+            BigDecimal amount,
+            LocalDate date) {
+        return register(customerId, creditId, amount, date, false);
+    }
+
+    private Single<Payment> register(
+            String customerId,
+            String creditId,
+            BigDecimal amount,
+            LocalDate date,
+            boolean ownCredit) {
+        return Single.fromCallable(() ->
+                        new Payment(PaymentTarget.CREDIT, creditId, amount, date, customerId))
+                .flatMap(payment -> creditClient
+                        .findById(creditId)
+                        .switchIfEmpty(Single.error(
+                                () -> new NotFoundException("El crédito no existe")))
+                        .map(credit -> ensureOwnership(credit, customerId, ownCredit))
+                        .flatMap(credit -> paymentRepository.save(payment)
+                                .flatMap(saved -> transactionEventPublisher
+                                        .publishPaymentRegistered(credit.customerId(), saved)
+                                        .andThen(Single.just(saved)))));
+    }
+
+    private static Credit ensureOwnership(Credit credit, String customerId, boolean ownCredit) {
+        if (ownCredit && !credit.belongsTo(customerId)) {
             throw new NotFoundException("El crédito no pertenece al cliente");
+        }
+        if (!ownCredit && credit.belongsTo(customerId)) {
+            throw new BusinessRuleException(
+                    "El crédito es del cliente; use el pago de sus propios créditos");
         }
         return credit;
     }

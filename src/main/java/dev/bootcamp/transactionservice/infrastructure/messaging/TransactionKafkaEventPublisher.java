@@ -61,6 +61,7 @@ public class TransactionKafkaEventPublisher implements TransactionEventPublisher
             event.put("creditCardId", payment.productId());
         }
         event.put("customerId", customerId);
+        event.put("payerCustomerId", payment.payerCustomerId());
         event.put("amount", payment.amount());
         event.put("date", payment.date().toString());
         return publish(customerId, event);

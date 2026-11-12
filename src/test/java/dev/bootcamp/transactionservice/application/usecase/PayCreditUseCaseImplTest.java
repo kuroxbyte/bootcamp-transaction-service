@@ -59,7 +59,8 @@ class PayCreditUseCaseImplTest {
 
         Payment payment = useCase.pay(CUSTOMER_ID, "1", AMOUNT, DATE).blockingGet();
 
-        assertThat(payment).isEqualTo(new Payment(PaymentTarget.CREDIT, "1", AMOUNT, DATE));
+        assertThat(payment).isEqualTo(
+                new Payment(PaymentTarget.CREDIT, "1", AMOUNT, DATE, CUSTOMER_ID));
     }
 
     @Test
@@ -103,5 +104,36 @@ class PayCreditUseCaseImplTest {
 
         useCase.pay("999", "1", AMOUNT, DATE).test().assertError(NotFoundException.class);
         verify(transactionEventPublisher, never()).publishPaymentRegistered(any(), any());
+    }
+
+    @Test
+    void customerPaysCreditOfAnotherCustomer() {
+        when(creditClient.findById("9")).thenReturn(Maybe.just(new Credit("9", "otro-cliente")));
+        when(paymentRepository.save(any())).thenAnswer(inv -> Single.just(inv.getArgument(0)));
+
+        Payment payment = useCase.payThirdParty(CUSTOMER_ID, "9", AMOUNT, DATE).blockingGet();
+
+        assertThat(payment.payerCustomerId()).isEqualTo(CUSTOMER_ID);
+        // La deuda que baja es la del dueño del crédito, no la de quien paga.
+        verify(transactionEventPublisher).publishPaymentRegistered("otro-cliente", payment);
+    }
+
+    @Test
+    void thirdPartyPaymentRejectsOwnCredit() {
+        when(creditClient.findById("1")).thenReturn(Maybe.just(new Credit("1", CUSTOMER_ID)));
+
+        useCase.payThirdParty(CUSTOMER_ID, "1", AMOUNT, DATE).test()
+                .assertError(error -> error instanceof BusinessRuleException
+                        && error.getMessage().equals(
+                                "El crédito es del cliente; use el pago de sus propios créditos"));
+        verify(paymentRepository, never()).save(any());
+    }
+
+    @Test
+    void thirdPartyPaymentRejectsUnknownCredit() {
+        when(creditClient.findById("99")).thenReturn(Maybe.empty());
+
+        useCase.payThirdParty(CUSTOMER_ID, "99", AMOUNT, DATE).test()
+                .assertError(NotFoundException.class);
     }
 }

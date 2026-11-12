@@ -40,7 +40,7 @@ class ProductMovementTest {
     void mapsPayment() {
         assertThat(
                         ProductMovement.from(
-                                new Payment(PaymentTarget.CREDIT, "1", BigDecimal.TEN, DATE)))
+                                new Payment(PaymentTarget.CREDIT, "1", BigDecimal.TEN, DATE, "c1")))
                 .isEqualTo(new ProductMovement(ProductMovementType.PAYMENT, BigDecimal.TEN, DATE));
     }
 

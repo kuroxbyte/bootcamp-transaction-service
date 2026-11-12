@@ -68,6 +68,30 @@ public class CreditCardTransactionController implements CreditCardTransactionsAp
     }
 
     @Override
+    public Mono<ResponseEntity<PaymentResponseDto>> payThirdPartyCreditCard(
+            String customerId,
+            String creditCardId,
+            Mono<AmountRequestDto> amountRequestDto,
+            ServerWebExchange exchange) {
+        return amountRequestDto
+                .flatMap(request -> Mono.from(payCreditCardUseCase
+                        .payThirdParty(
+                                customerId,
+                                creditCardId,
+                                request.getAmount(),
+                                LocalDate.now(clock))
+                        .toFlowable()))
+                .doOnNext(payment -> log.info(
+                        "Third-party card payment registered creditCardId={} payerCustomerId={}"
+                                + " amount={}",
+                        creditCardId,
+                        customerId,
+                        payment.amount()))
+                .map(payment -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body(TransactionWebMapper.toResponse(payment)));
+    }
+
+    @Override
     public Mono<ResponseEntity<PaymentResponseDto>> payCreditCard(
             String customerId,
             String creditCardId,

@@ -28,7 +28,8 @@ final class TransactionPersistenceMapper {
                 payment.target().name(),
                 payment.productId(),
                 payment.amount(),
-                payment.date());
+                payment.date(),
+                payment.payerCustomerId());
     }
 
     static ChargeDocument toDocument(Charge charge) {
@@ -49,7 +50,8 @@ final class TransactionPersistenceMapper {
                 PaymentTarget.valueOf(document.getTarget()),
                 document.getProductId(),
                 document.getAmount(),
-                document.getDate());
+                document.getDate(),
+                document.getPayerCustomerId());
     }
 
     static Charge toDomain(ChargeDocument document) {

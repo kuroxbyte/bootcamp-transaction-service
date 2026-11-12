@@ -85,8 +85,8 @@ class ProductReportTest {
     @Test
     void assignsPaymentsAndChargesToTheirCreditProduct() {
         List<Payment> payments = List.of(
-                new Payment(PaymentTarget.CREDIT, "k1", new BigDecimal("80"), DAY),
-                new Payment(PaymentTarget.CREDIT_CARD, "t1", new BigDecimal("40"), DAY));
+                new Payment(PaymentTarget.CREDIT, "k1", new BigDecimal("80"), DAY, "c1"),
+                new Payment(PaymentTarget.CREDIT_CARD, "t1", new BigDecimal("40"), DAY, "c1"));
         List<Charge> charges = List.of(new Charge("t1", new BigDecimal("200"), DAY));
 
         ProductReport report = ProductReport.generate(

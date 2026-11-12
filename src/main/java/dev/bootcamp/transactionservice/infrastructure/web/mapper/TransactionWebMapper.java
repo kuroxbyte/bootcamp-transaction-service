@@ -64,7 +64,8 @@ public final class TransactionWebMapper {
                 PaymentTargetDto.valueOf(payment.target().name()),
                 payment.productId(),
                 payment.amount(),
-                payment.date());
+                payment.date(),
+                payment.payerCustomerId());
     }
 
     /**

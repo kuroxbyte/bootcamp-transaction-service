@@ -11,9 +11,10 @@ import io.reactivex.rxjava3.core.Completable;
 public interface TransactionEventPublisher {
 
     /**
-     * Publica un pago registrado a un crédito o a una tarjeta de crédito.
+     * Publica un pago registrado a un crédito o a una tarjeta de crédito, hecho por su dueño o por
+     * un tercero ({@link Payment#payerCustomerId()}).
      *
-     * @param customerId cliente dueño del producto pagado
+     * @param customerId cliente dueño del producto pagado (no necesariamente quien pagó)
      * @return termina cuando se publicó, o sin error si no se pudo (el adaptador lo registra)
      */
     Completable publishPaymentRegistered(String customerId, Payment payment);

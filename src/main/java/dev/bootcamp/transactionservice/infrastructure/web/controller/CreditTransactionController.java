@@ -32,6 +32,30 @@ public class CreditTransactionController implements CreditTransactionsApi {
     private final Clock clock;
 
     @Override
+    public Mono<ResponseEntity<PaymentResponseDto>> payThirdPartyCredit(
+            String customerId,
+            String creditId,
+            Mono<AmountRequestDto> amountRequestDto,
+            ServerWebExchange exchange) {
+        return amountRequestDto
+                .flatMap(request -> Mono.from(payCreditUseCase
+                        .payThirdParty(
+                                customerId,
+                                creditId,
+                                request.getAmount(),
+                                LocalDate.now(clock))
+                        .toFlowable()))
+                .doOnNext(payment -> log.info(
+                        "Third-party credit payment registered creditId={} payerCustomerId={}"
+                                + " amount={}",
+                        creditId,
+                        customerId,
+                        payment.amount()))
+                .map(payment -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body(TransactionWebMapper.toResponse(payment)));
+    }
+
+    @Override
     public Mono<ResponseEntity<PaymentResponseDto>> payCredit(
             String customerId,
             String creditId,

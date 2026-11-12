@@ -112,17 +112,17 @@ class TransactionPersistenceAdaptersTest {
     void findsPaymentsByTargetAndProduct() {
         LocalDate date = LocalDate.of(2026, 11, 15);
         paymentAdapter
-                .save(new Payment(PaymentTarget.CREDIT, "p1", BigDecimal.TEN, date))
+                .save(new Payment(PaymentTarget.CREDIT, "p1", BigDecimal.TEN, date, "c1"))
                 .blockingGet();
         paymentAdapter
-                .save(new Payment(PaymentTarget.CREDIT_CARD, "p1", BigDecimal.ONE, date))
+                .save(new Payment(PaymentTarget.CREDIT_CARD, "p1", BigDecimal.ONE, date, "c1"))
                 .blockingGet();
 
         paymentAdapter
                 .findByTargetAndProductId(PaymentTarget.CREDIT, "p1")
                 .test()
                 .awaitDone(5, TimeUnit.SECONDS)
-                .assertValues(new Payment(PaymentTarget.CREDIT, "p1", BigDecimal.TEN, date));
+                .assertValues(new Payment(PaymentTarget.CREDIT, "p1", BigDecimal.TEN, date, "c1"));
     }
 
     @Test
@@ -131,11 +131,17 @@ class TransactionPersistenceAdaptersTest {
         chargeAdapter.save(new Charge("card1", new BigDecimal("300"), date)).blockingGet();
         chargeAdapter.save(new Charge("card1", new BigDecimal("200.50"), date)).blockingGet();
         paymentAdapter
-                .save(new Payment(PaymentTarget.CREDIT_CARD, "card1", new BigDecimal("100"), date))
+                .save(
+                        new Payment(
+                                PaymentTarget.CREDIT_CARD,
+                                "card1",
+                                new BigDecimal("100"),
+                                date,
+                                "c1"))
                 .blockingGet();
         // Un pago a un crédito con el mismo id no reduce la deuda de la tarjeta.
         paymentAdapter
-                .save(new Payment(PaymentTarget.CREDIT, "card1", new BigDecimal("999"), date))
+                .save(new Payment(PaymentTarget.CREDIT, "card1", new BigDecimal("999"), date, "c1"))
                 .blockingGet();
 
         chargeAdapter
@@ -205,13 +211,14 @@ class TransactionPersistenceAdaptersTest {
         saveMovement("a1", MovementType.DEPOSIT, "10", LocalDate.of(2026, 10, 31));
         saveMovement("a1", MovementType.DEPOSIT, "10", from);
         saveMovement("a2", MovementType.WITHDRAWAL, "5", to);
-        paymentAdapter.save(new Payment(PaymentTarget.CREDIT, "k1", BigDecimal.ONE, to))
+        paymentAdapter.save(new Payment(PaymentTarget.CREDIT, "k1", BigDecimal.ONE, to, "c1"))
                 .blockingGet();
         paymentAdapter.save(new Payment(
                 PaymentTarget.CREDIT,
                 "k1",
                 BigDecimal.ONE,
-                LocalDate.of(2026, 12, 1))).blockingGet();
+                LocalDate.of(2026, 12, 1),
+                "c1")).blockingGet();
         chargeAdapter.save(new Charge("t1", BigDecimal.TEN, from)).blockingGet();
 
         movementAdapter.findByDateBetween(from, to).test().awaitDone(5, TimeUnit.SECONDS)
