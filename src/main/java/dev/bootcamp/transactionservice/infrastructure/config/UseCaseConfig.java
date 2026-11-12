@@ -7,6 +7,7 @@ import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.CreditClient;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
+import dev.bootcamp.transactionservice.application.port.TransactionEventPublisher;
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCase;
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.GenerateProductReportUseCase;
@@ -61,8 +62,12 @@ public class UseCaseConfig {
     @Bean
     public PayCreditUseCase payCreditUseCase(
             PaymentRepository paymentRepository,
-            CreditClient creditClient) {
-        return new PayCreditUseCaseImpl(paymentRepository, creditClient);
+            CreditClient creditClient,
+            TransactionEventPublisher transactionEventPublisher) {
+        return new PayCreditUseCaseImpl(
+                paymentRepository,
+                creditClient,
+                transactionEventPublisher);
     }
 
     /**
@@ -71,8 +76,12 @@ public class UseCaseConfig {
     @Bean
     public PayCreditCardUseCase payCreditCardUseCase(
             PaymentRepository paymentRepository,
-            CreditCardClient creditCardClient) {
-        return new PayCreditCardUseCaseImpl(paymentRepository, creditCardClient);
+            CreditCardClient creditCardClient,
+            TransactionEventPublisher transactionEventPublisher) {
+        return new PayCreditCardUseCaseImpl(
+                paymentRepository,
+                creditCardClient,
+                transactionEventPublisher);
     }
 
     /**
@@ -81,8 +90,12 @@ public class UseCaseConfig {
     @Bean
     public ChargeCreditCardUseCase chargeCreditCardUseCase(
             ChargeRepository chargeRepository,
-            CreditCardClient creditCardClient) {
-        return new ChargeCreditCardUseCaseImpl(chargeRepository, creditCardClient);
+            CreditCardClient creditCardClient,
+            TransactionEventPublisher transactionEventPublisher) {
+        return new ChargeCreditCardUseCaseImpl(
+                chargeRepository,
+                creditCardClient,
+                transactionEventPublisher);
     }
 
     /**

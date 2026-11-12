@@ -2,6 +2,7 @@ package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
+import dev.bootcamp.transactionservice.application.port.TransactionEventPublisher;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
@@ -21,15 +22,18 @@ public class PayCreditCardUseCaseImpl implements PayCreditCardUseCase {
 
     private final PaymentRepository paymentRepository;
     private final CreditCardClient creditCardClient;
+    private final TransactionEventPublisher transactionEventPublisher;
 
     /**
      * Crea el caso de uso con los adaptadores de sus puertos.
      */
     public PayCreditCardUseCaseImpl(
             PaymentRepository paymentRepository,
-            CreditCardClient creditCardClient) {
+            CreditCardClient creditCardClient,
+            TransactionEventPublisher transactionEventPublisher) {
         this.paymentRepository = paymentRepository;
         this.creditCardClient = creditCardClient;
+        this.transactionEventPublisher = transactionEventPublisher;
     }
 
     @Override
@@ -50,7 +54,10 @@ public class PayCreditCardUseCaseImpl implements PayCreditCardUseCase {
                                                                 new NotFoundException(
                                                                         CREDIT_CARD_NOT_FOUND)))
                                         .map(creditCard -> ensureBelongsTo(creditCard, customerId))
-                                        .flatMap(creditCard -> paymentRepository.save(payment)));
+                                        .flatMap(creditCard -> paymentRepository.save(payment)))
+                .flatMap(saved -> transactionEventPublisher
+                        .publishPaymentRegistered(customerId, saved)
+                        .andThen(Single.just(saved)));
     }
 
     private static CreditCard ensureBelongsTo(CreditCard creditCard, String customerId) {

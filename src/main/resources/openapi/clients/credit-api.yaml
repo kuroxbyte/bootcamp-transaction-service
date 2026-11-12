@@ -38,6 +38,7 @@ paths:
         Personal: solo para clientes personales y máximo uno por persona.
         Empresarial: solo para clientes empresariales, sin límite por empresa.
         No se exige que el cliente tenga una cuenta bancaria.
+        Se rechaza (422) si el cliente tiene una deuda vencida en algún producto de crédito.
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
       requestBody:
@@ -118,6 +119,7 @@ paths:
       description: |
         Para clientes personales o empresariales, con un límite de crédito mayor a 0.
         No se exige que el cliente tenga una cuenta bancaria.
+        Se rechaza (422) si el cliente tiene una deuda vencida en algún producto de crédito.
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
       requestBody:
@@ -201,13 +203,24 @@ components:
       enum: [PERSONAL, BUSINESS]
     CreditRequest:
       type: object
-      required: [type]
+      required: [type, amount, dueDate]
       properties:
         type:
           $ref: '#/components/schemas/CreditType'
+        amount:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Monto otorgado; la deuda es este monto menos los pagos
+          example: 10000.00
+        dueDate:
+          type: string
+          format: date
+          description: Fecha de vencimiento, posterior a hoy; desde el día siguiente, el saldo pendiente es deuda vencida
+          example: '2027-11-15'
     CreditResponse:
       type: object
-      required: [id, customerId, type, grantedAt]
+      required: [id, customerId, type, amount, dueDate, grantedAt]
       properties:
         id:
           type: string
@@ -217,6 +230,13 @@ components:
           example: 6650f1c2a4b5c6d7e8f90123
         type:
           $ref: '#/components/schemas/CreditType'
+        amount:
+          type: number
+          example: 10000.00
+        dueDate:
+          type: string
+          format: date
+          example: '2027-11-15'
         grantedAt:
           type: string
           format: date
@@ -224,7 +244,7 @@ components:
           example: '2026-11-15'
     CreditCardRequest:
       type: object
-      required: [creditLimit]
+      required: [creditLimit, paymentDueDay]
       properties:
         creditLimit:
           type: number
@@ -232,9 +252,16 @@ components:
           exclusiveMinimum: true
           description: Límite de crédito para consumos
           example: 5000.00
+        paymentDueDay:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 28
+          description: Día de pago mensual; los consumos de un mes se pagan hasta ese día del mes siguiente
+          example: 15
     CreditCardResponse:
       type: object
-      required: [id, customerId, creditLimit, grantedAt]
+      required: [id, customerId, creditLimit, paymentDueDay, grantedAt]
       properties:
         id:
           type: string
@@ -245,6 +272,10 @@ components:
         creditLimit:
           type: number
           example: 5000.00
+        paymentDueDay:
+          type: integer
+          format: int32
+          example: 15
         grantedAt:
           type: string
           format: date
@@ -287,7 +318,7 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     BusinessRuleViolation:
-      description: Se incumple una regla de negocio (por ejemplo, segundo crédito personal)
+      description: Se incumple una regla de negocio (por ejemplo, segundo crédito personal o deuda vencida)
       content:
         application/problem+json:
           schema:
