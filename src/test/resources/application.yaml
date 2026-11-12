@@ -8,8 +8,6 @@ spring:
   cloud:
     config:
       enabled: false
-    compatibility-verifier:
-      enabled: false
   mongodb:
     uri: mongodb://localhost:27017/transaction_test_db
 

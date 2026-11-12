@@ -4,7 +4,3 @@ spring:
   config:
     # Puerto, MongoDB y URLs de otros servicios viven en config-repo y los sirve config-server.
     import: configserver:${CONFIG_SERVER_URL:http://localhost:8888}
-  cloud:
-    # Spring Cloud 2025.1 está certificado para Spring Boot 4.0; el proyecto usa 4.1.
-    compatibility-verifier:
-      enabled: false
