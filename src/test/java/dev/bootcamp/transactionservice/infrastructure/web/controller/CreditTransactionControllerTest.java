@@ -2,6 +2,7 @@ package dev.bootcamp.transactionservice.infrastructure.web.controller;
 
 import dev.bootcamp.transactionservice.application.usecase.GetProductMovementsUseCase;
 import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCase;
+import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovementType;
@@ -49,7 +50,8 @@ class CreditTransactionControllerTest {
     @Test
     void registersCreditPayment() {
         when(payCreditUseCase.pay("1", "5", AMOUNT, TODAY))
-                .thenReturn(Single.just(new Payment(PaymentTarget.CREDIT, "5", AMOUNT, TODAY)));
+                .thenReturn(
+                        Single.just(new Payment(PaymentTarget.CREDIT, "5", AMOUNT, TODAY, "c1")));
 
         webTestClient
                 .post()
@@ -100,5 +102,43 @@ class CreditTransactionControllerTest {
                 .expectBody()
                 .jsonPath("$[0].type")
                 .isEqualTo("PAYMENT");
+    }
+
+    @Test
+    void registersPaymentToThirdPartyProduct() {
+        when(payCreditUseCase.payThirdParty("1", "9", AMOUNT, TODAY))
+                .thenReturn(
+                        Single.just(new Payment(PaymentTarget.CREDIT, "9", AMOUNT, TODAY, "1")));
+
+        webTestClient
+                .post()
+                .uri("/api/v1/credits/9/payments/third-party")
+                .header("X-Customer-Id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"amount\":250.0}")
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody()
+                .jsonPath("$.productId")
+                .isEqualTo("9")
+                .jsonPath("$.payerCustomerId")
+                .isEqualTo("1");
+    }
+
+    @Test
+    void rejectsThirdPartyPaymentToOwnProduct() {
+        when(payCreditUseCase.payThirdParty("1", "5", AMOUNT, TODAY))
+                .thenReturn(Single.error(new BusinessRuleException("producto propio")));
+
+        webTestClient
+                .post()
+                .uri("/api/v1/credits/5/payments/third-party")
+                .header("X-Customer-Id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"amount\":250.0}")
+                .exchange()
+                .expectStatus()
+                .isEqualTo(422);
     }
 }

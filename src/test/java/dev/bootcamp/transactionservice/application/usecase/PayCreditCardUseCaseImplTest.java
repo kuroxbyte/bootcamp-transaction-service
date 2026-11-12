@@ -60,7 +60,8 @@ class PayCreditCardUseCaseImplTest {
 
         Payment payment = useCase.pay(CUSTOMER_ID, "1", AMOUNT, DATE).blockingGet();
 
-        assertThat(payment).isEqualTo(new Payment(PaymentTarget.CREDIT_CARD, "1", AMOUNT, DATE));
+        assertThat(payment).isEqualTo(
+                new Payment(PaymentTarget.CREDIT_CARD, "1", AMOUNT, DATE, CUSTOMER_ID));
     }
 
     @Test
@@ -97,5 +98,26 @@ class PayCreditCardUseCaseImplTest {
         Payment payment = useCase.pay(CUSTOMER_ID, "1", AMOUNT, DATE).blockingGet();
 
         verify(transactionEventPublisher).publishPaymentRegistered(CUSTOMER_ID, payment);
+    }
+
+    @Test
+    void customerPaysCardOfAnotherCustomer() {
+        when(creditCardClient.findById("9")).thenReturn(Maybe.just(
+                new CreditCard("9", "otro-cliente", new BigDecimal("1000"))));
+        when(paymentRepository.save(any())).thenAnswer(inv -> Single.just(inv.getArgument(0)));
+
+        Payment payment = useCase.payThirdParty(CUSTOMER_ID, "9", AMOUNT, DATE).blockingGet();
+
+        assertThat(payment.payerCustomerId()).isEqualTo(CUSTOMER_ID);
+        verify(transactionEventPublisher).publishPaymentRegistered("otro-cliente", payment);
+    }
+
+    @Test
+    void thirdPartyPaymentRejectsOwnCard() {
+        when(creditCardClient.findById("1")).thenReturn(Maybe.just(CARD));
+
+        useCase.payThirdParty(CUSTOMER_ID, "1", AMOUNT, DATE).test()
+                .assertError(BusinessRuleException.class);
+        verify(paymentRepository, never()).save(any());
     }
 }

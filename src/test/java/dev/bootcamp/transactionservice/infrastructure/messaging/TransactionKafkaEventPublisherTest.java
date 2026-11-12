@@ -65,7 +65,7 @@ class TransactionKafkaEventPublisherTest {
 
         publisher.publishPaymentRegistered(
                         "c1",
-                        new Payment(PaymentTarget.CREDIT, "k1", new BigDecimal("50"), DATE))
+                        new Payment(PaymentTarget.CREDIT, "k1", new BigDecimal("50"), DATE, "c1"))
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)
                 .assertComplete();
@@ -74,6 +74,7 @@ class TransactionKafkaEventPublisherTest {
         assertThat(event.get("eventType").asString()).isEqualTo("CreditPaymentRegistered");
         assertThat(event.get("creditId").asString()).isEqualTo("k1");
         assertThat(event.get("customerId").asString()).isEqualTo("c1");
+        assertThat(event.get("payerCustomerId").asString()).isEqualTo("c1");
         assertThat(event.get("amount").decimalValue()).isEqualByComparingTo("50");
         assertThat(event.get("date").asString()).isEqualTo("2026-11-15");
         assertThat(event.get("occurredAt").asString()).isEqualTo("2026-11-15T10:00:00Z");
@@ -86,7 +87,7 @@ class TransactionKafkaEventPublisherTest {
 
         publisher.publishPaymentRegistered(
                         "c1",
-                        new Payment(PaymentTarget.CREDIT_CARD, "t1", BigDecimal.TEN, DATE))
+                        new Payment(PaymentTarget.CREDIT_CARD, "t1", BigDecimal.TEN, DATE, "c1"))
                 .test()
                 .awaitDone(2, TimeUnit.SECONDS)
                 .assertComplete();

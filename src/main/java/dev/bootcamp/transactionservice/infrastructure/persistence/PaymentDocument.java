@@ -32,4 +32,9 @@ public class PaymentDocument {
     private final BigDecimal amount;
 
     private final LocalDate date;
+
+    /**
+     * Cliente que hizo el pago: el dueño del producto o un tercero.
+     */
+    private final String payerCustomerId;
 }

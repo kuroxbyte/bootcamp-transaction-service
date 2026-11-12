@@ -210,6 +210,31 @@ paths:
           $ref: '#/components/responses/ProductNotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credits/{creditId}/payments/third-party:
+    post:
+      tags: [CreditTransactions]
+      operationId: payThirdPartyCredit
+      summary: Pagar el crédito de otro cliente del banco
+      description: |
+        El crédito debe existir y ser de otro cliente (si es propio, 422: se usa el pago propio).
+        El pago no se descuenta de ninguna cuenta; guarda quién pagó (payerCustomerId) y reduce la
+        deuda del dueño del crédito.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditId'
+      requestBody:
+        $ref: '#/components/requestBodies/Amount'
+      responses:
+        '201':
+          $ref: '#/components/responses/PaymentCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/credits/{creditId}/movements:
     get:
       tags: [CreditTransactions]
@@ -271,6 +296,31 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/ProductNotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/credit-cards/{creditCardId}/payments/third-party:
+    post:
+      tags: [CreditCardTransactions]
+      operationId: payThirdPartyCreditCard
+      summary: Pagar la tarjeta de otro cliente del banco
+      description: |
+        La tarjeta debe existir y ser de otro cliente (si es propia, 422: se usa el pago propio).
+        El pago no se descuenta de ninguna cuenta; guarda quién pagó (payerCustomerId), reduce la
+        deuda de la tarjeta y libera crédito disponible para su dueño.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/CreditCardId'
+      requestBody:
+        $ref: '#/components/requestBodies/Amount'
+      responses:
+        '201':
+          $ref: '#/components/responses/PaymentCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/credit-cards/{creditCardId}/available-credit:
@@ -493,7 +543,7 @@ components:
       enum: [CREDIT, CREDIT_CARD]
     PaymentResponse:
       type: object
-      required: [target, productId, amount, date]
+      required: [target, productId, amount, date, payerCustomerId]
       properties:
         target:
           $ref: '#/components/schemas/PaymentTarget'
@@ -506,6 +556,9 @@ components:
         date:
           type: string
           format: date
+        payerCustomerId:
+          type: string
+          description: Cliente que hizo el pago (el dueño del producto o un tercero)
     ChargeResponse:
       type: object
       required: [creditCardId, amount, date]

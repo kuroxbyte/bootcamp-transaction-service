@@ -153,7 +153,8 @@ class GetProductMovementsUseCaseImplTest {
                                                 PaymentTarget.CREDIT,
                                                 "2",
                                                 BigDecimal.TEN,
-                                                DAY_1))));
+                                                DAY_1,
+                                                CUSTOMER_ID))));
 
         assertThat(useCase.getCreditMovements(CUSTOMER_ID, "2").toList().blockingGet())
                 .containsExactly(
@@ -186,7 +187,8 @@ class GetProductMovementsUseCaseImplTest {
                                                 PaymentTarget.CREDIT_CARD,
                                                 "3",
                                                 new BigDecimal("100"),
-                                                DAY_2))));
+                                                DAY_2,
+                                                CUSTOMER_ID))));
 
         assertThat(useCase.getCreditCardMovements(CUSTOMER_ID, "3").toList().blockingGet())
                 .containsExactly(

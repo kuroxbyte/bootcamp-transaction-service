@@ -15,17 +15,23 @@ class PaymentTest {
 
     @Test
     void acceptsPositiveAmount() {
-        assertThatCode(() -> new Payment(PaymentTarget.CREDIT, "1", BigDecimal.ONE, DATE))
+        assertThatCode(() -> new Payment(PaymentTarget.CREDIT, "1", BigDecimal.ONE, DATE, "c1"))
                 .doesNotThrowAnyException();
     }
 
     @Test
     void rejectsZeroNegativeOrMissingAmount() {
-        assertThatThrownBy(() -> new Payment(PaymentTarget.CREDIT, "1", BigDecimal.ZERO, DATE))
+        assertThatThrownBy(
+                () -> new Payment(PaymentTarget.CREDIT,
+                "1",
+                BigDecimal.ZERO,
+                DATE,
+                "c1"))
                 .isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> new Payment(PaymentTarget.CREDIT, "1", new BigDecimal("-1"), DATE))
+        BigDecimal negative = new BigDecimal("-1");
+        assertThatThrownBy(() -> new Payment(PaymentTarget.CREDIT, "1", negative, DATE, "c1"))
                 .isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> new Payment(PaymentTarget.CREDIT, "1", null, DATE))
+        assertThatThrownBy(() -> new Payment(PaymentTarget.CREDIT, "1", null, DATE, "c1"))
                 .isInstanceOf(BusinessRuleException.class);
     }
 }

@@ -97,7 +97,8 @@ class CreditCardTransactionControllerTest {
     void registersCardPayment() {
         when(payCreditCardUseCase.pay("1", "7", AMOUNT, TODAY))
                 .thenReturn(
-                        Single.just(new Payment(PaymentTarget.CREDIT_CARD, "7", AMOUNT, TODAY)));
+                        Single.just(
+                                new Payment(PaymentTarget.CREDIT_CARD, "7", AMOUNT, TODAY, "c1")));
 
         webTestClient
                 .post()
@@ -148,5 +149,44 @@ class CreditCardTransactionControllerTest {
                 .expectBody()
                 .jsonPath("$.length()")
                 .isEqualTo(2);
+    }
+
+    @Test
+    void registersPaymentToThirdPartyProduct() {
+        when(payCreditCardUseCase.payThirdParty("1", "9", AMOUNT, TODAY))
+                .thenReturn(
+                        Single.just(
+                                new Payment(PaymentTarget.CREDIT_CARD, "9", AMOUNT, TODAY, "1")));
+
+        webTestClient
+                .post()
+                .uri("/api/v1/credit-cards/9/payments/third-party")
+                .header("X-Customer-Id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"amount\":80.5}")
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody()
+                .jsonPath("$.productId")
+                .isEqualTo("9")
+                .jsonPath("$.payerCustomerId")
+                .isEqualTo("1");
+    }
+
+    @Test
+    void rejectsThirdPartyPaymentToOwnProduct() {
+        when(payCreditCardUseCase.payThirdParty("1", "5", AMOUNT, TODAY))
+                .thenReturn(Single.error(new BusinessRuleException("producto propio")));
+
+        webTestClient
+                .post()
+                .uri("/api/v1/credit-cards/5/payments/third-party")
+                .header("X-Customer-Id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"amount\":80.5}")
+                .exchange()
+                .expectStatus()
+                .isEqualTo(422);
     }
 }
