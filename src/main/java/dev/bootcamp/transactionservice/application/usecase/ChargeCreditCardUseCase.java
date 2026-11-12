@@ -18,6 +18,7 @@ import java.time.LocalDate;
  *   <li>El monto del consumo debe ser mayor a 0.
  *   <li>El consumo no puede superar el crédito disponible: límite de crédito menos la deuda actual
  *       (consumos menos pagos).
+ *   <li>Al registrarlo publica el evento del consumo en {@code transaction-events}.
  * </ul>
  *
  * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Single}. Termina con error {@link

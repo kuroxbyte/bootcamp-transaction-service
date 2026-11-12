@@ -16,6 +16,7 @@ import java.time.LocalDate;
  * <ul>
  *   <li>El crédito debe existir en credit-service y pertenecer al cliente.
  *   <li>El monto del pago debe ser mayor a 0.
+ *   <li>Al registrarlo publica el evento del pago en {@code transaction-events}.
  * </ul>
  *
  * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Single}. Termina con error {@link

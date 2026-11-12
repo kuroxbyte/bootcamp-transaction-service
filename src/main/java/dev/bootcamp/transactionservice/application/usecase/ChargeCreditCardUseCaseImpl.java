@@ -2,6 +2,7 @@ package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.application.port.ChargeRepository;
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
+import dev.bootcamp.transactionservice.application.port.TransactionEventPublisher;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
@@ -20,15 +21,18 @@ public class ChargeCreditCardUseCaseImpl implements ChargeCreditCardUseCase {
 
     private final ChargeRepository chargeRepository;
     private final CreditCardClient creditCardClient;
+    private final TransactionEventPublisher transactionEventPublisher;
 
     /**
      * Crea el caso de uso con los adaptadores de sus puertos.
      */
     public ChargeCreditCardUseCaseImpl(
             ChargeRepository chargeRepository,
-            CreditCardClient creditCardClient) {
+            CreditCardClient creditCardClient,
+            TransactionEventPublisher transactionEventPublisher) {
         this.chargeRepository = chargeRepository;
         this.creditCardClient = creditCardClient;
+        this.transactionEventPublisher = transactionEventPublisher;
     }
 
     @Override
@@ -60,7 +64,10 @@ public class ChargeCreditCardUseCaseImpl implements ChargeCreditCardUseCase {
                                                                                             debt);
                                                                             return charge;
                                                                         })))
-                .flatMap(chargeRepository::save);
+                .flatMap(chargeRepository::save)
+                .flatMap(saved -> transactionEventPublisher
+                        .publishChargeRegistered(customerId, saved)
+                        .andThen(Single.just(saved)));
     }
 
     private static CreditCard ensureBelongsTo(CreditCard creditCard, String customerId) {

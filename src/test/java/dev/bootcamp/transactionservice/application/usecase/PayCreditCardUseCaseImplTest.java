@@ -2,13 +2,16 @@ package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
+import dev.bootcamp.transactionservice.application.port.TransactionEventPublisher;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,6 +23,7 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,7 +40,18 @@ class PayCreditCardUseCaseImplTest {
 
     @Mock private CreditCardClient creditCardClient;
 
+    @Mock private TransactionEventPublisher transactionEventPublisher;
+
     @InjectMocks private PayCreditCardUseCaseImpl useCase;
+
+    /**
+     * Publicar siempre termina bien, salvo en las pruebas que verifican lo contrario.
+     */
+    @BeforeEach
+    void eventsArePublished() {
+        lenient().when(transactionEventPublisher.publishPaymentRegistered(any(), any()))
+                .thenReturn(Completable.complete());
+    }
 
     @Test
     void customerPaysOwnCreditCard() {
@@ -71,5 +86,16 @@ class PayCreditCardUseCaseImplTest {
                 .assertError(BusinessRuleException.class);
         verify(creditCardClient, never()).findById(any());
         verify(paymentRepository, never()).save(any());
+    }
+
+    @Test
+    void publishesTheCardPaymentWithItsCustomer() {
+        when(creditCardClient.findById("1")).thenReturn(Maybe.just(
+                new CreditCard("1", CUSTOMER_ID, new BigDecimal("1000"))));
+        when(paymentRepository.save(any())).thenAnswer(inv -> Single.just(inv.getArgument(0)));
+
+        Payment payment = useCase.pay(CUSTOMER_ID, "1", AMOUNT, DATE).blockingGet();
+
+        verify(transactionEventPublisher).publishPaymentRegistered(CUSTOMER_ID, payment);
     }
 }

@@ -17,6 +17,7 @@ import java.time.LocalDate;
  *   <li>La tarjeta debe existir en credit-service y pertenecer al cliente.
  *   <li>El monto del pago debe ser mayor a 0.
  *   <li>El pago reduce la deuda de la tarjeta y libera crédito disponible para consumos.
+ *   <li>Al registrarlo publica el evento del pago en {@code transaction-events}.
  * </ul>
  *
  * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Single}. Termina con error {@link

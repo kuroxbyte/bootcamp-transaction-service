@@ -10,6 +10,15 @@ spring:
       enabled: false
   mongodb:
     uri: mongodb://localhost:27017/transaction_test_db
+  kafka:
+    bootstrap-servers: localhost:9092
+    admin:
+      # Las pruebas no crean tópicos ni esperan a un broker.
+      auto-create: false
+
+messaging:
+  topics:
+    transaction-events: transaction-events
 
 clients:
   account-service:

@@ -2,6 +2,7 @@ package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.application.port.CreditClient;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
+import dev.bootcamp.transactionservice.application.port.TransactionEventPublisher;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
@@ -17,13 +18,18 @@ import java.time.LocalDate;
 public class PayCreditUseCaseImpl implements PayCreditUseCase {
     private final PaymentRepository paymentRepository;
     private final CreditClient creditClient;
+    private final TransactionEventPublisher transactionEventPublisher;
 
     /**
      * Crea el caso de uso con los adaptadores de sus puertos.
      */
-    public PayCreditUseCaseImpl(PaymentRepository paymentRepository, CreditClient creditClient) {
+    public PayCreditUseCaseImpl(
+            PaymentRepository paymentRepository,
+            CreditClient creditClient,
+            TransactionEventPublisher transactionEventPublisher) {
         this.paymentRepository = paymentRepository;
         this.creditClient = creditClient;
+        this.transactionEventPublisher = transactionEventPublisher;
     }
 
     @Override
@@ -43,7 +49,10 @@ public class PayCreditUseCaseImpl implements PayCreditUseCase {
                                                                 new NotFoundException(
                                                                         "El crédito no existe")))
                                         .map(credit -> ensureBelongsTo(credit, customerId))
-                                        .flatMap(credit -> paymentRepository.save(payment)));
+                                        .flatMap(credit -> paymentRepository.save(payment)))
+                .flatMap(saved -> transactionEventPublisher
+                        .publishPaymentRegistered(customerId, saved)
+                        .andThen(Single.just(saved)));
     }
 
     private static Credit ensureBelongsTo(Credit credit, String customerId) {
