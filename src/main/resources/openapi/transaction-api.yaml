@@ -377,7 +377,7 @@ components:
       name: X-Customer-Id
       in: header
       required: true
-      description: Id del cliente que realiza la operación; debe ser el dueño del producto
+      description: Id del cliente que realiza la operación; debe ser el dueño del producto. Lo establece el API Gateway con el claim sub del JWT; el valor que envía el cliente se descarta
       schema:
         type: string
     AccountId:
