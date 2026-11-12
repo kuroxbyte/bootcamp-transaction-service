@@ -15,10 +15,18 @@ spring:
     admin:
       # Las pruebas no crean tópicos ni esperan a un broker.
       auto-create: false
+    listener:
+      # El consumidor se prueba directamente, sin broker.
+      auto-startup: false
 
 messaging:
   topics:
     transaction-events: transaction-events
+    debit-card-events: debit-card-events
+
+cache:
+  debit-cards:
+    ttl: 10m
 
 clients:
   account-service:

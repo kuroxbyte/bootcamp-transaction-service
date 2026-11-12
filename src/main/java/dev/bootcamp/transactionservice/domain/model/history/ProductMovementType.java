@@ -21,6 +21,10 @@ public enum ProductMovementType {
      */
     TRANSFER_OUT,
     /**
+     * Pago con tarjeta de débito desde una cuenta bancaria.
+     */
+    DEBIT_CARD_PAYMENT,
+    /**
      * Consumo cargado a una tarjeta de crédito.
      */
     CHARGE,

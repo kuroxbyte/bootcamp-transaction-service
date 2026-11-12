@@ -1,6 +1,7 @@
 package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.application.port.AccountClient;
+import dev.bootcamp.transactionservice.application.port.DebitCardRepository;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
@@ -10,6 +11,7 @@ import dev.bootcamp.transactionservice.domain.model.account.FixedTermMovementPol
 import dev.bootcamp.transactionservice.domain.model.account.MovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolicy;
 import dev.bootcamp.transactionservice.domain.model.account.TransactionFee;
+import dev.bootcamp.transactionservice.domain.model.debitcard.DebitCard;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Maybe;
@@ -24,6 +26,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -45,6 +48,8 @@ class RegisterMovementUseCaseImplTest {
     @Mock private MovementRepository movementRepository;
 
     @Mock private AccountClient accountClient;
+
+    @Mock private DebitCardRepository debitCardRepository;
 
     @InjectMocks private RegisterMovementUseCaseImpl useCase;
 
@@ -214,5 +219,46 @@ class RegisterMovementUseCaseImplTest {
 
         verify(movementRepository).save(
                 new Movement("1", MovementType.DEPOSIT, AMOUNT, DATE, new BigDecimal("2.00")));
+    }
+
+    @Test
+    void paysWithDebitCardFromItsPrimaryAccount() {
+        when(debitCardRepository.findById("d1"))
+                .thenReturn(Maybe.just(new DebitCard("d1", CUSTOMER_ID, "1")));
+        givenAccount(new CheckingMovementPolicy(), 0, "100");
+        givenSaveReturnsMovement();
+
+        Movement movement =
+                useCase.payWithDebitCard(CUSTOMER_ID, "d1", AMOUNT, DATE).blockingGet();
+
+        assertThat(movement.accountId()).isEqualTo("1");
+        assertThat(movement.type()).isEqualTo(MovementType.DEBIT_CARD_PAYMENT);
+        assertThat(movement.debitCardId()).isEqualTo("d1");
+    }
+
+    @Test
+    void debitCardPaymentFollowsTheAccountBalanceRule() {
+        when(debitCardRepository.findById("d1"))
+                .thenReturn(Maybe.just(new DebitCard("d1", CUSTOMER_ID, "1")));
+        givenAccount(new CheckingMovementPolicy(), 0, "5");
+
+        useCase.payWithDebitCard(CUSTOMER_ID, "d1", AMOUNT, DATE).test()
+                .assertError(error -> error instanceof BusinessRuleException
+                        && error.getMessage().equals(
+                                "Saldo insuficiente para el pago con tarjeta y su comisión"));
+        verify(movementRepository, never()).save(any());
+    }
+
+    @Test
+    void rejectsDebitCardOfAnotherCustomerOrUnknown() {
+        when(debitCardRepository.findById("d1"))
+                .thenReturn(Maybe.just(new DebitCard("d1", "otro", "1")));
+        when(debitCardRepository.findById("d9")).thenReturn(Maybe.empty());
+
+        useCase.payWithDebitCard(CUSTOMER_ID, "d1", AMOUNT, DATE).test()
+                .assertError(NotFoundException.class);
+        useCase.payWithDebitCard(CUSTOMER_ID, "d9", AMOUNT, DATE).test()
+                .assertError(NotFoundException.class);
+        verify(accountClient, never()).findById(any());
     }
 }

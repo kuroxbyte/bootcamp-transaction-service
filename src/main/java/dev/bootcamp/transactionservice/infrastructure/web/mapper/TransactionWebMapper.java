@@ -39,7 +39,8 @@ public final class TransactionWebMapper {
                 MovementTypeDto.valueOf(movement.type().name()),
                 movement.amount(),
                 movement.date(),
-                movement.commission());
+                movement.commission())
+                .debitCardId(movement.debitCardId());
     }
 
     /**

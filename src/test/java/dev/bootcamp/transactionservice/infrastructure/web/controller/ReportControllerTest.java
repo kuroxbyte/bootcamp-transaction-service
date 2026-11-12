@@ -118,4 +118,24 @@ class ReportControllerTest {
                 .jsonPath("$[0].type")
                 .isEqualTo("PAYMENT");
     }
+
+    @Test
+    void returnsLastDebitCardPayments() {
+        when(getProductMovementsUseCase.getDebitCardLastMovements("1", "d1"))
+                .thenReturn(Flowable.just(new ProductMovement(
+                        ProductMovementType.DEBIT_CARD_PAYMENT,
+                        BigDecimal.TEN,
+                        TO)));
+
+        webTestClient
+                .get()
+                .uri("/api/v1/reports/debit-cards/d1/last-movements")
+                .header("X-Customer-Id", "1")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$[0].type")
+                .isEqualTo("DEBIT_CARD_PAYMENT");
+    }
 }

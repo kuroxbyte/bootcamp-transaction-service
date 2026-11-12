@@ -5,6 +5,7 @@ import dev.bootcamp.transactionservice.application.port.BankProductClient;
 import dev.bootcamp.transactionservice.application.port.ChargeRepository;
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.CreditClient;
+import dev.bootcamp.transactionservice.application.port.DebitCardRepository;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.application.port.TransactionEventPublisher;
@@ -24,6 +25,8 @@ import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCase;
 import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCase;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCaseImpl;
+import dev.bootcamp.transactionservice.application.usecase.SaveDebitCardUseCase;
+import dev.bootcamp.transactionservice.application.usecase.SaveDebitCardUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.TransferUseCase;
 import dev.bootcamp.transactionservice.application.usecase.TransferUseCaseImpl;
 import org.springframework.context.annotation.Bean;
@@ -52,8 +55,12 @@ public class UseCaseConfig {
     @Bean
     public RegisterMovementUseCase registerMovementUseCase(
             MovementRepository movementRepository,
-            AccountClient accountClient) {
-        return new RegisterMovementUseCaseImpl(movementRepository, accountClient);
+            AccountClient accountClient,
+            DebitCardRepository debitCardRepository) {
+        return new RegisterMovementUseCaseImpl(
+                movementRepository,
+                accountClient,
+                debitCardRepository);
     }
 
     /**
@@ -121,14 +128,16 @@ public class UseCaseConfig {
             CreditCardClient creditCardClient,
             MovementRepository movementRepository,
             PaymentRepository paymentRepository,
-            ChargeRepository chargeRepository) {
+            ChargeRepository chargeRepository,
+            DebitCardRepository debitCardRepository) {
         return new GetProductMovementsUseCaseImpl(
                 accountClient,
                 creditClient,
                 creditCardClient,
                 movementRepository,
                 paymentRepository,
-                chargeRepository);
+                chargeRepository,
+                debitCardRepository);
     }
 
     /**
@@ -166,5 +175,13 @@ public class UseCaseConfig {
                 movementRepository,
                 paymentRepository,
                 chargeRepository);
+    }
+
+    /**
+     * Registra el caso de uso {@link SaveDebitCardUseCase}.
+     */
+    @Bean
+    public SaveDebitCardUseCase saveDebitCardUseCase(DebitCardRepository debitCardRepository) {
+        return new SaveDebitCardUseCaseImpl(debitCardRepository);
     }
 }
