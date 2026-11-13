@@ -9,6 +9,7 @@ import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,22 +17,11 @@ import java.time.LocalDate;
 /**
  * Implementación de {@link PayCreditUseCase}.
  */
+@RequiredArgsConstructor
 public class PayCreditUseCaseImpl implements PayCreditUseCase {
     private final PaymentRepository paymentRepository;
     private final CreditClient creditClient;
     private final TransactionEventPublisher transactionEventPublisher;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public PayCreditUseCaseImpl(
-            PaymentRepository paymentRepository,
-            CreditClient creditClient,
-            TransactionEventPublisher transactionEventPublisher) {
-        this.paymentRepository = paymentRepository;
-        this.creditClient = creditClient;
-        this.transactionEventPublisher = transactionEventPublisher;
-    }
 
     @Override
     public Single<Payment> pay(

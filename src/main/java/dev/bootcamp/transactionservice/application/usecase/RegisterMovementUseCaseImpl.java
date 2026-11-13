@@ -8,6 +8,7 @@ import dev.bootcamp.transactionservice.domain.model.account.Account;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,22 +17,11 @@ import java.time.YearMonth;
 /**
  * Implementación de {@link RegisterMovementUseCase}.
  */
+@RequiredArgsConstructor
 public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
     private final MovementRepository movementRepository;
     private final AccountClient accountClient;
     private final DebitCardRepository debitCardRepository;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public RegisterMovementUseCaseImpl(
-            MovementRepository movementRepository,
-            AccountClient accountClient,
-            DebitCardRepository debitCardRepository) {
-        this.movementRepository = movementRepository;
-        this.accountClient = accountClient;
-        this.debitCardRepository = debitCardRepository;
-    }
 
     @Override
     public Single<Movement> payWithDebitCard(

@@ -9,6 +9,7 @@ import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import dev.bootcamp.transactionservice.domain.model.payment.Payment;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 /**
  * Implementación de {@link PayCreditCardUseCase}.
  */
+@RequiredArgsConstructor
 public class PayCreditCardUseCaseImpl implements PayCreditCardUseCase {
     private static final String CREDIT_CARD_NOT_FOUND = "La tarjeta de crédito no existe";
     private static final String CREDIT_CARD_NOT_OWNED =
@@ -26,18 +28,6 @@ public class PayCreditCardUseCaseImpl implements PayCreditCardUseCase {
     private final PaymentRepository paymentRepository;
     private final CreditCardClient creditCardClient;
     private final TransactionEventPublisher transactionEventPublisher;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public PayCreditCardUseCaseImpl(
-            PaymentRepository paymentRepository,
-            CreditCardClient creditCardClient,
-            TransactionEventPublisher transactionEventPublisher) {
-        this.paymentRepository = paymentRepository;
-        this.creditCardClient = creditCardClient;
-        this.transactionEventPublisher = transactionEventPublisher;
-    }
 
     @Override
     public Single<Payment> pay(

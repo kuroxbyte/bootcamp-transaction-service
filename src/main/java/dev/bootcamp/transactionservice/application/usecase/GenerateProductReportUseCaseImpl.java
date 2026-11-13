@@ -7,31 +7,19 @@ import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.domain.model.report.ProductReport;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
 
 /**
  * Implementación de {@link GenerateProductReportUseCase}.
  */
+@RequiredArgsConstructor
 public class GenerateProductReportUseCaseImpl implements GenerateProductReportUseCase {
     private final BankProductClient bankProductClient;
     private final MovementRepository movementRepository;
     private final PaymentRepository paymentRepository;
     private final ChargeRepository chargeRepository;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public GenerateProductReportUseCaseImpl(
-            BankProductClient bankProductClient,
-            MovementRepository movementRepository,
-            PaymentRepository paymentRepository,
-            ChargeRepository chargeRepository) {
-        this.bankProductClient = bankProductClient;
-        this.movementRepository = movementRepository;
-        this.paymentRepository = paymentRepository;
-        this.chargeRepository = chargeRepository;
-    }
 
     @Override
     public Single<ProductReport> execute(LocalDate from, LocalDate to) {
