@@ -188,4 +188,13 @@ class AccountTest {
         assertThatCode(() -> account.prepareMovement(deposit, 0, BigDecimal.ONE))
                 .doesNotThrowAnyException();
     }
+
+    @Test
+    void rejectsYankiPaymentOverBalance() {
+        Movement payment = new Movement("1", MovementType.YANKI_PAYMENT_SENT, BigDecimal.TEN, DATE);
+
+        assertThatThrownBy(() -> checking().prepareMovement(payment, 0, BigDecimal.ONE))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Saldo insuficiente para el pago Yanki y su comisión");
+    }
 }

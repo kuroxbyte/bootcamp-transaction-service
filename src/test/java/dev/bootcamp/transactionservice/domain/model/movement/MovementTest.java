@@ -71,4 +71,14 @@ class MovementTest {
         assertThat(payment.debitCardId()).isEqualTo("d1");
         assertThat(payment.balanceEffect()).isEqualByComparingTo("-11");
     }
+
+    @Test
+    void yankiPaymentsActLikeWithdrawalOrDepositAndReversalAddsBack() {
+        assertThat(new Movement("1", MovementType.YANKI_PAYMENT_SENT, BigDecimal.TEN, DATE)
+                .withCommission(BigDecimal.ONE).balanceEffect()).isEqualByComparingTo("-11");
+        assertThat(new Movement("1", MovementType.YANKI_PAYMENT_RECEIVED, BigDecimal.TEN, DATE)
+                .withCommission(BigDecimal.ONE).balanceEffect()).isEqualByComparingTo("9");
+        assertThat(new Movement("1", MovementType.YANKI_PAYMENT_REVERSAL, BigDecimal.TEN, DATE)
+                .balanceEffect()).isEqualByComparingTo("10");
+    }
 }

@@ -2,6 +2,7 @@ package dev.bootcamp.transactionservice.infrastructure.persistence;
 
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
+import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,11 @@ public class MovementPersistenceAdapter implements MovementRepository {
     public Single<Long> countByAccountIdAndMonth(String accountId, YearMonth month) {
         // [primer día del mes, primer día del mes siguiente)
         Range<LocalDate> monthRange = Range.rightOpen(month.atDay(1), month.plusMonths(1).atDay(1));
-        return Single.fromPublisher(
-                mongoRepository.countByAccountIdAndDateBetween(accountId, monthRange));
+        // Las devoluciones de pagos Yanki no son transacciones del cliente: no cuentan.
+        return Single.fromPublisher(mongoRepository.countByAccountIdAndDateBetweenAndTypeNot(
+                accountId,
+                monthRange,
+                MovementType.YANKI_PAYMENT_REVERSAL.name()));
     }
 
     /**

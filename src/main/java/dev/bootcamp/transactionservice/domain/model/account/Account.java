@@ -142,7 +142,10 @@ public record Account(
                     case TRANSFER_OUT -> "Saldo insuficiente para la transferencia y su comisión";
                     case DEBIT_CARD_PAYMENT ->
                             "Saldo insuficiente para el pago con tarjeta y su comisión";
-                    case DEPOSIT, TRANSFER_IN -> "Saldo insuficiente para la comisión del depósito";
+                    case YANKI_PAYMENT_SENT ->
+                            "Saldo insuficiente para el pago Yanki y su comisión";
+                    case DEPOSIT, TRANSFER_IN, YANKI_PAYMENT_RECEIVED, YANKI_PAYMENT_REVERSAL ->
+                            "Saldo insuficiente para la comisión del depósito";
                 });
     }
 }

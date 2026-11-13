@@ -24,12 +24,31 @@ public enum MovementType {
     /**
      * Pago con tarjeta de débito desde la cuenta principal de la tarjeta; se trata como un retiro.
      */
-    DEBIT_CARD_PAYMENT;
+    DEBIT_CARD_PAYMENT,
+    /**
+     * Pago Yanki enviado desde la cuenta principal de la tarjeta del monedero; se trata como un
+     * retiro.
+     */
+    YANKI_PAYMENT_SENT,
+    /**
+     * Pago Yanki recibido en la cuenta principal de la tarjeta del monedero (o el saldo del
+     * monedero transferido al asociar la tarjeta); se trata como un depósito.
+     */
+    YANKI_PAYMENT_RECEIVED,
+    /**
+     * Devolución de un pago Yanki enviado que no llegó a su destino; suma al saldo sin reglas ni
+     * comisión.
+     */
+    YANKI_PAYMENT_REVERSAL;
 
     /**
-     * Indica si el movimiento suma al saldo (depósito o transferencia recibida).
+     * Indica si el movimiento suma al saldo (depósito, transferencia o pago Yanki recibido, o
+     * devolución de un pago Yanki).
      */
     public boolean addsToBalance() {
-        return this == DEPOSIT || this == TRANSFER_IN;
+        return this == DEPOSIT
+                || this == TRANSFER_IN
+                || this == YANKI_PAYMENT_RECEIVED
+                || this == YANKI_PAYMENT_REVERSAL;
     }
 }

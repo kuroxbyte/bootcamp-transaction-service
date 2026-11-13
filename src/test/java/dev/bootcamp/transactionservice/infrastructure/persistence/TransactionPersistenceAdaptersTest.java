@@ -81,6 +81,8 @@ class TransactionPersistenceAdaptersTest {
         saveMovement("a1", MovementType.WITHDRAWAL, "5", LocalDate.of(2026, 11, 30));
         saveMovement("a1", MovementType.DEPOSIT, "10", LocalDate.of(2026, 12, 1));
         saveMovement("a2", MovementType.DEPOSIT, "10", LocalDate.of(2026, 11, 15));
+        // Las devoluciones de pagos Yanki no cuentan como transacciones del mes.
+        saveMovement("a1", MovementType.YANKI_PAYMENT_REVERSAL, "10", LocalDate.of(2026, 11, 20));
 
         movementAdapter
                 .countByAccountIdAndMonth("a1", YearMonth.of(2026, 11))
