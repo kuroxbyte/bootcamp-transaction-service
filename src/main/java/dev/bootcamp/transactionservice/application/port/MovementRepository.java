@@ -31,6 +31,11 @@ public interface MovementRepository {
     Flowable<Movement> findByAccountId(String accountId);
 
     /**
+     * Pagos hechos con la tarjeta de débito, de cualquier cuenta.
+     */
+    Flowable<Movement> findByDebitCardId(String debitCardId);
+
+    /**
      * Guarda el depósito o retiro.
      */
     Single<Movement> save(Movement movement);

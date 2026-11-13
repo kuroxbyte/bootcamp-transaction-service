@@ -37,7 +37,6 @@ public class ReportController implements ReportsApi {
                 .map(report -> ResponseEntity.ok(TransactionWebMapper.toResponse(report)));
     }
 
-    // TODO: incluir el reporte de la tarjeta de débito cuando exista el producto.
     @Override
     public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getCreditCardLastMovements(
             String customerId,
@@ -49,5 +48,18 @@ public class ReportController implements ReportsApi {
                 customerId);
         return MovementResponses.of(
                 getProductMovementsUseCase.getCreditCardLastMovements(customerId, creditCardId));
+    }
+
+    @Override
+    public Mono<ResponseEntity<Flux<ProductMovementResponseDto>>> getDebitCardLastMovements(
+            String customerId,
+            String debitCardId,
+            ServerWebExchange exchange) {
+        log.debug(
+                "Fetching last movements debitCardId={} customerId={}",
+                debitCardId,
+                customerId);
+        return MovementResponses.of(
+                getProductMovementsUseCase.getDebitCardLastMovements(customerId, debitCardId));
     }
 }

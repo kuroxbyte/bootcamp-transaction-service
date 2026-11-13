@@ -6,17 +6,21 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Depósito, retiro o transferencia registrado en una cuenta bancaria, con la comisión que pagó.
+ * Depósito, retiro, transferencia o pago con tarjeta de débito registrado en una cuenta bancaria,
+ * con la comisión que pagó.
  *
- * @param commission comisión cobrada por la transacción (0 si no pagó comisión); se descuenta del
+ * @param commission  comisión cobrada por la transacción (0 si no pagó comisión); se descuenta del
  *     saldo de la cuenta
+ * @param debitCardId tarjeta de débito con la que se pagó; solo en
+ *     {@link MovementType#DEBIT_CARD_PAYMENT}, en los demás es null
  */
 public record Movement(
         String accountId,
         MovementType type,
         BigDecimal amount,
         LocalDate date,
-        BigDecimal commission) {
+        BigDecimal commission,
+        String debitCardId) {
 
     /**
      * Valida que el monto sea mayor a 0 y que la comisión no sea negativa.
@@ -34,14 +38,43 @@ public record Movement(
      * Crea un movimiento todavía sin comisión.
      */
     public Movement(String accountId, MovementType type, BigDecimal amount, LocalDate date) {
-        this(accountId, type, amount, date, BigDecimal.ZERO);
+        this(accountId, type, amount, date, BigDecimal.ZERO, null);
+    }
+
+    /**
+     * Crea un movimiento con comisión, sin tarjeta de débito.
+     */
+    public Movement(
+            String accountId,
+            MovementType type,
+            BigDecimal amount,
+            LocalDate date,
+            BigDecimal commission) {
+        this(accountId, type, amount, date, commission, null);
+    }
+
+    /**
+     * Crea un pago con tarjeta de débito, todavía sin comisión.
+     */
+    public static Movement debitCardPayment(
+            String accountId,
+            String debitCardId,
+            BigDecimal amount,
+            LocalDate date) {
+        return new Movement(
+                accountId,
+                MovementType.DEBIT_CARD_PAYMENT,
+                amount,
+                date,
+                BigDecimal.ZERO,
+                debitCardId);
     }
 
     /**
      * Copia del movimiento con la comisión indicada.
      */
     public Movement withCommission(BigDecimal commission) {
-        return new Movement(accountId, type, amount, date, commission);
+        return new Movement(accountId, type, amount, date, commission, debitCardId);
     }
 
     /**

@@ -9,7 +9,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Caso de uso para que un cliente haga depósitos y retiros en sus cuentas bancarias.
+ * Caso de uso para que un cliente haga depósitos, retiros y pagos con tarjeta de débito en sus
+ * cuentas bancarias.
  *
  * <p>Reglas:
  *
@@ -21,6 +22,8 @@ import java.time.LocalDate;
  *   <li>Ahorro: no se puede superar el límite máximo de movimientos mensuales.
  *   <li>Cuenta corriente: sin límite de movimientos.
  *   <li>Plazo fijo: un solo movimiento al mes, en el día configurado.
+ *   <li>Pago con tarjeta de débito: la tarjeta debe ser del cliente (copia local de los eventos de
+ *       account-service); el pago sale solo de su cuenta principal y se trata como un retiro.
  * </ul>
  *
  * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Single}. Termina con error {@link
@@ -61,6 +64,24 @@ public interface RegisterMovementUseCase {
     Single<Movement> withdraw(
             String customerId,
             String accountId,
+            BigDecimal amount,
+            LocalDate date);
+
+    /**
+     * Registra un pago con tarjeta de débito desde la cuenta principal de la tarjeta.
+     *
+     * @param customerId id del cliente dueño de la tarjeta
+     * @param debitCardId id de la tarjeta en account-service
+     * @param amount monto a pagar
+     * @param date fecha del pago
+     * @return el movimiento guardado ({@code DEBIT_CARD_PAYMENT}); error {@link
+     *     NotFoundException} si la tarjeta no existe o no pertenece al cliente; {@link
+     *     BusinessRuleException} si el monto no es válido, el saldo no cubre el monto y su
+     *     comisión o se incumple una regla de la cuenta
+     */
+    Single<Movement> payWithDebitCard(
+            String customerId,
+            String debitCardId,
             BigDecimal amount,
             LocalDate date);
 }

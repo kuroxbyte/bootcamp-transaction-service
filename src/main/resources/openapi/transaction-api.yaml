@@ -18,6 +18,8 @@ tags:
     description: Consumos, pagos, crédito disponible y movimientos de tarjetas de crédito
   - name: Reports
     description: Reportes del banco
+  - name: DebitCardTransactions
+    description: Pagos con tarjetas de débito
 paths:
   /api/v1/accounts/{accountId}/deposits:
     post:
@@ -408,7 +410,6 @@ paths:
       description: |
         Consumos y pagos de la tarjeta, del más reciente al más antiguo (máximo 10). Los movimientos
         tienen fecha sin hora: entre los del mismo día no se garantiza el orden.
-        Pendiente: incluir la tarjeta de débito cuando exista el producto.
       parameters:
         - $ref: '#/components/parameters/XCustomerId'
         - $ref: '#/components/parameters/CreditCardId'
@@ -421,8 +422,61 @@ paths:
           $ref: '#/components/responses/ProductNotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/reports/debit-cards/{debitCardId}/last-movements:
+    get:
+      tags: [Reports]
+      operationId: getDebitCardLastMovements
+      summary: Últimos 10 pagos con una tarjeta de débito del cliente
+      description: |
+        Pagos hechos con la tarjeta, de cualquiera de sus cuentas, del más reciente al más antiguo
+        (máximo 10). Los movimientos tienen fecha sin hora: entre los del mismo día no se garantiza
+        el orden.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/DebitCardId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProductMovements'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+  /api/v1/debit-cards/{debitCardId}/payments:
+    post:
+      tags: [DebitCardTransactions]
+      operationId: payWithDebitCard
+      summary: Pagar con una tarjeta de débito del cliente
+      description: |
+        El pago sale solo de la cuenta principal de la tarjeta y se trata como un retiro: aplican el
+        límite mensual del ahorro, el día del plazo fijo y las transacciones sin comisión; el saldo
+        debe cubrir el monto más la comisión. transaction-service conoce las tarjetas por los
+        eventos de account-service; una tarjeta recién emitida puede tardar unos instantes en
+        estar disponible.
+      parameters:
+        - $ref: '#/components/parameters/XCustomerId'
+        - $ref: '#/components/parameters/DebitCardId'
+      requestBody:
+        $ref: '#/components/requestBodies/Amount'
+      responses:
+        '201':
+          $ref: '#/components/responses/MovementCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/ProductNotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   parameters:
+    DebitCardId:
+      name: debitCardId
+      in: path
+      required: true
+      description: Id de la tarjeta de débito
+      schema:
+        type: string
     XCustomerId:
       name: X-Customer-Id
       in: header
@@ -518,7 +572,7 @@ components:
     MovementType:
       type: string
       description: Tipo de movimiento de una cuenta bancaria
-      enum: [DEPOSIT, WITHDRAWAL]
+      enum: [DEPOSIT, WITHDRAWAL, DEBIT_CARD_PAYMENT]
     MovementResponse:
       type: object
       required: [accountId, type, amount, date, commission]
@@ -537,6 +591,9 @@ components:
           type: number
           description: Comisión cobrada (0 si está dentro de las transacciones sin comisión del mes); se descuenta del saldo
           example: 0
+        debitCardId:
+          type: string
+          description: Solo DEBIT_CARD_PAYMENT; tarjeta de débito con la que se pagó
     PaymentTarget:
       type: string
       description: Producto de crédito al que se aplica el pago
@@ -617,7 +674,7 @@ components:
     ProductMovementType:
       type: string
       description: Tipo de movimiento de un producto bancario
-      enum: [DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT, CHARGE, PAYMENT]
+      enum: [DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT, DEBIT_CARD_PAYMENT, CHARGE, PAYMENT]
     ProductType:
       type: string
       description: Tipo de producto del banco

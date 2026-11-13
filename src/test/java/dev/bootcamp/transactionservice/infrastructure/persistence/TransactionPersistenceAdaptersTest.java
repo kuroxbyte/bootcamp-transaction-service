@@ -228,4 +228,17 @@ class TransactionPersistenceAdaptersTest {
         chargeAdapter.findByDateBetween(from, to).test().awaitDone(5, TimeUnit.SECONDS)
                 .assertValueCount(1);
     }
+
+    @Test
+    void findsPaymentsOfDebitCardKeepingItsId() {
+        LocalDate date = LocalDate.of(2026, 11, 15);
+        movementAdapter.save(Movement.debitCardPayment("a1", "d1", BigDecimal.TEN, date))
+                .blockingGet();
+        movementAdapter.save(new Movement("a1", MovementType.WITHDRAWAL, BigDecimal.ONE, date))
+                .blockingGet();
+
+        movementAdapter.findByDebitCardId("d1").test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValue(movement -> "d1".equals(movement.debitCardId())
+                        && movement.type() == MovementType.DEBIT_CARD_PAYMENT);
+    }
 }

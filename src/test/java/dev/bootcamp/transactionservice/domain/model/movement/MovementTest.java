@@ -61,4 +61,14 @@ class MovementTest {
         assertThat(new Movement("1", MovementType.TRANSFER_OUT, BigDecimal.TEN, DATE)
                 .withCommission(BigDecimal.ONE).balanceEffect()).isEqualByComparingTo("-11");
     }
+
+    @Test
+    void debitCardPaymentKeepsItsCardAndActsLikeWithdrawal() {
+        Movement payment = Movement.debitCardPayment("a1", "d1", BigDecimal.TEN, DATE)
+                .withCommission(BigDecimal.ONE);
+
+        assertThat(payment.type()).isEqualTo(MovementType.DEBIT_CARD_PAYMENT);
+        assertThat(payment.debitCardId()).isEqualTo("d1");
+        assertThat(payment.balanceEffect()).isEqualByComparingTo("-11");
+    }
 }

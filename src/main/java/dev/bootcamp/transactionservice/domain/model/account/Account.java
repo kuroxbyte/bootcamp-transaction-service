@@ -140,6 +140,8 @@ public record Account(
                 switch (movement.type()) {
                     case WITHDRAWAL -> "Saldo insuficiente para el retiro y su comisión";
                     case TRANSFER_OUT -> "Saldo insuficiente para la transferencia y su comisión";
+                    case DEBIT_CARD_PAYMENT ->
+                            "Saldo insuficiente para el pago con tarjeta y su comisión";
                     case DEPOSIT, TRANSFER_IN -> "Saldo insuficiente para la comisión del depósito";
                 });
     }

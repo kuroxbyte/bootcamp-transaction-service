@@ -50,6 +50,12 @@ public class MovementPersistenceAdapter implements MovementRepository {
     }
 
     @Override
+    public Flowable<Movement> findByDebitCardId(String debitCardId) {
+        return Flowable.fromPublisher(mongoRepository.findByDebitCardId(debitCardId))
+                .map(TransactionPersistenceMapper::toDomain);
+    }
+
+    @Override
     public Single<Movement> save(Movement movement) {
         return Single.fromPublisher(
                         mongoRepository.save(TransactionPersistenceMapper.toDocument(movement)))

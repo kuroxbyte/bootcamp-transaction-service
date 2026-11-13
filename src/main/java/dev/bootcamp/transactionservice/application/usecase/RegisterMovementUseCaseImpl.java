@@ -1,6 +1,7 @@
 package dev.bootcamp.transactionservice.application.usecase;
 
 import dev.bootcamp.transactionservice.application.port.AccountClient;
+import dev.bootcamp.transactionservice.application.port.DebitCardRepository;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.account.Account;
@@ -18,15 +19,36 @@ import java.time.YearMonth;
 public class RegisterMovementUseCaseImpl implements RegisterMovementUseCase {
     private final MovementRepository movementRepository;
     private final AccountClient accountClient;
+    private final DebitCardRepository debitCardRepository;
 
     /**
      * Crea el caso de uso con los adaptadores de sus puertos.
      */
     public RegisterMovementUseCaseImpl(
             MovementRepository movementRepository,
-            AccountClient accountClient) {
+            AccountClient accountClient,
+            DebitCardRepository debitCardRepository) {
         this.movementRepository = movementRepository;
         this.accountClient = accountClient;
+        this.debitCardRepository = debitCardRepository;
+    }
+
+    @Override
+    public Single<Movement> payWithDebitCard(
+            String customerId,
+            String debitCardId,
+            BigDecimal amount,
+            LocalDate date) {
+        return debitCardRepository.findById(debitCardId)
+                .filter(card -> card.belongsTo(customerId))
+                .switchIfEmpty(Single.error(() -> new NotFoundException(
+                        "La tarjeta de débito no existe o no pertenece al cliente")))
+                .map(card -> Movement.debitCardPayment(
+                        card.primaryAccountId(),
+                        debitCardId,
+                        amount,
+                        date))
+                .flatMap(movement -> register(customerId, movement));
     }
 
     @Override

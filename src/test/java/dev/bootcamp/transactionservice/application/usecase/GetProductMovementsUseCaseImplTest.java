@@ -4,6 +4,7 @@ import dev.bootcamp.transactionservice.application.port.AccountClient;
 import dev.bootcamp.transactionservice.application.port.ChargeRepository;
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.CreditClient;
+import dev.bootcamp.transactionservice.application.port.DebitCardRepository;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
@@ -12,6 +13,7 @@ import dev.bootcamp.transactionservice.domain.model.account.CheckingMovementPoli
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.credit.Credit;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
+import dev.bootcamp.transactionservice.domain.model.debitcard.DebitCard;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.history.ProductMovementType;
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
@@ -51,6 +53,7 @@ class GetProductMovementsUseCaseImplTest {
     @Mock private MovementRepository movementRepository;
     @Mock private PaymentRepository paymentRepository;
     @Mock private ChargeRepository chargeRepository;
+    @Mock private DebitCardRepository debitCardRepository;
 
     @InjectMocks private GetProductMovementsUseCaseImpl useCase;
 
@@ -236,6 +239,39 @@ class GetProductMovementsUseCaseImplTest {
                 .thenReturn(Maybe.just(new CreditCard("3", "other", new BigDecimal("1000"))));
 
         useCase.getCreditCardLastMovements(CUSTOMER_ID, "3").test()
+                .assertError(NotFoundException.class);
+    }
+
+    @Test
+    void returnsLastTenDebitCardPaymentsNewestFirst() {
+        when(debitCardRepository.findById("d1"))
+                .thenReturn(Maybe.just(new DebitCard("d1", CUSTOMER_ID, "a1")));
+        List<Movement> payments = new ArrayList<>();
+        for (int day = 1; day <= 12; day++) {
+            payments.add(Movement.debitCardPayment(
+                    "a1",
+                    "d1",
+                    BigDecimal.valueOf(day),
+                    LocalDate.of(2026, 11, day)));
+        }
+        when(movementRepository.findByDebitCardId("d1"))
+                .thenReturn(Flowable.fromIterable(payments));
+
+        List<ProductMovement> last =
+                useCase.getDebitCardLastMovements(CUSTOMER_ID, "d1").toList().blockingGet();
+
+        assertThat(last).hasSize(10);
+        assertThat(last.get(0).type()).isEqualTo(ProductMovementType.DEBIT_CARD_PAYMENT);
+        assertThat(last.get(0).date()).isEqualTo(LocalDate.of(2026, 11, 12));
+        assertThat(last.get(9).date()).isEqualTo(LocalDate.of(2026, 11, 3));
+    }
+
+    @Test
+    void rejectsLastMovementsOfDebitCardOfAnotherCustomer() {
+        when(debitCardRepository.findById("d1"))
+                .thenReturn(Maybe.just(new DebitCard("d1", "otro", "a1")));
+
+        useCase.getDebitCardLastMovements(CUSTOMER_ID, "d1").test()
                 .assertError(NotFoundException.class);
     }
 }

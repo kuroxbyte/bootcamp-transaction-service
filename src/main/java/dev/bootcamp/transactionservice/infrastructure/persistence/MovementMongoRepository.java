@@ -17,6 +17,11 @@ public interface MovementMongoRepository extends ReactiveMongoRepository<Movemen
     Flux<MovementDocument> findByAccountId(String accountId);
 
     /**
+     * Pagos hechos con la tarjeta de débito.
+     */
+    Flux<MovementDocument> findByDebitCardId(String debitCardId);
+
+    /**
      * Cantidad de movimientos de la cuenta con fecha dentro del rango; los límites incluidos o
      * excluidos los define el {@link Range} recibido.
      */

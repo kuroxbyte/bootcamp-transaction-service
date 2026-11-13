@@ -4,6 +4,7 @@ import dev.bootcamp.transactionservice.application.port.AccountClient;
 import dev.bootcamp.transactionservice.application.port.ChargeRepository;
 import dev.bootcamp.transactionservice.application.port.CreditCardClient;
 import dev.bootcamp.transactionservice.application.port.CreditClient;
+import dev.bootcamp.transactionservice.application.port.DebitCardRepository;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
@@ -34,6 +35,7 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
     private final MovementRepository movementRepository;
     private final PaymentRepository paymentRepository;
     private final ChargeRepository chargeRepository;
+    private final DebitCardRepository debitCardRepository;
 
     /**
      * Crea el caso de uso con los adaptadores de sus puertos.
@@ -44,13 +46,15 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
             CreditCardClient creditCardClient,
             MovementRepository movementRepository,
             PaymentRepository paymentRepository,
-            ChargeRepository chargeRepository) {
+            ChargeRepository chargeRepository,
+            DebitCardRepository debitCardRepository) {
         this.accountClient = accountClient;
         this.creditClient = creditClient;
         this.creditCardClient = creditCardClient;
         this.movementRepository = movementRepository;
         this.paymentRepository = paymentRepository;
         this.chargeRepository = chargeRepository;
+        this.debitCardRepository = debitCardRepository;
     }
 
     @Override
@@ -123,5 +127,19 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
                     Collections.reverse(newestFirst);
                     return Flowable.fromIterable(newestFirst).take(LAST_MOVEMENTS);
                 });
+    }
+
+    @Override
+    public Flowable<ProductMovement> getDebitCardLastMovements(
+            String customerId,
+            String debitCardId) {
+        return debitCardRepository.findById(debitCardId)
+                .filter(card -> card.belongsTo(customerId))
+                .switchIfEmpty(Single.error(() -> new NotFoundException(
+                        "La tarjeta de débito no existe o no pertenece al cliente")))
+                .flatMapPublisher(card -> movementRepository.findByDebitCardId(debitCardId)
+                        .map(ProductMovement::from)
+                        .sorted(BY_DATE.reversed())
+                        .take(LAST_MOVEMENTS));
     }
 }

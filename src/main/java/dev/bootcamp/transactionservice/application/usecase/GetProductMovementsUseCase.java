@@ -65,12 +65,23 @@ public interface GetProductMovementsUseCase {
      * <p>Los movimientos tienen fecha sin hora: entre movimientos del mismo día no se garantiza el
      * orden.
      *
-     * <p>TODO: incluir la tarjeta de débito en este reporte cuando exista el producto.
-     *
      * @param customerId   id del cliente que consulta
      * @param creditCardId id de la tarjeta en credit-service
      * @return hasta {@value #LAST_MOVEMENTS} movimientos; error {@link NotFoundException} si la
      *     tarjeta no existe o no pertenece al cliente
      */
     Flowable<ProductMovement> getCreditCardLastMovements(String customerId, String creditCardId);
+
+    /**
+     * Reporte con los últimos {@value #LAST_MOVEMENTS} pagos hechos con una tarjeta de débito del
+     * cliente, de cualquiera de sus cuentas, del más reciente al más antiguo.
+     *
+     * <p>Los movimientos tienen fecha sin hora: entre pagos del mismo día no se garantiza el orden.
+     *
+     * @param customerId  id del cliente que consulta
+     * @param debitCardId id de la tarjeta en account-service
+     * @return hasta {@value #LAST_MOVEMENTS} pagos; error {@link NotFoundException} si la tarjeta
+     *     no existe o no pertenece al cliente
+     */
+    Flowable<ProductMovement> getDebitCardLastMovements(String customerId, String debitCardId);
 }

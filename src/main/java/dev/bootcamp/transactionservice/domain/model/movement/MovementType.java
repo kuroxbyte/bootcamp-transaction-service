@@ -1,7 +1,8 @@
 package dev.bootcamp.transactionservice.domain.model.movement;
 
 /**
- * Tipo de movimiento de una cuenta bancaria: depósito, retiro o transferencia.
+ * Tipo de movimiento de una cuenta bancaria: depósito, retiro, transferencia o pago con tarjeta de
+ * débito.
  */
 public enum MovementType {
     /**
@@ -19,7 +20,11 @@ public enum MovementType {
     /**
      * Transferencia enviada a otra cuenta del banco; se trata como un retiro.
      */
-    TRANSFER_OUT;
+    TRANSFER_OUT,
+    /**
+     * Pago con tarjeta de débito desde la cuenta principal de la tarjeta; se trata como un retiro.
+     */
+    DEBIT_CARD_PAYMENT;
 
     /**
      * Indica si el movimiento suma al saldo (depósito o transferencia recibida).
