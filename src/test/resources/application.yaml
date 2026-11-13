@@ -23,6 +23,8 @@ messaging:
   topics:
     transaction-events: transaction-events
     debit-card-events: debit-card-events
+    yanki-operations: yanki-operations
+    yanki-operation-results: yanki-operation-results
 
 cache:
   debit-cards:

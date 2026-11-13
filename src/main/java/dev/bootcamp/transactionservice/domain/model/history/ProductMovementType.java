@@ -25,6 +25,18 @@ public enum ProductMovementType {
      */
     DEBIT_CARD_PAYMENT,
     /**
+     * Pago Yanki enviado desde una cuenta bancaria.
+     */
+    YANKI_PAYMENT_SENT,
+    /**
+     * Pago Yanki recibido en una cuenta bancaria.
+     */
+    YANKI_PAYMENT_RECEIVED,
+    /**
+     * Devolución de un pago Yanki que no llegó a su destino.
+     */
+    YANKI_PAYMENT_REVERSAL,
+    /**
      * Consumo cargado a una tarjeta de crédito.
      */
     CHARGE,

@@ -9,6 +9,8 @@ import dev.bootcamp.transactionservice.application.port.DebitCardRepository;
 import dev.bootcamp.transactionservice.application.port.MovementRepository;
 import dev.bootcamp.transactionservice.application.port.PaymentRepository;
 import dev.bootcamp.transactionservice.application.port.TransactionEventPublisher;
+import dev.bootcamp.transactionservice.application.port.YankiOperationRepository;
+import dev.bootcamp.transactionservice.application.port.YankiOperationResultPublisher;
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCase;
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.GenerateProductReportUseCase;
@@ -23,6 +25,8 @@ import dev.bootcamp.transactionservice.application.usecase.PayCreditCardUseCase;
 import dev.bootcamp.transactionservice.application.usecase.PayCreditCardUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCase;
 import dev.bootcamp.transactionservice.application.usecase.PayCreditUseCaseImpl;
+import dev.bootcamp.transactionservice.application.usecase.ProcessYankiOperationUseCase;
+import dev.bootcamp.transactionservice.application.usecase.ProcessYankiOperationUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCase;
 import dev.bootcamp.transactionservice.application.usecase.RegisterMovementUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.SaveDebitCardUseCase;
@@ -183,5 +187,21 @@ public class UseCaseConfig {
     @Bean
     public SaveDebitCardUseCase saveDebitCardUseCase(DebitCardRepository debitCardRepository) {
         return new SaveDebitCardUseCaseImpl(debitCardRepository);
+    }
+
+    /**
+     * Registra el caso de uso {@link ProcessYankiOperationUseCase}.
+     */
+    @Bean
+    public ProcessYankiOperationUseCase processYankiOperationUseCase(
+            MovementRepository movementRepository,
+            AccountClient accountClient,
+            YankiOperationRepository yankiOperationRepository,
+            YankiOperationResultPublisher yankiOperationResultPublisher) {
+        return new ProcessYankiOperationUseCaseImpl(
+                movementRepository,
+                accountClient,
+                yankiOperationRepository,
+                yankiOperationResultPublisher);
     }
 }

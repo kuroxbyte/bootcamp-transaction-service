@@ -22,10 +22,13 @@ public interface MovementMongoRepository extends ReactiveMongoRepository<Movemen
     Flux<MovementDocument> findByDebitCardId(String debitCardId);
 
     /**
-     * Cantidad de movimientos de la cuenta con fecha dentro del rango; los límites incluidos o
-     * excluidos los define el {@link Range} recibido.
+     * Cantidad de movimientos de la cuenta con fecha dentro del rango, sin contar los del tipo
+     * indicado; los límites incluidos o excluidos los define el {@link Range} recibido.
      */
-    Mono<Long> countByAccountIdAndDateBetween(String accountId, Range<LocalDate> dateRange);
+    Mono<Long> countByAccountIdAndDateBetweenAndTypeNot(
+            String accountId,
+            Range<LocalDate> dateRange,
+            String excludedType);
 
     /**
      * Documentos de todo el banco con fecha dentro del rango; los límites incluidos o excluidos

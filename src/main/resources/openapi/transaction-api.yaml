@@ -674,7 +674,17 @@ components:
     ProductMovementType:
       type: string
       description: Tipo de movimiento de un producto bancario
-      enum: [DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT, DEBIT_CARD_PAYMENT, CHARGE, PAYMENT]
+      enum:
+        - DEPOSIT
+        - WITHDRAWAL
+        - TRANSFER_IN
+        - TRANSFER_OUT
+        - DEBIT_CARD_PAYMENT
+        - YANKI_PAYMENT_SENT
+        - YANKI_PAYMENT_RECEIVED
+        - YANKI_PAYMENT_REVERSAL
+        - CHARGE
+        - PAYMENT
     ProductType:
       type: string
       description: Tipo de producto del banco

@@ -15,7 +15,8 @@ import java.util.List;
 public interface MovementRepository {
 
     /**
-     * Cantidad de movimientos (depósitos y retiros) de la cuenta en el mes indicado.
+     * Cantidad de movimientos de la cuenta en el mes indicado, sin contar las devoluciones de pagos
+     * Yanki (no son transacciones del cliente).
      */
     Single<Long> countByAccountIdAndMonth(String accountId, YearMonth month);
 
