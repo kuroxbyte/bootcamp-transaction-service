@@ -7,6 +7,7 @@ import dev.bootcamp.transactionservice.domain.exception.NotFoundException;
 import dev.bootcamp.transactionservice.domain.model.charge.Charge;
 import dev.bootcamp.transactionservice.domain.model.creditcard.CreditCard;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 /**
  * Implementación de {@link ChargeCreditCardUseCase}.
  */
+@RequiredArgsConstructor
 public class ChargeCreditCardUseCaseImpl implements ChargeCreditCardUseCase {
     private static final String CREDIT_CARD_NOT_FOUND = "La tarjeta de crédito no existe";
     private static final String CREDIT_CARD_NOT_OWNED =
@@ -22,18 +24,6 @@ public class ChargeCreditCardUseCaseImpl implements ChargeCreditCardUseCase {
     private final ChargeRepository chargeRepository;
     private final CreditCardClient creditCardClient;
     private final TransactionEventPublisher transactionEventPublisher;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public ChargeCreditCardUseCaseImpl(
-            ChargeRepository chargeRepository,
-            CreditCardClient creditCardClient,
-            TransactionEventPublisher transactionEventPublisher) {
-        this.chargeRepository = chargeRepository;
-        this.creditCardClient = creditCardClient;
-        this.transactionEventPublisher = transactionEventPublisher;
-    }
 
     @Override
     public Single<Charge> charge(

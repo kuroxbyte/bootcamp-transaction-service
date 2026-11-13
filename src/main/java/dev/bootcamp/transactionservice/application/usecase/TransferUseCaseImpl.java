@@ -8,6 +8,7 @@ import dev.bootcamp.transactionservice.domain.model.movement.Movement;
 import dev.bootcamp.transactionservice.domain.model.transfer.Transfer;
 import dev.bootcamp.transactionservice.domain.model.transfer.TransferType;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,17 +18,10 @@ import java.util.List;
 /**
  * Implementación de {@link TransferUseCase}.
  */
+@RequiredArgsConstructor
 public class TransferUseCaseImpl implements TransferUseCase {
     private final AccountClient accountClient;
     private final MovementRepository movementRepository;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public TransferUseCaseImpl(AccountClient accountClient, MovementRepository movementRepository) {
-        this.accountClient = accountClient;
-        this.movementRepository = movementRepository;
-    }
 
     @Override
     public Single<Transfer> transferToOwnAccount(

@@ -12,6 +12,7 @@ import dev.bootcamp.transactionservice.domain.model.history.ProductMovement;
 import dev.bootcamp.transactionservice.domain.model.payment.PaymentTarget;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +22,7 @@ import java.util.List;
 /**
  * Implementación de {@link GetProductMovementsUseCase}.
  */
+@RequiredArgsConstructor
 public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCase {
     private static final String CREDIT_CARD_NOT_FOUND = "La tarjeta de crédito no existe";
     private static final String CREDIT_CARD_NOT_OWNED =
@@ -36,26 +38,6 @@ public class GetProductMovementsUseCaseImpl implements GetProductMovementsUseCas
     private final PaymentRepository paymentRepository;
     private final ChargeRepository chargeRepository;
     private final DebitCardRepository debitCardRepository;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public GetProductMovementsUseCaseImpl(
-            AccountClient accountClient,
-            CreditClient creditClient,
-            CreditCardClient creditCardClient,
-            MovementRepository movementRepository,
-            PaymentRepository paymentRepository,
-            ChargeRepository chargeRepository,
-            DebitCardRepository debitCardRepository) {
-        this.accountClient = accountClient;
-        this.creditClient = creditClient;
-        this.creditCardClient = creditCardClient;
-        this.movementRepository = movementRepository;
-        this.paymentRepository = paymentRepository;
-        this.chargeRepository = chargeRepository;
-        this.debitCardRepository = debitCardRepository;
-    }
 
     @Override
     public Flowable<ProductMovement> getAccountMovements(String customerId, String accountId) {

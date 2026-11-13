@@ -11,6 +11,7 @@ import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import dev.bootcamp.transactionservice.domain.model.yanki.YankiOperation;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,25 +20,12 @@ import java.time.YearMonth;
 /**
  * Implementación de {@link ProcessYankiOperationUseCase}.
  */
+@RequiredArgsConstructor
 public class ProcessYankiOperationUseCaseImpl implements ProcessYankiOperationUseCase {
     private final MovementRepository movementRepository;
     private final AccountClient accountClient;
     private final YankiOperationRepository operationRepository;
     private final YankiOperationResultPublisher resultPublisher;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public ProcessYankiOperationUseCaseImpl(
-            MovementRepository movementRepository,
-            AccountClient accountClient,
-            YankiOperationRepository operationRepository,
-            YankiOperationResultPublisher resultPublisher) {
-        this.movementRepository = movementRepository;
-        this.accountClient = accountClient;
-        this.operationRepository = operationRepository;
-        this.resultPublisher = resultPublisher;
-    }
 
     @Override
     public Completable execute(
