@@ -1,6 +1,7 @@
 package dev.bootcamp.transactionservice.application.port;
 
 import dev.bootcamp.transactionservice.domain.model.movement.Movement;
+import dev.bootcamp.transactionservice.domain.model.movement.MovementType;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
@@ -15,8 +16,9 @@ import java.util.List;
 public interface MovementRepository {
 
     /**
-     * Cantidad de movimientos de la cuenta en el mes indicado, sin contar las devoluciones de pagos
-     * Yanki (no son transacciones del cliente).
+     * Cantidad de transacciones del cliente en la cuenta durante el mes indicado: no cuenta las
+     * devoluciones de pagos Yanki ni las comisiones mensuales (ver
+     * {@link MovementType#isCustomerTransaction}).
      */
     Single<Long> countByAccountIdAndMonth(String accountId, YearMonth month);
 
@@ -35,6 +37,11 @@ public interface MovementRepository {
      * Pagos hechos con la tarjeta de débito, de cualquier cuenta.
      */
     Flowable<Movement> findByDebitCardId(String debitCardId);
+
+    /**
+     * Indica si ya se cobraron comisiones mensuales a la cuenta con la fecha indicada.
+     */
+    Single<Boolean> hasMonthlyCharges(String accountId, LocalDate chargeDate);
 
     /**
      * Guarda el depósito o retiro.

@@ -37,6 +37,14 @@ public enum ProductMovementType {
      */
     YANKI_PAYMENT_REVERSAL,
     /**
+     * Comisión de mantenimiento mensual de una cuenta corriente.
+     */
+    MAINTENANCE_FEE,
+    /**
+     * Comisión mensual de una cuenta de ahorro VIP que no alcanzó su promedio diario mínimo.
+     */
+    MINIMUM_AVERAGE_FEE,
+    /**
      * Consumo cargado a una tarjeta de crédito.
      */
     CHARGE,

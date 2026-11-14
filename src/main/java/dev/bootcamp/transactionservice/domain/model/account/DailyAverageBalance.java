@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 
 /**
- * Saldo promedio diario de una cuenta en un mes. Es informativo: no bloquea ni cobra nada.
+ * Saldo promedio diario de una cuenta en un mes. Consultarlo no bloquea ni cobra nada; al terminar
+ * el mes, la cuenta de ahorro VIP que no alcanzó el mínimo paga una comisión (ver
+ * {@link Account#monthlyCharges}).
  *
  * @param month               mes calculado
  * @param days                días del mes en que la cuenta estuvo abierta hasta hoy
