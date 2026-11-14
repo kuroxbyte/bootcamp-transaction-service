@@ -683,6 +683,8 @@ components:
         - YANKI_PAYMENT_SENT
         - YANKI_PAYMENT_RECEIVED
         - YANKI_PAYMENT_REVERSAL
+        - MAINTENANCE_FEE
+        - MINIMUM_AVERAGE_FEE
         - CHARGE
         - PAYMENT
     ProductType:

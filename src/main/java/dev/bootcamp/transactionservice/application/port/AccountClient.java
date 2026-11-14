@@ -1,6 +1,7 @@
 package dev.bootcamp.transactionservice.application.port;
 
 import dev.bootcamp.transactionservice.domain.model.account.Account;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 
 /**
@@ -14,4 +15,9 @@ public interface AccountClient {
      * @return la cuenta, o vacío si no existe
      */
     Maybe<Account> findById(String accountId);
+
+    /**
+     * Lista todas las cuentas del banco.
+     */
+    Flowable<Account> findAll();
 }

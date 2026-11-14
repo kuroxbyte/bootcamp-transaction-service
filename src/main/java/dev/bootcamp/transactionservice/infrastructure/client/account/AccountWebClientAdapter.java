@@ -9,6 +9,7 @@ import dev.bootcamp.transactionservice.domain.model.account.SavingsMovementPolic
 import dev.bootcamp.transactionservice.domain.model.account.TransactionFee;
 import dev.bootcamp.transactionservice.infrastructure.client.RemoteLookup;
 import dev.bootcamp.transactionservice.infrastructure.client.account.dto.AccountResponseDto;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -49,6 +50,18 @@ public class AccountWebClientAdapter implements AccountClient {
                 accountId);
     }
 
+    @Override
+    public Flowable<Account> findAll() {
+        return remoteLookup.findAll(
+                webClient
+                        .get()
+                        .uri("/api/v1/internal/accounts")
+                        .retrieve()
+                        .bodyToFlux(AccountResponseDto.class)
+                        .map(AccountWebClientAdapter::toDomain),
+                SERVICE_NAME);
+    }
+
     /**
      * Convierte la cuenta en la vista local, con la regla de movimientos de su tipo.
      */
@@ -69,6 +82,7 @@ public class AccountWebClientAdapter implements AccountClient {
                 response.getMinimumDailyAverage(),
                 new TransactionFee(
                         response.getFreeMonthlyTransactions(),
-                        response.getTransactionFee()));
+                        response.getTransactionFee()),
+                response.getMaintenanceFee());
     }
 }

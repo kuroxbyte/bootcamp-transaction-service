@@ -13,6 +13,8 @@ import dev.bootcamp.transactionservice.application.port.YankiOperationRepository
 import dev.bootcamp.transactionservice.application.port.YankiOperationResultPublisher;
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCase;
 import dev.bootcamp.transactionservice.application.usecase.ChargeCreditCardUseCaseImpl;
+import dev.bootcamp.transactionservice.application.usecase.ChargeMonthlyFeesUseCase;
+import dev.bootcamp.transactionservice.application.usecase.ChargeMonthlyFeesUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.GenerateProductReportUseCase;
 import dev.bootcamp.transactionservice.application.usecase.GenerateProductReportUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.GetAvailableBalanceUseCase;
@@ -33,9 +35,11 @@ import dev.bootcamp.transactionservice.application.usecase.SaveDebitCardUseCase;
 import dev.bootcamp.transactionservice.application.usecase.SaveDebitCardUseCaseImpl;
 import dev.bootcamp.transactionservice.application.usecase.TransferUseCase;
 import dev.bootcamp.transactionservice.application.usecase.TransferUseCaseImpl;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 
 /**
@@ -153,6 +157,21 @@ public class UseCaseConfig {
             MovementRepository movementRepository,
             Clock clock) {
         return new GetDailyAverageBalanceUseCaseImpl(accountClient, movementRepository, clock);
+    }
+
+    /**
+     * Registra el caso de uso {@link ChargeMonthlyFeesUseCase}; la comisión por no alcanzar el
+     * promedio diario mínimo viene de {@code fees.monthly.minimum-average-fee}.
+     */
+    @Bean
+    public ChargeMonthlyFeesUseCase chargeMonthlyFeesUseCase(
+            AccountClient accountClient,
+            MovementRepository movementRepository,
+            @Value("${fees.monthly.minimum-average-fee}") BigDecimal minimumAverageFee) {
+        return new ChargeMonthlyFeesUseCaseImpl(
+                accountClient,
+                movementRepository,
+                minimumAverageFee);
     }
 
     /**

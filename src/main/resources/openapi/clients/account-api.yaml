@@ -128,7 +128,7 @@ paths:
       tags: [Accounts]
       operationId: listAllAccounts
       summary: Listar todas las cuentas del banco
-      description: Uso interno; transaction-service lo usa para el reporte general por producto. El API Gateway no lo expone.
+      description: Uso interno; transaction-service lo usa para el reporte general por producto y para cobrar las comisiones mensuales. El API Gateway no lo expone.
       responses:
         '200':
           description: Todas las cuentas (vacío si no hay)

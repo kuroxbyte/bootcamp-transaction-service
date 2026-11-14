@@ -6,6 +6,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 /**
  * Repositorio de Spring Data para {@link MovementDocument}.
@@ -22,13 +23,21 @@ public interface MovementMongoRepository extends ReactiveMongoRepository<Movemen
     Flux<MovementDocument> findByDebitCardId(String debitCardId);
 
     /**
-     * Cantidad de movimientos de la cuenta con fecha dentro del rango, sin contar los del tipo
-     * indicado; los límites incluidos o excluidos los define el {@link Range} recibido.
+     * Cantidad de movimientos de la cuenta con fecha dentro del rango, sin contar los de los tipos
+     * indicados; los límites incluidos o excluidos los define el {@link Range} recibido.
      */
-    Mono<Long> countByAccountIdAndDateBetweenAndTypeNot(
+    Mono<Long> countByAccountIdAndDateBetweenAndTypeNotIn(
             String accountId,
             Range<LocalDate> dateRange,
-            String excludedType);
+            Collection<String> excludedTypes);
+
+    /**
+     * Indica si la cuenta tiene algún movimiento de los tipos indicados en la fecha indicada.
+     */
+    Mono<Boolean> existsByAccountIdAndDateAndTypeIn(
+            String accountId,
+            LocalDate date,
+            Collection<String> types);
 
     /**
      * Documentos de todo el banco con fecha dentro del rango; los límites incluidos o excluidos

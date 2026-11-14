@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -92,7 +93,8 @@ class AccountWebClientAdapterTest {
                         BigDecimal.ZERO,
                         null,
                         null,
-                        FEE));
+                        FEE,
+                        new BigDecimal("15.0")));
     }
 
     @Test
@@ -130,6 +132,31 @@ class AccountWebClientAdapterTest {
                 .blockingGet();
 
         assertThat(stub.lastPath()).isEqualTo("/api/v1/accounts/10");
+    }
+
+    @Test
+    void listsAllAccountsFromTheInternalEndpoint() {
+        StubWebClient stub = StubWebClient.respondingWith(
+                HttpStatus.OK,
+                "[{\"id\":\"10\",\"customerId\":\"1\",\"type\":\"CHECKING\","
+                        + "\"maintenanceFee\":8,\"openingAmount\":0,"
+                        + "\"freeMonthlyTransactions\":3,\"transactionFee\":2},"
+                        + "{\"id\":\"11\",\"customerId\":\"1\",\"type\":\"SAVINGS\","
+                        + "\"maxMonthlyMovements\":5,\"openingAmount\":0,"
+                        + "\"freeMonthlyTransactions\":3,\"transactionFee\":2}]");
+
+        List<Account> accounts = new AccountWebClientAdapter(
+                stub.builder(),
+                "http://account-service",
+                TestCircuitBreakers.remoteLookup(Duration.ofSeconds(1)))
+                .findAll()
+                .toList()
+                .blockingGet();
+
+        assertThat(stub.lastPath()).isEqualTo("/api/v1/internal/accounts");
+        assertThat(accounts).extracting(Account::id).containsExactly("10", "11");
+        assertThat(accounts.get(0).maintenanceFee()).isEqualByComparingTo("8");
+        assertThat(accounts.get(1).maintenanceFee()).isEqualByComparingTo("0");
     }
 
     @Test

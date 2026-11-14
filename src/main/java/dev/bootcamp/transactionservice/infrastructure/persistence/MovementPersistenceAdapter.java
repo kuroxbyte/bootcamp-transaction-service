@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Implementa el puerto {@link MovementRepository} con MongoDB reactivo.
@@ -23,17 +25,37 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MovementPersistenceAdapter implements MovementRepository {
 
+    private static final List<String> NOT_CUSTOMER_TRANSACTIONS = Arrays.stream(
+                    MovementType.values())
+            .filter(type -> !type.isCustomerTransaction())
+            .map(MovementType::name)
+            .toList();
+
+    private static final List<String> MONTHLY_FEES = Stream.of(
+                    MovementType.MAINTENANCE_FEE,
+                    MovementType.MINIMUM_AVERAGE_FEE)
+            .map(MovementType::name)
+            .toList();
+
     private final MovementMongoRepository mongoRepository;
 
     @Override
     public Single<Long> countByAccountIdAndMonth(String accountId, YearMonth month) {
         // [primer día del mes, primer día del mes siguiente)
         Range<LocalDate> monthRange = Range.rightOpen(month.atDay(1), month.plusMonths(1).atDay(1));
-        // Las devoluciones de pagos Yanki no son transacciones del cliente: no cuentan.
-        return Single.fromPublisher(mongoRepository.countByAccountIdAndDateBetweenAndTypeNot(
+        // Las devoluciones de pagos Yanki y las comisiones mensuales no cuentan.
+        return Single.fromPublisher(mongoRepository.countByAccountIdAndDateBetweenAndTypeNotIn(
                 accountId,
                 monthRange,
-                MovementType.YANKI_PAYMENT_REVERSAL.name()));
+                NOT_CUSTOMER_TRANSACTIONS));
+    }
+
+    @Override
+    public Single<Boolean> hasMonthlyCharges(String accountId, LocalDate chargeDate) {
+        return Single.fromPublisher(mongoRepository.existsByAccountIdAndDateAndTypeIn(
+                accountId,
+                chargeDate,
+                MONTHLY_FEES));
     }
 
     /**

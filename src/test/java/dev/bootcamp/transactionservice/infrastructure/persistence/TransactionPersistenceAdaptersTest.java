@@ -81,8 +81,10 @@ class TransactionPersistenceAdaptersTest {
         saveMovement("a1", MovementType.WITHDRAWAL, "5", LocalDate.of(2026, 11, 30));
         saveMovement("a1", MovementType.DEPOSIT, "10", LocalDate.of(2026, 12, 1));
         saveMovement("a2", MovementType.DEPOSIT, "10", LocalDate.of(2026, 11, 15));
-        // Las devoluciones de pagos Yanki no cuentan como transacciones del mes.
+        // Las devoluciones de pagos Yanki y las comisiones mensuales no cuentan como transacciones.
         saveMovement("a1", MovementType.YANKI_PAYMENT_REVERSAL, "10", LocalDate.of(2026, 11, 20));
+        saveMovement("a1", MovementType.MAINTENANCE_FEE, "8", LocalDate.of(2026, 11, 1));
+        saveMovement("a1", MovementType.MINIMUM_AVERAGE_FEE, "15", LocalDate.of(2026, 11, 1));
 
         movementAdapter
                 .countByAccountIdAndMonth("a1", YearMonth.of(2026, 11))
@@ -90,6 +92,23 @@ class TransactionPersistenceAdaptersTest {
                 .awaitDone(5, TimeUnit.SECONDS)
                 .assertNoErrors()
                 .assertValue(2L);
+    }
+
+    @Test
+    void tellsIfTheAccountAlreadyHasMonthlyChargesOnTheDate() {
+        LocalDate chargeDate = LocalDate.of(2026, 12, 1);
+        saveMovement("a1", MovementType.MAINTENANCE_FEE, "8", chargeDate);
+        saveMovement("a2", MovementType.DEPOSIT, "10", chargeDate);
+        saveMovement("a3", MovementType.MINIMUM_AVERAGE_FEE, "15", chargeDate);
+
+        movementAdapter.hasMonthlyCharges("a1", chargeDate).test()
+                .awaitDone(5, TimeUnit.SECONDS).assertValue(true);
+        movementAdapter.hasMonthlyCharges("a3", chargeDate).test()
+                .awaitDone(5, TimeUnit.SECONDS).assertValue(true);
+        movementAdapter.hasMonthlyCharges("a1", LocalDate.of(2027, 1, 1)).test()
+                .awaitDone(5, TimeUnit.SECONDS).assertValue(false);
+        movementAdapter.hasMonthlyCharges("a2", chargeDate).test()
+                .awaitDone(5, TimeUnit.SECONDS).assertValue(false);
     }
 
     @Test

@@ -81,4 +81,17 @@ class MovementTest {
         assertThat(new Movement("1", MovementType.YANKI_PAYMENT_REVERSAL, BigDecimal.TEN, DATE)
                 .balanceEffect()).isEqualByComparingTo("10");
     }
+
+    @Test
+    void monthlyFeesSubtractAndAreNotCustomerTransactions() {
+        assertThat(new Movement("1", MovementType.MAINTENANCE_FEE, BigDecimal.TEN, DATE)
+                .balanceEffect()).isEqualByComparingTo("-10");
+        assertThat(new Movement("1", MovementType.MINIMUM_AVERAGE_FEE, BigDecimal.TEN, DATE)
+                .balanceEffect()).isEqualByComparingTo("-10");
+        assertThat(MovementType.MAINTENANCE_FEE.isCustomerTransaction()).isFalse();
+        assertThat(MovementType.MINIMUM_AVERAGE_FEE.isCustomerTransaction()).isFalse();
+        assertThat(MovementType.YANKI_PAYMENT_REVERSAL.isCustomerTransaction()).isFalse();
+        assertThat(MovementType.DEPOSIT.isCustomerTransaction()).isTrue();
+        assertThat(MovementType.YANKI_PAYMENT_SENT.isCustomerTransaction()).isTrue();
+    }
 }
