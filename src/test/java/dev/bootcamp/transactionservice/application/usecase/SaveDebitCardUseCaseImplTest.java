@@ -28,4 +28,13 @@ class SaveDebitCardUseCaseImplTest {
 
         verify(debitCardRepository).save(card);
     }
+
+    @Test
+    void closedCardIsRemovedFromTheLocalCopy() {
+        when(debitCardRepository.deleteById("d1")).thenReturn(Completable.complete());
+
+        new SaveDebitCardUseCaseImpl(debitCardRepository).close("d1").test().assertComplete();
+
+        verify(debitCardRepository).deleteById("d1");
+    }
 }

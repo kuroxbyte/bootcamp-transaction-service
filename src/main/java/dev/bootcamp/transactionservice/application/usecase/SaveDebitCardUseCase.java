@@ -16,4 +16,10 @@ public interface SaveDebitCardUseCase {
      * Guarda o reemplaza la tarjeta.
      */
     Completable execute(DebitCard debitCard);
+
+    /**
+     * Quita de la copia local una tarjeta dada de baja ({@code DebitCardClosed}): ya no se puede
+     * pagar con ella. Es idempotente.
+     */
+    Completable close(String debitCardId);
 }

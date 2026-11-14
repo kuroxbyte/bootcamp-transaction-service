@@ -58,6 +58,8 @@ public class AccountWebClientAdapter implements AccountClient {
                         .uri("/api/v1/internal/accounts")
                         .retrieve()
                         .bodyToFlux(AccountResponseDto.class)
+                        // Las cuentas dadas de baja no pagan comisiones.
+                        .filter(account -> account.getClosedAt() == null)
                         .map(AccountWebClientAdapter::toDomain),
                 SERVICE_NAME);
     }
