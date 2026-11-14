@@ -16,4 +16,9 @@ public class SaveDebitCardUseCaseImpl implements SaveDebitCardUseCase {
     public Completable execute(DebitCard debitCard) {
         return debitCardRepository.save(debitCard);
     }
+
+    @Override
+    public Completable close(String debitCardId) {
+        return debitCardRepository.deleteById(debitCardId);
+    }
 }

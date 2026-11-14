@@ -255,6 +255,10 @@ components:
         maintenanceFee:
           type: number
           description: Solo CHECKING
+        closedAt:
+          type: string
+          format: date
+          description: Fecha de baja; solo la tienen las cuentas dadas de baja, que únicamente aparecen en el listado interno
         holderIds:
           type: array
           description: Solo CHECKING

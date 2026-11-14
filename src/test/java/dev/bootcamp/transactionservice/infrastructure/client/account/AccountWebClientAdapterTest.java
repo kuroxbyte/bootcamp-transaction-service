@@ -143,6 +143,10 @@ class AccountWebClientAdapterTest {
                         + "\"freeMonthlyTransactions\":3,\"transactionFee\":2},"
                         + "{\"id\":\"11\",\"customerId\":\"1\",\"type\":\"SAVINGS\","
                         + "\"maxMonthlyMovements\":5,\"openingAmount\":0,"
+                        + "\"freeMonthlyTransactions\":3,\"transactionFee\":2},"
+                        // Una cuenta dada de baja no se cobra.
+                        + "{\"id\":\"12\",\"customerId\":\"1\",\"type\":\"CHECKING\","
+                        + "\"maintenanceFee\":8,\"openingAmount\":0,\"closedAt\":\"2026-11-30\","
                         + "\"freeMonthlyTransactions\":3,\"transactionFee\":2}]");
 
         List<Account> accounts = new AccountWebClientAdapter(
